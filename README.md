@@ -2,6 +2,8 @@
 
 AI-powered live commerce platform — mobile-first video shopping for Central Asia.
 
+**Repository:** https://github.com/Akmal1255553/livecommerce
+
 Users discover and buy products through short-form video and live streams (TikTok-style engagement + in-app checkout). The monorepo contains the Flutter mobile app, Laravel API, Docker infrastructure, and full architecture documentation.
 
 ```
