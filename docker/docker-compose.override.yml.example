@@ -1,0 +1,7 @@
+# Copy to docker-compose.override.yml for local customizations (gitignored optional)
+# Example: expose additional ports or mount IDE debug configs
+
+services:
+  app:
+    environment:
+      XDEBUG_MODE: "off"

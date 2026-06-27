@@ -1,0 +1,32 @@
+---
+description: API design and OpenAPI conventions
+globs:
+  - backend/routes/**/*
+  - backend/app/Http/Controllers/**/*
+  - docs/04_API_SPECIFICATION.md
+alwaysApply: false
+---
+
+# API Conventions
+
+## Routes
+
+- Prefix: `/api/v1/`
+- RESTful resource naming, kebab-case URLs
+- JWT Bearer auth (Sprint 1+) — Scramble documents security scheme
+
+## Controllers
+
+- One action per endpoint where practical
+- Return `JsonResponse` with `{ success, data, message? }`
+- Use Form Requests for validation (Sprint 1+)
+
+## Documentation
+
+- Source of truth: `docs/04_API_SPECIFICATION.md`
+- Runtime docs: Scramble at `/docs/api`
+- Export spec: `scripts/openapi.ps1` → `docs/openapi.json`
+
+## Versioning
+
+Breaking changes require `/api/v2/`. Never break v1 within MVP.

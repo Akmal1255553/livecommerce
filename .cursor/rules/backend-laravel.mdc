@@ -1,0 +1,41 @@
+---
+description: Laravel backend conventions
+globs: backend/**/*
+alwaysApply: false
+---
+
+# Backend (Laravel)
+
+## Structure
+
+- Controllers: `app/Http/Controllers/Api/V1/` — thin, use `RespondsWithJson`
+- Services: `app/Services/{Module}/` — extend `BaseService`
+- Repositories: `app/Repositories/Eloquent/` — extend `BaseEloquentRepository`
+- DTOs: `app/DTOs/` — readonly data objects for service layer
+- Contracts: `app/Contracts/Repositories/`, `app/Contracts/Services/`
+- Responses: `App\Http\Responses\ApiResponse` — never hand-roll JSON envelopes
+- Exceptions: throw `BusinessException` subclasses from services
+
+## Code style
+
+- `declare(strict_types=1);` in all PHP files
+- Run `composer format` (Pint) before commit
+- PHPStan level 6: `composer analyse`
+
+## Testing
+
+- Pest tests in `tests/Feature/` and `tests/Unit/`
+- Run `composer test` or `php artisan test`
+
+## API docs
+
+- Scramble auto-generates OpenAPI from routes/controllers
+- UI: `/docs/api` | Export: `scripts/openapi.ps1`
+
+## Response format
+
+```json
+{ "success": true, "data": {}, "message": "optional" }
+```
+
+Errors use standard Laravel validation / HTTP status codes.

@@ -1,0 +1,52 @@
+# OS
+.DS_Store
+Thumbs.db
+*.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+auth.json
+
+# PHP / Laravel (backend)
+backend/vendor/
+backend/node_modules/
+backend/.phpunit.cache/
+backend/.phpunit.result.cache
+backend/public/build/
+backend/public/hot/
+backend/public/storage/
+backend/storage/*.key
+backend/storage/pail/
+backend/bootstrap/cache/*
+!backend/bootstrap/cache/.gitignore
+
+# Composer
+composer.phar
+composer-setup.php
+
+# Flutter (mobile)
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.pub-cache/
+mobile/.pub/
+mobile/coverage/
+mobile/**/*.g.dart
+mobile/**/*.freezed.dart
+
+# Docker overrides (local only)
+docker/docker-compose.override.yml
+
+# Misc
+*.pem
+*.key

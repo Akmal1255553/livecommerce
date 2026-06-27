@@ -1,0 +1,35 @@
+---
+description: Flutter mobile app conventions
+globs: mobile/**/*
+alwaysApply: false
+---
+
+# Mobile (Flutter)
+
+## Structure
+
+- `lib/app/` — app shell, router, theme
+- `lib/core/` — shared utilities, network, constants
+- `lib/features/<name>/` — feature modules (data/domain/presentation)
+
+## State & navigation
+
+- Riverpod for state management
+- GoRouter for routing
+- Dio for HTTP (`/api/v1/` base URL from env/config)
+
+## Code style
+
+- `flutter analyze` must pass
+- Prefer `const` constructors
+- No `print()` — use proper logging
+
+## Testing
+
+- Unit/widget tests in `test/`
+- Run `flutter test`
+
+## Platform folders
+
+If `android/` or `ios/` missing, run:
+`flutter create . --org uz.livecommerce --project-name livecommerce_mobile`

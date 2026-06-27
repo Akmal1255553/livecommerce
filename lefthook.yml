@@ -1,0 +1,12 @@
+pre-commit:
+  parallel: true
+  commands:
+    backend-lint:
+      glob: "backend/**/*.php"
+      run: cd backend && composer lint
+    backend-analyse:
+      glob: "backend/**/*.php"
+      run: cd backend && composer analyse
+    mobile-analyze:
+      glob: "mobile/**/*.dart"
+      run: cd mobile && flutter analyze --no-fatal-infos

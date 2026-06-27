@@ -1,0 +1,20 @@
+# Flutter
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+build/
+.pub-cache/
+.pub/
+coverage/
+
+# Generated l10n (regenerate with flutter gen-l10n)
+# lib/core/l10n/app_localizations*.dart — keep generated files tracked if committed after gen-l10n
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db

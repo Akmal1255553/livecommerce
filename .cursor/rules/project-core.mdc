@@ -1,0 +1,30 @@
+---
+description: LiveCommerce monorepo core conventions
+globs:
+alwaysApply: true
+---
+
+# LiveCommerce Platform
+
+Mobile-first AI live commerce (TikTok-style video + shopping).
+
+## Stack
+
+- Backend: Laravel 12, PHP 8.4, PostgreSQL, Redis, Pest, Pint, PHPStan, Scramble
+- Mobile: Flutter 3, Riverpod, GoRouter, Dio, Clean Architecture
+- Infra: Docker Compose (see `docker/docker-compose.yml`)
+
+## Architecture rules
+
+- No business logic in controllers — use Services + Repositories
+- API prefix: `/api/v1/`
+- Module contracts in `backend/app/Contracts/Services/`
+- Follow docs in `docs/` and root architecture files (`07_ADR.md`, `08_MODULES.md`)
+
+## Before committing
+
+Run `scripts/qa.ps1` (Windows) or `scripts/qa.sh` (Unix). Install hooks: `scripts/install-hooks.ps1`.
+
+## Scope
+
+Architecture is frozen. Do not change stack without ADR. MVP = Sprints 0–7 + 14–16.

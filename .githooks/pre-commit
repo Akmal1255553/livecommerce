@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+
+changed_backend=false
+changed_mobile=false
+
+while IFS= read -r file; do
+  [[ -z "$file" ]] && continue
+  if [[ "$file" == backend/* ]]; then
+    changed_backend=true
+  elif [[ "$file" == mobile/* ]]; then
+    changed_mobile=true
+  fi
+done < <(git diff --cached --name-only --diff-filter=ACM)
+
+if [[ "$changed_backend" == false && "$changed_mobile" == false ]]; then
+  exit 0
+fi
+
+if [[ "$changed_backend" == true ]]; then
+  echo "Running backend pre-commit checks..."
+  (cd "$ROOT/backend" && composer lint && composer analyse)
+fi
+
+if [[ "$changed_mobile" == true ]]; then
+  if command -v flutter >/dev/null 2>&1; then
+    echo "Running mobile pre-commit checks..."
+    (cd "$ROOT/mobile" && flutter analyze --no-fatal-infos)
+  else
+    echo "Flutter not found — skipping mobile checks."
+  fi
+fi
+
+echo "Pre-commit checks passed."
