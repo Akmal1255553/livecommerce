@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\UserController;
@@ -43,9 +44,12 @@ Route::prefix('v1')->group(function (): void {
 
         Route::post('users/{id}/follow', [UserController::class, 'follow']);
         Route::delete('users/{id}/follow', [UserController::class, 'unfollow']);
+
+        Route::get('feed/following', [FeedController::class, 'following']);
     });
 
     Route::middleware('auth.api.optional')->group(function (): void {
+        Route::get('feed/for-you', [FeedController::class, 'forYou']);
         Route::get('users/{id}', [UserController::class, 'showPublic']);
         Route::get('users/{id}/followers', [UserController::class, 'followers']);
         Route::get('users/{id}/following', [UserController::class, 'following']);

@@ -252,7 +252,7 @@ Sprint 2 is split into focused sub-sprints:
 |------------|-------|--------|
 | **2.1** | Follow System | **Complete** |
 | **2.2** | Notifications Foundation | **Complete** |
-| **2.3** | Feed Foundation | Planned |
+| **2.3** | Feed Foundation | **Complete** |
 
 Remaining Sprint 2 scope (blocks, user search, mobile social UI) moves to Sprint 2.4+ or aligns with Sprint 3 mobile work.
 
@@ -297,30 +297,27 @@ Remaining Sprint 2 scope (blocks, user search, mobile social UI) moves to Sprint
 
 ---
 
-# Sprint 2.3 — Feed Foundation
+# Sprint 2.3 — Feed Foundation ✅
 
-**Status:** Planned (next)  
-**Depends on:** Sprint 2.1, Sprint 2.2  
+**Status:** Complete
+**Doc:** [docs/SPRINT_2.3_FEED_FOUNDATION.md](./docs/SPRINT_2.3_FEED_FOUNDATION.md)
+**Depends on:** Sprint 2.1, Sprint 2.2
 **Priority:** P0
-
-## Modules
-
-Video Feed (read path), cursor pagination infrastructure, feed API skeleton
 
 ## Backend Deliverables
 
-- [ ] Migrations: `videos` (minimal publishable schema)
-- [ ] `VideoService` — list published videos, seed/demo feed data
-- [ ] Feed endpoints: `GET /feed/for-you`, `GET /feed/following` (cursor pagination)
-- [ ] `VideoResource` per API spec
-- [ ] Following feed filters by `follows` graph (Sprint 2.1)
-- [ ] Feature tests: feed pagination, following feed shows followed creators only
+- [x] Migrations: `videos` (minimal publishable schema)
+- [x] `VideoService` — list published videos, cursor pagination
+- [x] Feed endpoints: `GET /feed/for-you`, `GET /feed/following` (cursor pagination)
+- [x] `VideoResource` per API spec
+- [x] Following feed filters by `follows` graph (Sprint 2.1)
+- [x] Feature tests: feed pagination, following feed shows followed creators only
 
 ## Mobile Deliverables
 
-- [ ] Feed module skeleton (`features/feed/`)
-- [ ] Vertical feed screen with cursor infinite scroll (mock or API-backed)
-- [ ] Tab shell: For You / Following
+- [x] Feed module skeleton (`features/feed/`)
+- [x] Vertical feed screen with cursor infinite scroll (API-backed)
+- [x] Tab shell: For You / Following
 
 ## API Endpoints
 
@@ -328,11 +325,11 @@ Video Feed (read path), cursor pagination infrastructure, feed API skeleton
 
 ## Acceptance Criteria
 
-- [ ] For-you feed returns paginated published videos
-- [ ] Following feed returns videos from followed users only
-- [ ] Cursor pagination matches API spec (`next_cursor`, `has_more`, `limit`)
-- [ ] Mobile feed screen loads first page from API
-- [ ] Feature tests passing
+- [x] For-you feed returns paginated published videos
+- [x] Following feed returns videos from followed users only
+- [x] Cursor pagination matches API spec (`next_cursor`, `has_more`, `limit`)
+- [x] Mobile feed screen loads first page from API
+- [x] Feature tests passing
 
 ---
 

@@ -213,6 +213,8 @@ Authenticated endpoints (`Authorization: Bearer {token}`) unless noted:
 | PUT | `/api/v1/me/notification-settings` | 2.2 | Notification preferences |
 | POST | `/api/v1/devices` | 2.2 | Register FCM token |
 | DELETE | `/api/v1/devices/{token}` | 2.2 | Unregister device |
+| GET | `/api/v1/feed/for-you` | 2.3 | For You video feed (cursor, optional auth) |
+| GET | `/api/v1/feed/following` | 2.3 | Following video feed (cursor, auth required) |
 
 Full contract: [API Specification](./docs/04_API_SPECIFICATION.md) · Live docs: http://localhost:8080/docs/api
 

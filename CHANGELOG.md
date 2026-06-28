@@ -8,6 +8,20 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 2.3 — Feed Foundation
+
+- `videos` table migration (minimal publishable schema)
+- `VideoStatus`, `VideoVisibility` enums
+- `VideoService` — For You and Following feeds with cursor pagination
+- `VideoRepository::cursorPaginateFeed()` — published/public filter, following user filter
+- `VideoResource`, `UserCompactResource`, `FeedController`
+- API endpoints:
+  - `GET /api/v1/feed/for-you` (optional auth)
+  - `GET /api/v1/feed/following` (auth required)
+- `CursorPaginationData` video cursor helpers (`encodeVideoCursor`, `decodeVideoCursor`, `nextVideoCursor`)
+- Feature tests: `tests/Feature/Feed/FeedTest.php` (7 tests)
+- Mobile: `features/feed/` — repository, providers, vertical `FeedScreen` with For You / Following tabs
+
 #### Sprint 2.2 — Notifications Foundation
 
 - `notifications` table migration with cursor-friendly indexes

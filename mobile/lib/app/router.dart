@@ -7,6 +7,7 @@ import 'package:livecommerce_mobile/features/auth/presentation/screens/otp_scree
 import 'package:livecommerce_mobile/features/auth/presentation/screens/profile_screen.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/screens/register_screen.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/screens/settings_screen.dart';
+import 'package:livecommerce_mobile/features/feed/presentation/screens/feed_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -63,7 +64,7 @@ class AppRouter {
         ),
         GoRoute(
           path: '/home',
-          builder: (context, state) => const _HomeShell(),
+          builder: (context, state) => const FeedScreen(),
         ),
         GoRoute(
           path: '/profile',
@@ -93,47 +94,6 @@ class _SplashScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return const Scaffold(
       body: Center(child: CircularProgressIndicator()),
-    );
-  }
-}
-
-class _HomeShell extends StatelessWidget {
-  const _HomeShell();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('LiveCommerce'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
-          ),
-        ],
-      ),
-      body: const Center(
-        child: Padding(
-          padding: EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(Icons.play_circle_outline, size: 72),
-              SizedBox(height: 24),
-              Text(
-                'Sprint 1 — Authentication',
-                style: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 12),
-              Text(
-                'Auth, profile, and settings are ready. Video feed starts in Sprint 3.',
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      ),
     );
   }
 }

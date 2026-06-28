@@ -4,11 +4,56 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\VideoStatus;
+use App\Enums\VideoVisibility;
+use Database\Factories\VideoFactory;
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Video extends Model
 {
-    protected $table = 'videos';
+    /** @use HasFactory<VideoFactory> */
+    use HasFactory, HasUuids, SoftDeletes;
 
-    protected $guarded = [];
+    public $incrementing = false;
+
+    protected $keyType = 'string';
+
+    protected $fillable = [
+        'user_id',
+        'title',
+        'description',
+        'video_url',
+        'thumbnail_url',
+        'raw_video_url',
+        'duration',
+        'width',
+        'height',
+        'view_count',
+        'like_count',
+        'comment_count',
+        'share_count',
+        'status',
+        'visibility',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'status' => VideoStatus::class,
+            'visibility' => VideoVisibility::class,
+            'view_count' => 'integer',
+            'like_count' => 'integer',
+            'comment_count' => 'integer',
+            'share_count' => 'integer',
+        ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
 }
