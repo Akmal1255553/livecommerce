@@ -14,7 +14,7 @@ Users discover and buy products through short-form video and live streams (TikTo
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
-**Engineering Foundation:** Sprint 0.1–0.3 complete · **Sprint 1:** implemented, **pending environment verification** · **Next:** Sprint 2 (after gate passes)
+**Engineering Foundation:** Sprint 0–1 complete · **Sprint 2.1:** Follow System · **Sprint 2.2:** Notifications · **Next:** Sprint 2.3 Feed Foundation
 
 ---
 
@@ -194,6 +194,27 @@ Composer scripts (inside container or local `backend/` with `vendor/` installed)
 | `composer analyse` | PHPStan static analysis |
 | `composer test` | Pest test suite |
 | `composer qa` | lint + analyse + test |
+
+### API (Sprint 2)
+
+Authenticated endpoints (`Authorization: Bearer {token}`) unless noted:
+
+| Method | Path | Sprint | Description |
+|--------|------|--------|-------------|
+| POST | `/api/v1/users/{id}/follow` | 2.1 | Follow user |
+| DELETE | `/api/v1/users/{id}/follow` | 2.1 | Unfollow user |
+| GET | `/api/v1/users/{id}` | 2.1 | Public profile (optional auth) |
+| GET | `/api/v1/users/{id}/followers` | 2.1 | Followers list |
+| GET | `/api/v1/users/{id}/following` | 2.1 | Following list |
+| GET | `/api/v1/notifications` | 2.2 | Notifications (cursor) |
+| GET | `/api/v1/notifications/unread-count` | 2.2 | Unread count |
+| PUT | `/api/v1/notifications/{id}/read` | 2.2 | Mark as read |
+| PUT | `/api/v1/notifications/read-all` | 2.2 | Mark all read |
+| PUT | `/api/v1/me/notification-settings` | 2.2 | Notification preferences |
+| POST | `/api/v1/devices` | 2.2 | Register FCM token |
+| DELETE | `/api/v1/devices/{token}` | 2.2 | Unregister device |
+
+Full contract: [API Specification](./docs/04_API_SPECIFICATION.md) · Live docs: http://localhost:8080/docs/api
 
 Monorepo scripts from repo root:
 

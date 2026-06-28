@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Responses;
 
+use App\DTOs\Pagination\CursorPaginationData;
 use App\DTOs\Pagination\PaginationData;
 use Illuminate\Http\JsonResponse;
 
@@ -51,6 +52,14 @@ final class ApiResponse
         int $status = 200,
     ): JsonResponse {
         return self::success($data, $status, meta: $pagination->toArray());
+    }
+
+    public static function cursorPaginated(
+        mixed $data,
+        CursorPaginationData $pagination,
+        int $status = 200,
+    ): JsonResponse {
+        return self::success($data, $status, meta: $pagination->meta());
     }
 
     /**

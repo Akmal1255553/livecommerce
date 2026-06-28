@@ -14,7 +14,9 @@ use App\Contracts\Repositories\RefreshTokenRepositoryInterface;
 use App\Contracts\Repositories\StoreRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
+use App\Contracts\Repositories\UserDeviceRepositoryInterface;
 use App\Contracts\Services\HealthServiceInterface;
+use App\Contracts\Services\PushNotificationInterface;
 use App\Contracts\Services\SmsProviderInterface;
 use App\Events\UserRegistered;
 use App\Listeners\CreateUserProfile;
@@ -26,10 +28,12 @@ use App\Repositories\Eloquent\OrderRepository;
 use App\Repositories\Eloquent\ProductRepository;
 use App\Repositories\Eloquent\RefreshTokenRepository;
 use App\Repositories\Eloquent\StoreRepository;
+use App\Repositories\Eloquent\UserDeviceRepository;
 use App\Repositories\Eloquent\UserRepository;
 use App\Repositories\Eloquent\VideoRepository;
 use App\Services\Auth\StubSmsProvider;
 use App\Services\Health\HealthService;
+use App\Services\Notification\StubFcmPushNotification;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 
@@ -48,9 +52,11 @@ class RepositoryServiceProvider extends ServiceProvider
         StoreRepositoryInterface::class => StoreRepository::class,
         LiveStreamRepositoryInterface::class => LiveStreamRepository::class,
         NotificationRepositoryInterface::class => NotificationRepository::class,
+        UserDeviceRepositoryInterface::class => UserDeviceRepository::class,
         FollowRepositoryInterface::class => FollowRepository::class,
         HealthServiceInterface::class => HealthService::class,
         SmsProviderInterface::class => StubSmsProvider::class,
+        PushNotificationInterface::class => StubFcmPushNotification::class,
     ];
 
     public function register(): void

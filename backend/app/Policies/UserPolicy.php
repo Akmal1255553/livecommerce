@@ -24,6 +24,11 @@ class UserPolicy
         return $actor->id === $target->id;
     }
 
+    public function follow(User $actor, User $target): bool
+    {
+        return $actor->id !== $target->id && $target->isActive();
+    }
+
     public function manageUsers(User $actor): bool
     {
         return $actor->hasRole(UserRole::Admin, UserRole::Moderator);

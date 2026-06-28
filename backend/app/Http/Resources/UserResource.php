@@ -27,6 +27,12 @@ class UserResource extends JsonResource
             'follower_count' => $this->profile?->follower_count ?? 0,
             'following_count' => $this->profile?->following_count ?? 0,
             'video_count' => $this->profile?->video_count ?? 0,
+            'is_following' => $this->when(
+                $request->user() !== null
+                    && $request->user()->id !== $this->id
+                    && array_key_exists('is_following', $this->getAttributes()),
+                (bool) $this->getAttribute('is_following'),
+            ),
             'locale' => $this->locale,
             'phone_verified' => $this->phone_verified_at !== null,
             'created_at' => $this->created_at?->toIso8601String(),

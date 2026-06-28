@@ -13,7 +13,6 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
-use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -26,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
             'auth.api' => \App\Http\Middleware\AuthenticateApi::class,
+            'auth.api.optional' => \App\Http\Middleware\AuthenticateApiOptional::class,
             'seller' => \App\Http\Middleware\EnsureSeller::class,
             'role' => \App\Http\Middleware\EnsureRole::class,
             'locale' => \App\Http\Middleware\SetLocale::class,
@@ -100,7 +100,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->render(function (Throwable $exception, Request $request) {
+        $exceptions->render(function (\Throwable $exception, Request $request) {
             if (! $request->is('api/*') || app()->hasDebugModeEnabled()) {
                 return null;
             }

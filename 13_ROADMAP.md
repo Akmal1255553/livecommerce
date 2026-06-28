@@ -240,50 +240,125 @@ Authentication, Authorization, JWT, Refresh Tokens, OTP Verification, Password R
 # Sprint 2 — Social Foundation
 
 **Phase:** 2 — Social & Engagement  
-**Duration:** 2 weeks  
+**Duration:** 3 sub-sprints (2.1–2.3)  
 **Depends on:** Sprint 1  
+**Priority:** P0
+
+## Overview
+
+Sprint 2 is split into focused sub-sprints:
+
+| Sub-sprint | Focus | Status |
+|------------|-------|--------|
+| **2.1** | Follow System | **Complete** |
+| **2.2** | Notifications Foundation | **Complete** |
+| **2.3** | Feed Foundation | Planned |
+
+Remaining Sprint 2 scope (blocks, user search, mobile social UI) moves to Sprint 2.4+ or aligns with Sprint 3 mobile work.
+
+---
+
+# Sprint 2.1 — Follow System ✅
+
+**Status:** Complete  
+**Doc:** [docs/SPRINT_2.1_FOLLOW_SYSTEM.md](./docs/SPRINT_2.1_FOLLOW_SYSTEM.md)
+
+## Backend Deliverables
+
+- [x] Migration: `follows`
+- [x] `FollowService`, follow/unfollow with transactional counter updates
+- [x] Event: `UserFollowed`
+- [x] Public profile + followers/following lists
+- [x] Feature tests: follow, unfollow, counters, pagination
+
+## API Endpoints
+
+`POST/DELETE /users/{id}/follow`, `GET /users/{id}/followers`, `GET /users/{id}/following`, `GET /users/{id}`
+
+---
+
+# Sprint 2.2 — Notifications Foundation ✅
+
+**Status:** Complete  
+**Doc:** [docs/SPRINT_2.2_NOTIFICATIONS.md](./docs/SPRINT_2.2_NOTIFICATIONS.md)
+
+## Backend Deliverables
+
+- [x] Migration: `notifications`
+- [x] `NotificationService`, `NotificationData` DTO, `NotificationType` enum
+- [x] `NotifyOnFollow` listener → `NEW_FOLLOWER` in-app notification
+- [x] `SendPushNotificationJob` + `StubFcmPushNotification`
+- [x] Device registration (`user_devices` model + repository)
+- [x] Feature tests: notifications, devices, standardized payload
+
+## API Endpoints
+
+`GET /notifications`, `GET /notifications/unread-count`, `PUT /notifications/{id}/read`, `PUT /notifications/read-all`, `PUT /me/notification-settings`, `POST /devices`, `DELETE /devices/{token}`
+
+---
+
+# Sprint 2.3 — Feed Foundation
+
+**Status:** Planned (next)  
+**Depends on:** Sprint 2.1, Sprint 2.2  
 **Priority:** P0
 
 ## Modules
 
-Followers, Following, Likes, Comments, Bookmarks, Notifications, User Search, Blocks
+Video Feed (read path), cursor pagination infrastructure, feed API skeleton
 
 ## Backend Deliverables
 
-- [ ] Migrations: follows, blocks, notifications, user_devices
-- [ ] FollowService, NotificationService
-- [ ] Follow/unfollow with counter updates (user_profiles)
-- [ ] Notification creation + FCM adapter interface
-- [ ] SendPushNotificationJob
-- [ ] Device registration endpoint
-- [ ] User search (username, display name)
-- [ ] Events: UserFollowed
-- [ ] Feature tests: follow, unfollow, notifications, device registration
+- [ ] Migrations: `videos` (minimal publishable schema)
+- [ ] `VideoService` — list published videos, seed/demo feed data
+- [ ] Feed endpoints: `GET /feed/for-you`, `GET /feed/following` (cursor pagination)
+- [ ] `VideoResource` per API spec
+- [ ] Following feed filters by `follows` graph (Sprint 2.1)
+- [ ] Feature tests: feed pagination, following feed shows followed creators only
 
 ## Mobile Deliverables
+
+- [ ] Feed module skeleton (`features/feed/`)
+- [ ] Vertical feed screen with cursor infinite scroll (mock or API-backed)
+- [ ] Tab shell: For You / Following
+
+## API Endpoints
+
+`GET /feed/for-you`, `GET /feed/following`
+
+## Acceptance Criteria
+
+- [ ] For-you feed returns paginated published videos
+- [ ] Following feed returns videos from followed users only
+- [ ] Cursor pagination matches API spec (`next_cursor`, `has_more`, `limit`)
+- [ ] Mobile feed screen loads first page from API
+- [ ] Feature tests passing
+
+---
+
+# Sprint 2 (legacy checklist — social remainder)
+
+**Note:** Original monolithic Sprint 2 items not yet delivered:
+
+## Modules (deferred)
+
+Blocks, User Search, Likes, Comments, Bookmarks (partial overlap with Sprint 3)
+
+## Mobile Deliverables (deferred)
 
 - [ ] Follow/unfollow on user profiles
 - [ ] Followers and following list screens
 - [ ] Notification center screen
 - [ ] Unread notification badge
-- [ ] Mark as read / mark all as read
-- [ ] User search screen
 - [ ] FCM integration (device token registration)
-- [ ] Push notification handling (foreground + background)
+- [ ] User search screen
 
-## API Endpoints
+## Acceptance Criteria (remainder)
 
-`POST/DELETE /users/{id}/follow`, `GET /users/{id}/followers`, `GET /users/{id}/following`, `GET /users/{id}`, `GET /notifications`, `PUT /notifications/{id}/read`, `PUT /notifications/read-all`, `POST /devices`, `DELETE /devices/{token}`, `GET /search?type=users`
-
-## Acceptance Criteria
-
-- [ ] Users can follow and unfollow other users
-- [ ] Follower/following counts update correctly
-- [ ] Push notifications delivered for new follower
-- [ ] In-app notification center works
+- [ ] Push notifications delivered for new follower (real FCM)
+- [ ] In-app notification center works (mobile)
 - [ ] Users can search for other users
-- [ ] Users can block other users (blocked content hidden)
-- [ ] All social endpoints have Feature tests passing
+- [ ] Users can block other users
 
 ---
 
