@@ -72,6 +72,9 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::middleware('auth.api.optional')->group(function (): void {
+        Route::get('feed/trending', [FeedController::class, 'trending']);
+        Route::get('feed/popular', [FeedController::class, 'popular']);
+        Route::get('feed/new', [FeedController::class, 'newFeed']);
         Route::get('feed/for-you', [FeedController::class, 'forYou']);
         Route::get('videos/{id}', [VideoController::class, 'show']);
         Route::post('videos/{id}/view', [VideoInteractionController::class, 'view']);

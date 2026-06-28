@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Contracts\Recommendation\RecommendationServiceInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoResource;
 use App\Http\Responses\ApiResponse;
@@ -13,12 +14,48 @@ use Illuminate\Http\Request;
 
 class FeedController extends Controller
 {
-    public function __construct(private readonly VideoService $videoService) {}
+    public function __construct(
+        private readonly RecommendationServiceInterface $recommendations,
+        private readonly VideoService $videoService,
+    ) {}
+
+    public function trending(Request $request): JsonResponse
+    {
+        $limit = min(max(1, (int) $request->query('limit', 20)), 50);
+        $page = $this->recommendations->feedTrending($request->query('cursor'), $limit, $request->user());
+
+        return ApiResponse::cursorPaginated(
+            VideoResource::collection($page->items),
+            $page,
+        );
+    }
+
+    public function popular(Request $request): JsonResponse
+    {
+        $limit = min(max(1, (int) $request->query('limit', 20)), 50);
+        $page = $this->recommendations->feedPopular($request->query('cursor'), $limit, $request->user());
+
+        return ApiResponse::cursorPaginated(
+            VideoResource::collection($page->items),
+            $page,
+        );
+    }
+
+    public function newFeed(Request $request): JsonResponse
+    {
+        $limit = min(max(1, (int) $request->query('limit', 20)), 50);
+        $page = $this->recommendations->feedNew($request->query('cursor'), $limit, $request->user());
+
+        return ApiResponse::cursorPaginated(
+            VideoResource::collection($page->items),
+            $page,
+        );
+    }
 
     public function forYou(Request $request): JsonResponse
     {
         $limit = min(max(1, (int) $request->query('limit', 20)), 50);
-        $page = $this->videoService->feedForYou($request->query('cursor'), $limit, $request->user());
+        $page = $this->recommendations->feedForYou($request->query('cursor'), $limit, $request->user());
 
         return ApiResponse::cursorPaginated(
             VideoResource::collection($page->items),

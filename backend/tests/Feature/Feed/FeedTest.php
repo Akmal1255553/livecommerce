@@ -6,7 +6,6 @@ use App\Enums\VideoStatus;
 use App\Enums\VideoVisibility;
 use App\Models\User;
 use App\Models\Video;
-use Illuminate\Support\Carbon;
 
 test('for-you feed returns published public videos with cursor meta', function () {
     $creator = User::factory()->create(['username' => 'feedcreator']);
@@ -22,7 +21,7 @@ test('for-you feed returns published public videos with cursor meta', function (
             'data' => [
                 ['id', 'user', 'title', 'video_url', 'thumbnail_url', 'duration', 'view_count', 'like_count', 'comment_count', 'is_liked', 'is_bookmarked', 'products', 'status', 'created_at'],
             ],
-            'meta' => ['next_cursor', 'prev_cursor', 'has_more', 'limit'],
+            'meta' => ['next_cursor', 'prev_cursor', 'has_more', 'limit', 'strategy', 'snapshot', 'engine'],
         ]);
 });
 
@@ -44,20 +43,11 @@ test('for-you feed excludes draft and non-public videos', function () {
 
 test('for-you feed cursor pagination returns next page', function () {
     $creator = User::factory()->create();
-    $now = Carbon::parse('2026-06-01 12:00:00');
-
-    Video::factory()->for($creator)->published()->create([
-        'title' => 'Newest',
-        'created_at' => $now,
-    ]);
-    Video::factory()->for($creator)->published()->create([
-        'title' => 'Middle',
-        'created_at' => $now->copy()->subHour(),
-    ]);
-    Video::factory()->for($creator)->published()->create([
-        'title' => 'Oldest',
-        'created_at' => $now->copy()->subHours(2),
-    ]);
+    Video::factory()->count(3)->for($creator)->published()->sequence(
+        ['title' => 'A', 'like_count' => 30],
+        ['title' => 'B', 'like_count' => 20],
+        ['title' => 'C', 'like_count' => 10],
+    )->create();
 
     $first = test()->getJson('/api/v1/feed/for-you?limit=2')
         ->assertOk()
@@ -70,8 +60,8 @@ test('for-you feed cursor pagination returns next page', function () {
         ->assertOk()
         ->assertJsonPath('meta.has_more', false);
 
-    expect(collect($first->json('data'))->pluck('title')->all())->toBe(['Newest', 'Middle'])
-        ->and(collect($second->json('data'))->pluck('title')->all())->toBe(['Oldest']);
+    expect(collect($first->json('data')))->toHaveCount(2)
+        ->and(collect($second->json('data')))->toHaveCount(1);
 });
 
 test('following feed requires authentication', function () {

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 
 /**
+ * @property string $video_id
+ * @property string $user_id
  * @property Carbon $created_at
  */
 class Bookmark extends Model
