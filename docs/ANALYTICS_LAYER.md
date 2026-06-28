@@ -118,7 +118,7 @@ When the user performs an action, the corresponding service records the analytic
 | `follow_after_watch` | Strong creator affinity |
 | `skip` | Negative |
 
-Exact scoring lives in Sprint 3.4 blueprint — this document defines **what to collect**.
+Exact scoring lives in Sprint 3.4 — see [22_RECOMMENDATION_ARCHITECTURE.md](./22_RECOMMENDATION_ARCHITECTURE.md) and [blueprints/recommendation-engine-v1.md](../blueprints/recommendation-engine-v1.md).
 
 ---
 

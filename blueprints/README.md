@@ -8,6 +8,7 @@ Implementation specifications for Sprint 3 sub-sprints. **No code** for a sub-sp
 | [../docs/SPRINT_3.1_BLUEPRINT.md](../docs/SPRINT_3.1_BLUEPRINT.md) | 3.1 Upload Foundation | Approved · [v0.3.1 release](https://github.com/Akmal1255553/livecommerce/releases/tag/v0.3.1-video-upload-foundation) |
 | [../docs/SPRINT_3.3_BLUEPRINT.md](../docs/SPRINT_3.3_BLUEPRINT.md) | 3.3 Video Interactions + Analytics Layer | Approved |
 | [../docs/ANALYTICS_LAYER.md](../docs/ANALYTICS_LAYER.md) | Analytics funnel (3.3 → 3.4 → 9) | Canonical |
-| [../docs/SPRINT_3.4_BLUEPRINT.md](../docs/SPRINT_3.4_BLUEPRINT.md) | 3.4 Recommendations v1 | Pending approval |
+| [recommendation-engine-v1.md](./recommendation-engine-v1.md) | 3.4 Recommendation Engine v1 | Approved (2026-06-28) |
+| [../docs/22_RECOMMENDATION_ARCHITECTURE.md](../docs/22_RECOMMENDATION_ARCHITECTURE.md) | Ranking pipeline architecture | Canonical |
 
 Legacy copies under `docs/SPRINT_3.x_BLUEPRINT.md` remain for changelog links; canonical 3.2 doc is [video-processing.md](./video-processing.md).

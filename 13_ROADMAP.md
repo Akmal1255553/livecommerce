@@ -376,7 +376,7 @@ Sprint 3 is split into focused sub-sprints (same pattern as Sprint 2). Feed read
 | **3.1** | Video Upload Foundation | [Blueprint](./docs/SPRINT_3.1_BLUEPRINT.md) | **Complete** |
 | **3.2** | Video Processing | [Blueprint](../blueprints/video-processing.md) | Approved **v2** |
 | **3.3** | Video Interactions | [Blueprint](./docs/SPRINT_3.3_BLUEPRINT.md) | Blueprint — pending approval |
-| **3.4** | Recommendation Engine v1 | [Blueprint](./docs/SPRINT_3.4_BLUEPRINT.md) | Blueprint — pending approval |
+| **3.4** | Recommendation Engine v1 | [Blueprint](../blueprints/recommendation-engine-v1.md) · [Architecture](./docs/22_RECOMMENDATION_ARCHITECTURE.md) | Approved — implementation in progress |
 
 > **Implementation gate:** No Sprint 3 code until the sub-sprint blueprint is marked **Approved**.
 
@@ -571,24 +571,26 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 
 # Sprint 3.4 — Recommendation Engine v1
 
-**Status:** Blueprint — pending approval  
-**Blueprint:** [docs/SPRINT_3.4_BLUEPRINT.md](./docs/SPRINT_3.4_BLUEPRINT.md)  
-**Depends on:** Sprint 3.3 (approved)  
+**Status:** Approved (2026-06-28) — implementation in progress  
+**Blueprint:** [blueprints/recommendation-engine-v1.md](../blueprints/recommendation-engine-v1.md) · [Architecture](./docs/22_RECOMMENDATION_ARCHITECTURE.md)  
+**Depends on:** Sprint 3.3 complete — [v0.3.3-video-interactions](https://github.com/Akmal1255553/livecommerce/releases/tag/v0.3.3-video-interactions)  
 **Priority:** P0
 
 ## Modules
 
-Rule-based ranking (no AI). Enhances feeds delivered in Sprint 2.3.
+Rule-based ranking pipeline (no AI). `RecommendationEngineInterface` → `RuleBasedRecommendationEngine` (Sprint 9: `AiRecommendationEngine`).
 
 ## Backend Deliverables
 
-- [ ] `RecommendationService` v1 — rule-based scoring
-- [ ] Feed strategies: **Trending**, **Popular**, **New**, **Following** (existing), **For You** (rules)
-- [ ] Trending score: view velocity + recency + engagement (likes/comments)
-- [ ] `GET /feed/trending`, `GET /feed/popular`, `GET /feed/new`
-- [ ] Enhance `GET /feed/for-you` with recommendation rules (replace chronological default)
-- [ ] Redis cache for trending/popular lists (TTL 5–15 min)
-- [ ] Feature tests: trending order, popular vs new, for-you excludes seen
+- [ ] `RecommendationEngineInterface` + `RuleBasedRecommendationEngine` + `AiRecommendationEngine` stub
+- [ ] Ranking pipeline: Candidate → Filter → Score → Diversity → Exploration → Final Rank
+- [ ] 9 candidate sources (Category, Seller = stubs)
+- [ ] `config/recommendation.php` — weights 40/20/15/10/10/5 (no hard-coded scores)
+- [ ] `video_engagement_rollups` + `AggregateEngagementRollupsJob`
+- [ ] Diversity layer (author cap) + exploration (90/10)
+- [ ] `GET /feed/trending`, `/feed/popular`, `/feed/new`, enhanced `/feed/for-you`
+- [ ] Redis snapshots + ranked cursor
+- [ ] Feature + unit tests (120+ total)
 
 ## Mobile Deliverables
 

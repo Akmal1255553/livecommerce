@@ -8,6 +8,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 3.4 — Recommendation Engine v1 (blueprint approved 2026-06-28)
+
+- Canonical blueprint: [blueprints/recommendation-engine-v1.md](./blueprints/recommendation-engine-v1.md) — **Approved**
+- Architecture: [docs/22_RECOMMENDATION_ARCHITECTURE.md](./docs/22_RECOMMENDATION_ARCHITECTURE.md) — pipeline, `RecommendationEngineInterface`, diversity, exploration
+- Sprint index: [docs/SPRINT_3.4_BLUEPRINT.md](./docs/SPRINT_3.4_BLUEPRINT.md)
+
 #### Sprint 3.3 — Video Interactions + Analytics Layer
 
 - Migrations: `video_likes`, `comments`, `bookmarks`, `video_shares`
