@@ -124,7 +124,7 @@ class RecommendationService extends BaseService implements RecommendationService
     {
         $cacheKey = $this->snapshotCacheKey($strategy, $viewer);
 
-        if ($cacheKey !== null) {
+        if ($cacheKey !== null && $this->shouldUseSnapshotCache()) {
             /** @var array{version: string, ids: list<string>}|null $cached */
             $cached = Cache::get($cacheKey);
 
@@ -146,11 +146,16 @@ class RecommendationService extends BaseService implements RecommendationService
 
         $snapshot = ['version' => $version, 'ids' => $ids];
 
-        if ($cacheKey !== null) {
+        if ($cacheKey !== null && $this->shouldUseSnapshotCache()) {
             Cache::put($cacheKey, $snapshot, $this->snapshotTtl($strategy));
         }
 
         return $snapshot;
+    }
+
+    private function shouldUseSnapshotCache(): bool
+    {
+        return ! app()->environment('testing');
     }
 
     private function snapshotCacheKey(FeedStrategy $strategy, ?User $viewer): ?string

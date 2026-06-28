@@ -9,7 +9,12 @@ use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoEngagementRollup;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+
+beforeEach(function (): void {
+    Cache::flush();
+});
 
 test('trending feed returns published public videos only', function () {
     $creator = User::factory()->create();
