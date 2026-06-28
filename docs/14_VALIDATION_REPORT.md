@@ -65,7 +65,7 @@ Fourteen project documents were reviewed for consistency, completeness, and impl
 | Auth + JWT | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | Sprint 1 | ✔ Yes |
 | Users / Profiles | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | Sprint 1 | ✔ Yes |
 | Follow / Social | ✔ | ✔ | ✔ | ✔ | ✔ | — | Sprint 2 | ✔ Yes |
-| Videos + Feed | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | Sprint 3 | ✔ Yes |
+| Videos + Feed (read) | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | Sprint 2.3, 3.1–3.4 | ✔ Yes |
 | Products + Cart | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | Sprint 4 | ✔ Yes |
 | Orders | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | Sprint 4 | ✔ Yes |
 | Payments | ✔ | ✔ | ✔ | ✔ | ✔ | ✔ | Sprint 7 | ✔ Yes |

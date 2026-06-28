@@ -14,7 +14,7 @@ Users discover and buy products through short-form video and live streams (TikTo
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
-**Engineering Foundation:** Sprint 0–1 complete · **Sprint 2.1:** Follow System · **Sprint 2.2:** Notifications · **Next:** Sprint 2.3 Feed Foundation
+**Engineering Foundation:** Sprint 0–1 complete · **Sprint 2:** Follow (2.1), Notifications (2.2), Feed (2.3) · **Next:** Sprint 3.1 Video Upload Foundation
 
 ---
 
@@ -310,7 +310,7 @@ Branch protection (recommended): `main` and `develop` require passing CI before 
 | Phase | Sprints | Focus |
 |-------|---------|-------|
 | Engineering Foundation | 0 | Docs, Docker, CI, skeleton |
-| Core Platform | 1–3 | Auth, social, video feed |
+| Core Platform | 1, 2.1–2.3, 3.1–3.4 | Auth, social, feed, upload, interactions, recommendations |
 | Commerce | 4–7 | Products, cart, orders, payments |
 | Seller & Live | 5–6 | Store, live streaming |
 | Growth & Admin | 12–16 | Analytics, admin, hardening |
@@ -322,7 +322,11 @@ Branch protection (recommended): `main` and `develop` require passing CI before 
 | 0.1 — Infrastructure | Complete |
 | 0.2 — Developer Experience | Complete |
 | 0.3 — Project Skeleton | Complete |
-| 1 — Authentication & Users | Next |
+| 1 — Authentication & Users | Complete |
+| 2.1 — Follow System | Complete |
+| 2.2 — Notifications Foundation | Complete |
+| 2.3 — Feed Foundation | Complete |
+| 3.1 — Video Upload Foundation | Next |
 
 Full plan: [Roadmap](./13_ROADMAP.md) · [Master Plan](./12_MASTER_PLAN.md)
 
@@ -389,6 +393,8 @@ Full plan: [Roadmap](./13_ROADMAP.md) · [Master Plan](./12_MASTER_PLAN.md)
 | [Sprint 0.2 — Developer Experience](./docs/SPRINT_0.2_DEVELOPER_EXPERIENCE.md) | Lint, hooks, Swagger, VS Code |
 | [Sprint 0.3 — Project Skeleton](./docs/SPRINT_0.3_PROJECT_SKELETON.md) | Base classes, repos, services |
 | [Sprint 1 — Authentication](./docs/SPRINT_1_AUTHENTICATION.md) | JWT auth, OTP, profile, mobile auth UX |
+| [Sprint 2.3 — Feed Foundation](./docs/SPRINT_2.3_FEED_FOUNDATION.md) | For You / Following feeds, cursor pagination |
+| [Sprint 3 — Video Platform](./docs/SPRINT_3_VIDEO_PLATFORM.md) | Upload, processing, interactions, recommendations (3.1–3.4) |
 | [Environment Verification](./docs/19_ENVIRONMENT_VERIFICATION.md) | Docker/Flutter gate before Sprint 1 sign-off |
 
 ---

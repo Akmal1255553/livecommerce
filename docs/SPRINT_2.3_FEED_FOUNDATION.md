@@ -8,7 +8,7 @@
 
 Sprint 2.3 delivers the read-path video feed: published videos with cursor pagination, For You and Following endpoints, `VideoResource` per API spec, and a mobile vertical feed with tab switching.
 
-Upload, likes, comments, and recommendations remain in Sprint 3+.
+Upload, likes, comments, and rule-based recommendations ship in Sprint 3.1–3.4; feed read-path is Sprint 2.3.
 
 ## Backend
 
@@ -49,7 +49,7 @@ Query: `cursor` (opaque), `limit` (default 20, max 50).
 
 ### Resources
 
-- `VideoResource` — full video payload per API spec (`is_liked` / `is_bookmarked` default false until Sprint 3)
+- `VideoResource` — full video payload per API spec (`is_liked` / `is_bookmarked` default false until Sprint 3.3)
 - `UserCompactResource` — compact creator payload on each video
 
 ## Mobile

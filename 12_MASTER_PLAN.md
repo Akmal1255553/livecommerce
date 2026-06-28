@@ -170,9 +170,9 @@ Combine the engagement of TikTok, the commerce of TikTok Shop, and the store man
 | Authentication | 1 | P0 |
 | Users / Profiles | 1 | P0 |
 | Followers | 2 | P0 |
-| Videos | 3 | P0 |
-| Feed | 3 | P0 |
-| Recommendations | 3 (rules), 9 (ML) | P0/P1 |
+| Videos | 3.1–3.3 | P0 |
+| Feed | 2.3 (read), 3.4 (ranking) | P0 |
+| Recommendations | 3.4 (rules), 9 (ML) | P0/P1 |
 | Products | 4 | P0 |
 | Categories | 4 | P0 |
 | Orders | 4 | P0 |
@@ -196,15 +196,15 @@ Full details: [Module Definitions](./08_MODULES.md)
 |-------|---------|----------|-------------|
 | Engineering Foundation | 0 | Week 1–2 | Docs, repo scaffold, CI |
 | Core Platform | 1 | Week 3–4 | Auth, profiles, settings |
-| Social & Engagement | 2 | Week 5–6 | Follow, notifications, search |
-| Video Platform | 3 | Week 7–8 | Upload, feed, likes, comments |
-| Commerce | 4–5, 7 | Week 9–14 | Products, cart, checkout, seller |
-| Live Commerce | 6 | Week 13–14 | Live streaming, pinned products |
-| Communication | 8 | Week 15–16 | Messaging |
-| AI | 9–11 | Week 17–22 | ML ranking, moderation, AI seller/video |
-| Analytics & Admin | 12, 14 | Week 21–24 | Dashboards, moderation |
-| Growth | 13 | Week 23–24 | Referrals, coupons, campaigns |
-| Scaling & Launch | 15–16 | Week 25–32 | Performance, production release |
+| Social & Engagement | 2 (2.1–2.3) | Week 5–8 | Follow, notifications, feed read-path |
+| Video Platform | 3.1–3.4 | Week 9–14 | Upload, processing, interactions, recommendations |
+| Commerce | 4–5, 7 | Week 15–20 | Products, cart, checkout, seller |
+| Live Commerce | 6 | Week 19–20 | Live streaming, pinned products |
+| Communication | 8 | Week 21–22 | Messaging |
+| AI | 9–11 | Week 23–28 | ML ranking, moderation, AI seller/video |
+| Analytics & Admin | 12, 14 | Week 27–30 | Dashboards, moderation |
+| Growth | 13 | Week 29–30 | Referrals, coupons, campaigns |
+| Scaling & Launch | 15–16 | Week 31–36 | Performance, production release |
 
 **v1.0 target:** ~8–9 months from Sprint 0 start.
 
@@ -218,7 +218,7 @@ Full details: [Product Roadmap](./13_ROADMAP.md)
 Sprint 0  → Foundation (docs ✔, repo ☐)
 Sprint 1  → Auth & Users
 Sprint 2  → Social & Notifications
-Sprint 3  → Video Platform & Feed
+Sprint 3  → Video Platform (3.1 Upload → 3.2 Processing → 3.3 Interactions → 3.4 Recommendations)
 Sprint 4  → Marketplace (products, cart, orders)
 Sprint 5  → Seller Platform
 Sprint 6  → Live Commerce
@@ -274,7 +274,7 @@ AI is integrated via an **adapter pattern** from day one. Core features work wit
 
 | Phase | Sprint | Features |
 |-------|--------|----------|
-| MVP | 3 | Rule-based recommendations and trending |
+| MVP | 3.4 | Rule-based recommendations and trending |
 | Phase 2 | 9 | ML feed ranking, content moderation, AI search |
 | Phase 2 | 10 | AI product descriptions, titles, tags, pricing |
 | Phase 2 | 11 | Auto captions, translation, thumbnails, highlights |

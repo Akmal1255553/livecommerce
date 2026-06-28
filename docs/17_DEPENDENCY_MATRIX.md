@@ -377,11 +377,17 @@ Sprint 0: Foundation
     ↓
 Sprint 1: Auth → Users
     ↓
-Sprint 2: Followers, Notifications, Search(users)
+Sprint 2: Followers, Notifications, Feed read-path (2.3)
     ↓
-Sprint 3: Videos → Feed → Recommendations(basic)
+Sprint 3.1: Upload + StorageService + MinIO + metrics foundation
     ↓
-Sprint 4: Categories → Products → Orders(cart)
+Sprint 3.2: FFmpeg processing (thumbnail, HLS)
+    ↓
+Sprint 3.3: Interactions (likes, comments, views, shares, bookmarks)
+    ↓
+Sprint 3.4: Recommendations v1 (trending, popular, new, rule-based for-you)
+    ↓
+Sprint 4: Categories → Products → Orders(cart)   [requires Sprint 3.3]
     ↓
 Sprint 5: Seller
     ↓
@@ -391,7 +397,7 @@ Sprint 7: Payments (needs Orders)
     ↓
 Sprint 8: Messaging (needs Users, Seller, Orders)
     ↓
-Sprint 9–11: AI (needs Videos, Products, Recommendations)
+Sprint 9–11: AI (requires Recommendations 3.4, Videos 3.2+, Products 4)
     ↓
 Sprint 12: Analytics (needs Orders, Videos, Seller, Live)
     ↓
@@ -404,6 +410,14 @@ Sprint 15–16: Scaling + Launch
 
 **No circular sprint dependencies detected.**
 
+### Key cross-sprint dependencies
+
+| Sprint | Requires | Reason |
+|--------|----------|--------|
+| Sprint 4 | Sprint 3.3 | Published videos + interactions for product–video tagging |
+| Sprint 9 | Sprint 3.4 | Rule-based `RecommendationService` baseline for ML replacement |
+| Sprint 11 | Sprint 3.2 | FFmpeg pipeline for AI video features |
+
 ---
 
 ## External Service Dependencies
@@ -411,9 +425,9 @@ Sprint 15–16: Scaling + Launch
 | Module | External Service | Required MVP? | Adapter Interface |
 |--------|-----------------|---------------|-------------------|
 | Authentication | SMS Provider | Yes (OTP) | `SmsProviderInterface` |
-| Videos | S3 / MinIO / R2 | Yes | Laravel Filesystem |
+| Videos | S3 / MinIO / R2 | Yes | `StorageServiceInterface` → S3/Local drivers |
 | Videos | CDN (Cloudflare) | Yes | CDN URLs in MediaService |
-| Videos | FFmpeg | Sprint 15 | ProcessVideoJob |
+| Videos | FFmpeg | Sprint 3.2 | `TranscodeVideoJob` |
 | Live Streaming | Agora | Yes | `StreamingProviderInterface` |
 | Payments | Click/Payme/Uzum | Yes (Sprint 7) | `PaymentGatewayInterface` |
 | Notifications | FCM | Yes | `PushNotificationInterface` |

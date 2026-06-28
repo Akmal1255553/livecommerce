@@ -326,8 +326,8 @@ mobile/
 │   ├── features/                     # 1 folder per module
 │   │   ├── auth/                     # Sprint 1
 │   │   ├── profile/                  # Sprint 1
-│   │   ├── feed/                     # Sprint 3
-│   │   ├── video/                    # Sprint 3
+│   │   ├── feed/                     # Sprint 2.3 (read), 3.4 (ranking)
+│   │   ├── video/                    # Sprint 3.1–3.3
 │   │   ├── product/                  # Sprint 4
 │   │   ├── cart/                     # Sprint 4
 │   │   ├── checkout/                 # Sprint 4
@@ -407,9 +407,9 @@ scripts/
 | Authentication | `Services/Auth/` | `AuthController` | `features/auth/` | 1 |
 | Users / Profiles | `Services/User/` | `UserController` | `features/profile/` | 1 |
 | Followers | `Services/Follow/` | `UserController` | `features/profile/` | 2 |
-| Videos | `Services/Video/` | `VideoController` | `features/video/` | 3 |
-| Feed | `Services/Feed/` | `FeedController` | `features/feed/` | 3 |
-| Recommendations | `Services/Recommendation/` | (internal) | `features/feed/` | 3, 9 |
+| Videos | `Services/Video/` | `VideoController`, `FeedController` | `features/video/` | 3.1–3.3 |
+| Feed | `Services/Video/`, `Services/Recommendation/` | `FeedController` | `features/feed/` | 2.3, 3.4 |
+| Recommendations | `Services/Recommendation/` | (internal) | `features/feed/` | 3.4, 9 |
 | Products | `Services/Product/` | `ProductController`, `Seller/ProductController` | `features/product/` | 4 |
 | Categories | `Services/Category/` | `CategoryController` | `features/product/` | 4 |
 | Orders | `Services/Cart/`, `Services/Order/` | `CartController`, `OrderController` | `features/cart/`, `checkout/`, `orders/` | 4 |
@@ -422,7 +422,7 @@ scripts/
 | Analytics | `Services/Analytics/` | `Seller/AnalyticsController` | `features/seller/` | 12 |
 | Admin | `Services/Admin/` | `Admin/*` | — (web-admin) | 14 |
 | AI | `Services/Ai/` | `AiController` (Phase 2) | various | 9–11 |
-| Media | `Services/Media/` | `MediaController` | shared | 3 |
+| Media | `Services/Media/` | `MediaController` | shared | 3.1 |
 
 ---
 

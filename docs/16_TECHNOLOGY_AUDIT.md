@@ -227,7 +227,7 @@ Optional: `ffprobe`/`ffmpeg` in worker container for video transcoding (Sprint 1
 | `freezed` + `json_serializable` | Immutable models | ✔ |
 | `intl` | Localization | ✔ |
 
-**Video player note:** HLS (m3u8) playback requires `video_player` with platform HLS support (iOS native; Android via ExoPlayer). Test on mid-range Android devices in Sprint 3.
+**Video player note:** HLS (m3u8) playback requires `video_player` with platform HLS support (iOS native; Android via ExoPlayer). Test on mid-range Android devices in Sprint 3.2.
 
 ---
 
@@ -251,7 +251,7 @@ Optional: `ffprobe`/`ffmpeg` in worker container for video transcoding (Sprint 1
 | Laravel 12 security support ends Feb 2027 | Low | Plan Laravel 13 upgrade in Year 2 |
 | PHP 8.4 edge-case extensions | Low | Pin Docker image; test in CI |
 | Agora SDK breaking changes | Medium | Abstract behind interface (done) |
-| Flutter video performance on low-end Android | Medium | Test Sprint 3; fallback to lower quality HLS |
+| Flutter video performance on low-end Android | Medium | Test Sprint 3.2; fallback to lower quality HLS |
 | Payment gateway API changes | Medium | Adapter pattern (done) |
 | Pest adoption learning curve | Low | Document examples in Engineering Rules |
 

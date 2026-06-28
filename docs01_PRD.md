@@ -872,6 +872,8 @@ Search and rule-based recommendations.
 
 Launch market: Uzbekistan.
 
+**Implementation mapping (engineering):** Video platform is delivered across Sprint 2.3 (feed read-path) and Sprint 3.1–3.4 (upload → processing → interactions → rule-based recommendations). See [Roadmap](./13_ROADMAP.md) and [Sprint 3 overview](./docs/SPRINT_3_VIDEO_PLATFORM.md).
+
 ---
 
 ## Phase 1.1 — Stabilization (Months 5-6)

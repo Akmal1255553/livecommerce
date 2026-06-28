@@ -128,7 +128,7 @@ As of Architecture Freeze v1.0, the following are **locked** and require an ADR 
 | R-09 | Video CDN costs at scale | Budget | Low (early) | Upload limits, adaptive bitrate |
 | R-10 | Agora vendor lock-in | Migration cost | Low | Provider abstraction (done) |
 | R-11 | Laravel 12 EOL Feb 2027 | Security | Low | Plan Laravel 13 upgrade Year 2 |
-| R-12 | Low-end Android video performance | UX | Medium | Test Sprint 3 on target devices |
+| R-12 | Low-end Android video performance | UX | Medium | Test Sprint 3.2 on target devices (HLS playback) |
 | R-13 | Uzbekistan payment regulations | Compliance | Medium | Legal review before Sprint 7 |
 
 ---
@@ -185,7 +185,7 @@ As of Architecture Freeze v1.0, the following are **locked** and require an ADR 
 5. **Fix all cross-document links** to `.md` extension.
 6. **Slim PROJECT_CONTEXT.md** — remove duplicated sections, add "see docs/ for details" links.
 
-### Short-Term (Sprint 1–3)
+### Short-Term (Sprint 1–3.4)
 
 7. Add **OpenAPI** generation via Scramble; expose `/docs/api` in staging.
 8. Create **payment gateway spike** document comparing Click vs Payme.

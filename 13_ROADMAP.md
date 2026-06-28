@@ -49,7 +49,7 @@ Phase 1 — Core Platform                 Sprint 1
          ↓
 Phase 2 — Social & Engagement           Sprint 2
          ↓
-Phase 3 — Video Platform                Sprint 3
+Phase 3 — Video Platform                Sprint 3 (3.1–3.4)
          ↓
 Phase 4 — Commerce                      Sprint 4, 5, 7
          ↓
@@ -73,7 +73,7 @@ Phase 10 — Scaling & Launch           Sprint 15, 16
 | Milestone | Sprints | Target | Description |
 |-----------|---------|--------|-------------|
 | **Foundation Ready** | Sprint 0 | Month 0 | Architecture approved, repo scaffolded, CI running |
-| **Internal Alpha** | Sprint 1–3 | Month 2 | Auth, social, video feed working internally |
+| **Internal Alpha** | Sprint 1–3.4 | Month 2 | Auth, social, video upload, feed, interactions |
 | **Commerce Alpha** | Sprint 4–5 | Month 4 | End-to-end purchase flow with test payments |
 | **MVP Feature Complete** | Sprint 6–7 | Month 5 | Live streaming + payment infrastructure |
 | **Private Beta** | Sprint 8 + 14 (core) | Month 6 | Messaging, admin moderation, invite-only users |
@@ -85,17 +85,17 @@ Phase 10 — Scaling & Launch           Sprint 15, 16
 # Sprint Dependency Map
 
 ```
-Sprint 0 ──→ Sprint 1 ──→ Sprint 2 ──→ Sprint 3
-                              │            │
-                              │            ├──→ Sprint 4 ──→ Sprint 5
-                              │            │         │
-                              │            │         └──→ Sprint 7
-                              │            │
-                              │            └──→ Sprint 6
+Sprint 0 ──→ Sprint 1 ──→ Sprint 2 ──→ Sprint 3.1 ──→ Sprint 3.2 ──→ Sprint 3.3 ──→ Sprint 3.4
+                              │              │                              │
+                              │              └──────────────┬───────────────┘
+                              │                             ├──→ Sprint 4 ──→ Sprint 5
+                              │                             │         │
+                              │                             │         └──→ Sprint 7
+                              │                             └──→ Sprint 6
                               │
                               └──→ Sprint 8 (requires Sprint 4 + 5)
                                         │
-Sprint 3 + 4 ──→ Sprint 9 ──→ Sprint 10 ──→ Sprint 11
+Sprint 3.4 + 4 ──→ Sprint 9 ──→ Sprint 10 ──→ Sprint 11
                                         │
 Sprint 4 + 5 + 6 ──→ Sprint 12
                                         │
@@ -254,7 +254,7 @@ Sprint 2 is split into focused sub-sprints:
 | **2.2** | Notifications Foundation | **Complete** |
 | **2.3** | Feed Foundation | **Complete** |
 
-Remaining Sprint 2 scope (blocks, user search, mobile social UI) moves to Sprint 2.4+ or aligns with Sprint 3 mobile work.
+Remaining Sprint 2 scope (blocks, user search, mobile social UI) moves to Sprint 2.4+ or aligns with Sprint 3.3 mobile work.
 
 ---
 
@@ -339,7 +339,7 @@ Remaining Sprint 2 scope (blocks, user search, mobile social UI) moves to Sprint
 
 ## Modules (deferred)
 
-Blocks, User Search, Likes, Comments, Bookmarks (partial overlap with Sprint 3)
+Blocks, User Search (deferred); Likes, Comments, Bookmarks → Sprint 3.3
 
 ## Mobile Deliverables (deferred)
 
@@ -362,54 +362,231 @@ Blocks, User Search, Likes, Comments, Bookmarks (partial overlap with Sprint 3)
 # Sprint 3 — Video Platform
 
 **Phase:** 3 — Video Platform  
-**Duration:** 2 weeks  
-**Depends on:** Sprint 2  
+**Duration:** 4 sub-sprints (3.1–3.4)  
+**Depends on:** Sprint 2 (2.3 Feed Foundation complete)  
+**Priority:** P0  
+**Overview doc:** [docs/SPRINT_3_VIDEO_PLATFORM.md](./docs/SPRINT_3_VIDEO_PLATFORM.md)
+
+## Overview
+
+Sprint 3 is split into focused sub-sprints (same pattern as Sprint 2). Feed read-path (`GET /feed/for-you`, `GET /feed/following`) ships in **Sprint 2.3**; Sprint 3 adds upload, processing, interactions, and rule-based recommendations.
+
+| Sub-sprint | Focus | Status |
+|------------|-------|--------|
+| **3.1** | Video Upload Foundation | Planned |
+| **3.2** | Video Processing | Planned |
+| **3.3** | Video Interactions | Planned |
+| **3.4** | Recommendation Engine v1 | Planned |
+
+## Cross-cutting architecture (all of Sprint 3)
+
+### Storage abstraction — no direct `Storage` in controllers
+
+All file operations go through `StorageService` (contract in `app/Contracts/Services/`). Controllers and jobs call the service only.
+
+```
+StorageService (interface)
+    ↓
+LocalStorageDriver      — dev / tests
+    ↓
+S3StorageDriver         — production (AWS S3, Cloudflare R2)
+    ↓
+MinIO                   — local S3-compatible (Docker Compose)
+    ↓
+CdnStorageDriver        — future: signed CDN URLs, cache invalidation
+```
+
+`MediaService` orchestrates presigned uploads and path conventions; it delegates I/O to `StorageService`.
+
+### Video processing pipeline
+
+Every upload enters a queued pipeline. Stages may ship as stubs in 3.1 and gain real implementations in 3.2+.
+
+```
+Upload
+  ↓
+VirusScanJob          (stub → ClamAV / vendor in Sprint 15)
+  ↓
+ExtractMetadataJob    (duration, resolution, codec)
+  ↓
+GenerateThumbnailJob  (stub → FFmpeg frame in 3.2)
+  ↓
+TranscodeVideoJob     (stub → HLS via FFmpeg in 3.2)
+  ↓
+ModerateContentJob    (stub → rules; ML in Sprint 9)
+  ↓
+PublishVideoJob       (status → published, feed-visible)
+```
+
+Pipeline state tracked on `videos.status` + `video_processing_steps` (or equivalent job log table).
+
+### Engagement metrics (start early — Sprint 3.1)
+
+Collect events before scale; store in `video_events` / `engagement_metrics` (append-only, batch-friendly).
+
+| Event | Sprint | Trigger |
+|-------|--------|---------|
+| `feed_open` | 3.1 | User opens feed tab |
+| `video_impression` | 3.1 | Video card visible ≥ N ms in feed |
+| `watch_time` | 3.3 | Heartbeat while playing |
+| `completion` | 3.3 | Watched ≥ 90% duration |
+| `skip` | 3.3 | Swiped away before 3 s |
+| `like` | 3.3 | Like action |
+| `comment` | 3.3 | Comment created |
+| `share` | 3.3 | Share action |
+
+`MetricsService` records events; controllers dispatch via service, never write metrics tables directly.
+
+---
+
+# Sprint 3.1 — Video Upload Foundation
+
+**Status:** Planned (next)  
+**Depends on:** Sprint 2.3  
+**Priority:** P0
+
+## Backend Deliverables
+
+- [ ] `StorageService` + `StorageDriverInterface` — Local, S3/MinIO drivers
+- [ ] `MediaService` refactor — presigned URLs via `StorageService` (no `Storage::` in controllers)
+- [ ] Migration: `media_uploads` (upload session, key, mime, size, checksum)
+- [ ] Extend `videos` — upload lifecycle fields (`raw_video_url`, processing timestamps)
+- [ ] `VideoUploadService` — initiate upload, confirm upload, enqueue pipeline
+- [ ] Pipeline skeleton: `ProcessVideoPipeline` job chain (stubs for scan/metadata/thumbnail/transcode/moderation)
+- [ ] Video statuses: `uploading` → `processing` → `published` / `failed` / `rejected`
+- [ ] `MetricsService` + `feed_open`, `video_impression` events
+- [ ] API: `POST /videos`, `POST /videos/{id}/confirm-upload`, `POST /media/presigned-url`
+- [ ] Feature tests: presigned URL, confirm upload, status transitions, no controller storage calls
+
+## Mobile Deliverables
+
+- [ ] Video upload flow (select/record → metadata form → presigned PUT → confirm)
+- [ ] Upload progress indicator
+- [ ] Processing status polling / notification
+
+## API Endpoints
+
+`POST /videos`, `POST /videos/{id}/confirm-upload`, `POST /media/presigned-url`
+
+## Acceptance Criteria
+
+- [ ] Upload uses pre-signed URL direct to MinIO via `StorageService`
+- [ ] No controller calls `Storage` facade directly
+- [ ] Confirm upload enqueues processing pipeline
+- [ ] `feed_open` and `video_impression` events recorded
+- [ ] Feature tests passing
+
+---
+
+# Sprint 3.2 — Video Processing
+
+**Status:** Planned  
+**Depends on:** Sprint 3.1  
+**Priority:** P0
+
+## Backend Deliverables
+
+- [ ] `GenerateThumbnailJob` — FFmpeg frame extract → MinIO via `StorageService`
+- [ ] `TranscodeVideoJob` — FFmpeg HLS (720p/480p) → MinIO
+- [ ] `ExtractMetadataJob` — real duration, width, height, codec
+- [ ] `VirusScanJob` — stub with pass-through + log (real scanner in Sprint 15)
+- [ ] Queue error handling: retries, `failed` status, `video_processing_errors` log
+- [ ] `ModerateContentJob` — rule stub (auto-approve MVP; queue for Sprint 14/9)
+- [ ] `PublishVideoJob` — set `published`, populate `video_url` (HLS manifest)
+- [ ] Feature tests: pipeline happy path, failed transcode, thumbnail written
+
+## Mobile Deliverables
+
+- [ ] HLS playback in feed (`video_player` + ExoPlayer)
+- [ ] Auto-play / pause on scroll
+- [ ] Thumbnail placeholder while processing
+
+## Acceptance Criteria
+
+- [ ] Uploaded video transcodes to HLS and is playable in feed
+- [ ] Thumbnail generated and served via CDN/MinIO URL
+- [ ] Failed jobs surface `failed` status with retriable error log
+- [ ] Pipeline stages run in order; stubs replaced where specified
+- [ ] Feature tests passing
+
+---
+
+# Sprint 3.3 — Video Interactions
+
+**Status:** Planned  
+**Depends on:** Sprint 3.2  
+**Priority:** P0
+
+## Backend Deliverables
+
+- [ ] Migrations: `video_likes`, `comments`, `bookmarks`, `video_shares` (reposts), `video_views`
+- [ ] `VideoInteractionService` — like, unlike, comment, bookmark, share, view
+- [ ] View count: Redis debounce → `FlushVideoViewsJob`
+- [ ] Metrics: `watch_time`, `completion`, `skip`, `like`, `comment`, `share`
+- [ ] Events: `VideoLiked`, `CommentCreated`, `VideoShared`
+- [ ] Update `VideoResource` — real `is_liked`, `is_bookmarked`
+- [ ] API: like/unlike, view, comments CRUD, bookmark, share, `GET /bookmarks`
+- [ ] Feature tests: like idempotency, comment threads, view debounce, metrics
+
+## Mobile Deliverables
+
+- [ ] Double-tap like with heart animation
+- [ ] Comments bottom sheet (view + add + reply)
+- [ ] Bookmark/save video
+- [ ] Share sheet (deep link)
+- [ ] Watch-time heartbeat to API
+
+## API Endpoints
+
+`POST/DELETE /videos/{id}/like`, `POST /videos/{id}/view`, `GET/POST /videos/{id}/comments`, `POST/DELETE /videos/{id}/bookmark`, `GET /bookmarks`, `POST /videos/{id}/share`, `GET /videos/{id}`, `DELETE /videos/{id}`
+
+## Acceptance Criteria
+
+- [ ] Users can like, comment, bookmark, and share videos
+- [ ] View counts tracked accurately (debounced)
+- [ ] Engagement metrics (`watch_time`, `completion`, `skip`) recorded
+- [ ] `VideoResource` reflects viewer-specific like/bookmark state
+- [ ] Feature tests passing
+
+---
+
+# Sprint 3.4 — Recommendation Engine v1
+
+**Status:** Planned  
+**Depends on:** Sprint 3.3  
 **Priority:** P0
 
 ## Modules
 
-Video Upload, Video Processing, Video Feed, Infinite Scroll, Trending, Recommendations (Basic), Video Views, Comments, Likes, Bookmarks
+Rule-based ranking (no AI). Enhances feeds delivered in Sprint 2.3.
 
 ## Backend Deliverables
 
-- [ ] Migrations: videos, video_likes, comments, bookmarks, video_products, media_uploads
-- [ ] VideoService, MediaService, RecommendationService (rule-based)
-- [ ] Pre-signed URL generation for uploads
-- [ ] ProcessVideoJob (transcoding stub → HLS in Sprint 15)
-- [ ] Feed endpoints: for-you, trending, following (cursor pagination)
-- [ ] Like, comment, bookmark endpoints
-- [ ] View count tracking (Redis debounce → flush job)
-- [ ] Events: VideoUploaded, VideoLiked, CommentCreated
-- [ ] Feature tests: upload flow, feed, like, comment, bookmark
+- [ ] `RecommendationService` v1 — rule-based scoring
+- [ ] Feed strategies: **Trending**, **Popular**, **New**, **Following** (existing), **For You** (rules)
+- [ ] Trending score: view velocity + recency + engagement (likes/comments)
+- [ ] `GET /feed/trending`, `GET /feed/popular`, `GET /feed/new`
+- [ ] Enhance `GET /feed/for-you` with recommendation rules (replace chronological default)
+- [ ] Redis cache for trending/popular lists (TTL 5–15 min)
+- [ ] Feature tests: trending order, popular vs new, for-you excludes seen
 
 ## Mobile Deliverables
 
-- [ ] TikTok-style vertical video feed (full-screen)
-- [ ] Infinite scroll with cursor pagination
-- [ ] Auto-play / pause on scroll
-- [ ] Double-tap like with heart animation
-- [ ] Video upload flow (select/record → metadata → upload → confirm)
-- [ ] Comments bottom sheet (view + add + reply)
-- [ ] Bookmark/save video
-- [ ] Share video link
-- [ ] Video detail screen
-- [ ] Trending feed tab
+- [ ] Trending / Popular / New feed tabs (or filter chips)
+- [ ] Infinite scroll on all feed variants (cursor pagination)
 
 ## API Endpoints
 
-`GET /feed/for-you`, `/feed/trending`, `/feed/following`, `POST /videos`, `POST /videos/{id}/confirm-upload`, `GET /videos/{id}`, `DELETE /videos/{id}`, `POST/DELETE /videos/{id}/like`, `POST /videos/{id}/view`, `GET/POST /videos/{id}/comments`, `POST/DELETE /videos/{id}/bookmark`, `GET /bookmarks`, `POST /media/presigned-url`
+`GET /feed/trending`, `GET /feed/popular`, `GET /feed/new`, enhanced `GET /feed/for-you`
 
 ## Acceptance Criteria
 
-- [ ] Users can upload videos up to 60 seconds
-- [ ] Upload uses pre-signed URL (direct to S3)
-- [ ] Video feed loads with infinite scroll (< 500ms first page)
-- [ ] Auto-play works smoothly at 60 FPS
-- [ ] Users can like, comment, and bookmark videos
-- [ ] Trending feed shows popular videos
-- [ ] For You feed shows personalized content (rule-based)
-- [ ] View counts tracked accurately
-- [ ] All video endpoints have Feature tests passing
+- [ ] Trending feed surfaces high-velocity videos
+- [ ] Popular feed ranks by total engagement
+- [ ] New feed shows latest published videos
+- [ ] For You uses rule-based personalization (no ML)
+- [ ] Sprint 9 ML ranking can replace `RecommendationService` without API contract changes
+- [ ] Feature tests passing
 
 ---
 
@@ -417,7 +594,7 @@ Video Upload, Video Processing, Video Feed, Infinite Scroll, Trending, Recommend
 
 **Phase:** 4 — Commerce  
 **Duration:** 2 weeks  
-**Depends on:** Sprint 3  
+**Depends on:** Sprint 3.3  
 **Priority:** P0
 
 ## Modules
@@ -677,7 +854,7 @@ Private Chat, Seller-Buyer Chat, Order Chat, Image Sharing, Real-Time Messaging
 
 **Phase:** 7 — AI  
 **Duration:** 2 weeks  
-**Depends on:** Sprint 3, Sprint 4  
+**Depends on:** Sprint 3.4, Sprint 4  
 **Priority:** P1
 
 ## Modules
@@ -688,7 +865,7 @@ AI Adapter Layer, Recommendation Engine (ML), Content Moderation, AI-Enhanced Se
 
 - [ ] AiProviderInterface + OpenAI adapter (or local ML)
 - [ ] AiService orchestration layer
-- [ ] ML-based feed ranking (replace rule-based from Sprint 3)
+- [ ] ML-based feed ranking (replace rule-based from Sprint 3.4)
 - [ ] Content moderation job (VideoUploaded → ModerateContentJob)
 - [ ] Moderation queue for human review
 - [ ] AI-enhanced search (semantic search)
@@ -758,7 +935,7 @@ AI Product Description, AI Product Title, AI Tags, AI SEO, AI Price Recommendati
 
 **Phase:** 7 — AI  
 **Duration:** 2 weeks  
-**Depends on:** Sprint 9, Sprint 3  
+**Depends on:** Sprint 9, Sprint 3.2  
 **Priority:** P1
 
 ## Modules
@@ -1043,8 +1220,9 @@ The **Minimum Viable Product** includes everything needed to launch in Uzbekista
 | Included | Sprint |
 |----------|--------|
 | Auth, profiles, roles | Sprint 1 |
-| Follow, likes, comments, bookmarks, notifications | Sprint 2 |
-| Video upload, feed, trending, basic recommendations | Sprint 3 |
+| Follow, notifications, feed foundation | Sprint 2 |
+| Video upload, processing, interactions, trending, rule-based recommendations | Sprint 3.1–3.4 |
+| Feed read-path (For You / Following) | Sprint 2.3 |
 | Products, cart, checkout, orders, reviews | Sprint 4 |
 | Seller dashboard, product/order management | Sprint 5 |
 | Live streaming, pinned products, live chat | Sprint 6 |
@@ -1069,10 +1247,10 @@ The **Minimum Viable Product** includes everything needed to launch in Uzbekista
 
 | Month | Sprints | Focus |
 |-------|---------|-------|
-| Month 1 | 0, 1, 2 | Foundation + Auth + Social |
-| Month 2 | 3, 4 | Video Platform + Marketplace |
-| Month 3 | 5, 6 | Seller Platform + Live Commerce |
-| Month 4 | 7, 8 | Payments + Messaging |
+| Month 1 | 0, 1, 2.1–2.2 | Foundation + Auth + Social |
+| Month 2 | 2.3, 3.1–3.4 | Feed + Video Platform (upload → recommendations) |
+| Month 3 | 4, 5 | Marketplace + Seller Platform |
+| Month 4 | 6, 7, 8 | Live Commerce + Payments + Messaging |
 | Month 5 | 9, 10 | AI Foundation + AI Seller |
 | Month 6 | 11, 12, 14 | AI Video + Analytics + Admin |
 | Month 7 | 13, 15 | Growth + Scaling |
@@ -1148,7 +1326,7 @@ Every sprint must satisfy ALL of the following before acceptance:
 |------|--------|------------|------------------|
 | Payment gateway integration delays | High | Start integration early (Sprint 4 stub, Sprint 7 full) | 4, 7 |
 | Streaming provider issues | High | Abstract provider; test Agora early in Sprint 6 | 6 |
-| Video CDN costs | Medium | Upload limits, adaptive bitrate, CDN in Sprint 15 | 3, 15 |
+| Video CDN costs | Medium | Upload limits, adaptive bitrate, CDN in Sprint 15 | 3.1–3.4, 15 |
 | Small team bottleneck | High | Parallel backend/mobile tracks; strict scope per sprint | All |
 | App store rejection | Medium | Follow guidelines from Sprint 1; submit early in Sprint 16 | 16 |
 | Low seller adoption at launch | High | Pre-launch seller onboarding program | 5, 16 |
