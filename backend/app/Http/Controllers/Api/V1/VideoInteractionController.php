@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\ShareChannel;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Video\RecordVideoViewRequest;
 use App\Http\Requests\Video\SessionScopedInteractionRequest;
@@ -59,7 +60,7 @@ class VideoInteractionController extends Controller
         $result = $this->interactions->share(
             $request->user(),
             $id,
-            \App\Enums\ShareChannel::from($validated['channel']),
+            ShareChannel::from($validated['channel']),
             $validated['session_id'],
         );
 

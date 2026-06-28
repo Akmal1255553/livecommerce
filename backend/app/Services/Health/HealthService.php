@@ -6,7 +6,6 @@ namespace App\Services\Health;
 
 use App\Contracts\Services\HealthServiceInterface;
 use App\DTOs\Health\HealthStatusData;
-use App\Logging\StructuredLogger;
 use App\Services\BaseService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Queue;

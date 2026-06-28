@@ -1,6 +1,11 @@
 <?php
 
+declare(strict_types=1);
+
+use App\Providers\AppServiceProvider;
+use App\Providers\RepositoryServiceProvider;
+
 return [
-    App\Providers\AppServiceProvider::class,
-    App\Providers\RepositoryServiceProvider::class,
+    AppServiceProvider::class,
+    RepositoryServiceProvider::class,
 ];

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
 use App\Enums\MediaAssetType;
+use App\Models\MediaAsset;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -24,7 +25,7 @@ test('media asset register upserts by video and type', function () {
 
     expect($first->id)->toBe($second->id)
         ->and($second->byte_size)->toBe(100)
-        ->and(\App\Models\MediaAsset::query()->where('video_id', $video->id)->count())->toBe(1);
+        ->and(MediaAsset::query()->where('video_id', $video->id)->count())->toBe(1);
 });
 
 test('media asset public url delegates to storage service', function () {

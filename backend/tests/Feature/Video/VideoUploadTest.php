@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
-use App\Enums\MediaAssetType;
 use App\Enums\VideoProcessingStepName;
-use App\Enums\VideoProcessingStepStatus;
 use App\Enums\VideoStatus;
-use App\Events\VideoPublished;
 use App\Jobs\ProcessVideoPipelineJob;
 use App\Models\EngagementEvent;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoProcessingStep;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 

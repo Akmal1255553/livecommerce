@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 use App\Enums\EngagementEventType;
 use App\Models\EngagementEvent;
-use App\Models\User;
-use App\Models\Video;
 use Illuminate\Support\Str;
 
 test('analytics funnel events can be recorded in order', function () {

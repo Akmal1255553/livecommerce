@@ -10,6 +10,7 @@ use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
 use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
+use App\DTOs\Storage\PresignedUploadData;
 use App\Enums\MediaUploadStatus;
 use App\Enums\VideoStatus;
 use App\Enums\VideoVisibility;
@@ -37,7 +38,7 @@ class VideoUploadService extends BaseService implements VideoUploadServiceInterf
 
     /**
      * @param  array{title?: string|null, description?: string|null, visibility?: string, mime_type: string, file_size: int}  $data
-     * @return array{video: Video, upload: \App\DTOs\Storage\PresignedUploadData}
+     * @return array{video: Video, upload: PresignedUploadData}
      */
     public function initiateUpload(User $user, array $data): array
     {

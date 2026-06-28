@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\DTOs\Pagination\CursorPaginationData;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\VideoResource;
 use App\Http\Responses\ApiResponse;
@@ -28,7 +29,7 @@ class BookmarkController extends Controller
 
         return ApiResponse::cursorPaginated(
             VideoResource::collection($videos),
-            new \App\DTOs\Pagination\CursorPaginationData(
+            new CursorPaginationData(
                 items: $videos,
                 nextCursor: $page->nextCursor,
                 hasMore: $page->hasMore,

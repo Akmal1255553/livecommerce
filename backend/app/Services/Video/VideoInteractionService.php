@@ -23,6 +23,7 @@ use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\BaseService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
@@ -148,7 +149,7 @@ class VideoInteractionService extends BaseService implements VideoInteractionSer
     {
         $video = $this->findPublishedVideo($videoId);
 
-        return DB::transaction(function () use ($user, $video, $videoId, $channel, $sessionId): array {
+        return DB::transaction(function () use ($user, $videoId, $channel, $sessionId): array {
             $this->shares->create($user->id, $videoId, $channel->value);
 
             $locked = $this->lockVideoRow($videoId);
@@ -218,7 +219,7 @@ class VideoInteractionService extends BaseService implements VideoInteractionSer
             $bookmarks = $bookmarks->take($limit);
         }
 
-        /** @var \Illuminate\Support\Collection<int, Video> $videos */
+        /** @var Collection<int, Video> $videos */
         $videos = $bookmarks
             ->map(fn ($bookmark) => $bookmark->video)
             ->filter(fn (?Video $video) => $video !== null && $video->status === VideoStatus::Published)
