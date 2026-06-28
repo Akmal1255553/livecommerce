@@ -8,6 +8,21 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 3.3 — Video Interactions + Analytics Layer
+
+- Migrations: `video_likes`, `comments`, `bookmarks`, `video_shares`
+- `VideoInteractionService` — like/unlike (idempotent), view (Redis 24h debounce), share, bookmark
+- `CommentService` — 1-level replies, pagination, soft-delete own
+- `VideoManagementService` — owner PUT metadata, soft DELETE
+- `FlushVideoViewsJob` — scheduled every 60s to flush Redis view counters
+- Events: `VideoLiked`, `VideoUnliked`, `CommentCreated`, `VideoShared`, `VideoBookmarked`, `VideoViewRecorded`
+- **Analytics Layer** — full recommendation funnel in `EngagementEventType` (`video_start`, progress milestones, `watch_time`, `save`, `view`, `follow_after_watch`); see [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md)
+- Interaction APIs require `session_id` (UUID) for funnel correlation via `MetricsService::record()`
+- Extended `EngagementEventType`: `like`, `comment`, `share`, `save`, `view`, `watch_time`, `skip`, progress milestones
+- `VideoService::enrichVideosForViewer()` — batch `is_liked` / `is_bookmarked` on feeds and detail
+- API routes per `docs/SPRINT_3.3_BLUEPRINT.md` §2.1
+- Tests: `VideoInteractionTest.php`, `VideoCommentTest.php`, `AnalyticsFunnelTest.php`
+
 #### Sprint 3.2 — Video Processing (v2 architecture)
 
 - `VideoStateMachine` — `uploaded` → `queued` → `processing` → `published` | `failed`

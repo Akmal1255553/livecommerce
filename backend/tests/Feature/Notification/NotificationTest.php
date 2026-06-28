@@ -2,9 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Contracts\Repositories\UserDeviceRepositoryInterface;
+use App\Contracts\Services\PushNotificationInterface;
 use App\Enums\NotificationType;
 use App\Jobs\SendPushNotificationJob;
 use App\Models\User;
+use App\Services\Notification\NotificationService;
 use Illuminate\Support\Facades\Queue;
 
 test('device can be registered and unregistered', function () {
@@ -108,7 +111,7 @@ test('notifications can be listed with cursor pagination', function () {
     $user = registerUser('notiflist', 'notiflist@example.com');
     $follower = User::factory()->create(['username' => 'notifactor']);
 
-    app(\App\Services\Notification\NotificationService::class)->notifyNewFollower(
+    app(NotificationService::class)->notifyNewFollower(
         User::query()->find($user['user_id']),
         $follower,
     );
@@ -128,7 +131,7 @@ test('unread count reflects unread notifications', function () {
     $user = registerUser('unreadcount', 'unreadcount@example.com');
     $follower = User::factory()->create(['username' => 'unreadactor']);
 
-    $service = app(\App\Services\Notification\NotificationService::class);
+    $service = app(NotificationService::class);
     $service->notifyNewFollower(User::query()->find($user['user_id']), $follower);
 
     test()->withToken($user['access_token'])
@@ -141,7 +144,7 @@ test('notification can be marked as read', function () {
     $user = registerUser('markread', 'markread@example.com');
     $follower = User::factory()->create(['username' => 'markreadactor']);
 
-    $service = app(\App\Services\Notification\NotificationService::class);
+    $service = app(NotificationService::class);
     $notification = $service->notifyNewFollower(User::query()->find($user['user_id']), $follower);
 
     test()->withToken($user['access_token'])
@@ -157,7 +160,7 @@ test('notification can be marked as read', function () {
 test('all notifications can be marked as read', function () {
     $user = registerUser('markall', 'markall@example.com');
     $recipient = User::query()->find($user['user_id']);
-    $service = app(\App\Services\Notification\NotificationService::class);
+    $service = app(NotificationService::class);
 
     $service->notifyNewFollower($recipient, User::factory()->create(['username' => 'actor1']));
     $service->notifyNewFollower($recipient, User::factory()->create(['username' => 'actor2']));
@@ -177,7 +180,7 @@ test('user cannot mark another users notification as read', function () {
     $other = registerUser('notifother', 'notifother@example.com');
     $follower = User::factory()->create(['username' => 'notifintruder']);
 
-    $notification = app(\App\Services\Notification\NotificationService::class)
+    $notification = app(NotificationService::class)
         ->notifyNewFollower(User::query()->find($owner['user_id']), $follower);
 
     test()->withToken($other['access_token'])
@@ -227,8 +230,8 @@ test('push job sends to registered active devices', function () {
     );
 
     $job->handle(
-        app(\App\Contracts\Services\PushNotificationInterface::class),
-        app(\App\Contracts\Repositories\UserDeviceRepositoryInterface::class),
+        app(PushNotificationInterface::class),
+        app(UserDeviceRepositoryInterface::class),
     );
 
     expect(true)->toBeTrue();

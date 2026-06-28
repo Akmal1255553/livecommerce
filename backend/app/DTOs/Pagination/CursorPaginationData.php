@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\DTOs\Pagination;
 
 use App\DTOs\DataTransferObject;
+use App\Models\Video;
 use Illuminate\Support\Collection;
 
 /**
@@ -85,7 +86,7 @@ readonly class CursorPaginationData extends DataTransferObject
     }
 
     /**
-     * @param  Collection<int, \App\Models\Video>  $items
+     * @param  Collection<int, Video>  $items
      */
     public static function nextVideoCursor(Collection $items, bool $hasMore): ?string
     {
@@ -93,7 +94,7 @@ readonly class CursorPaginationData extends DataTransferObject
             return null;
         }
 
-        /** @var \App\Models\Video $last */
+        /** @var Video $last */
         $last = $items->last();
 
         return self::encodeVideoCursor(

@@ -8,7 +8,13 @@ use App\Enums\MediaAssetType;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property MediaAssetType $type
+ * @property array<string, mixed> $metadata
+ * @property Carbon $created_at
+ */
 class MediaAsset extends Model
 {
     use HasUuids;
@@ -44,6 +50,9 @@ class MediaAsset extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Video, $this>
+     */
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);

@@ -2,7 +2,10 @@
 
 declare(strict_types=1);
 
+use App\Models\User;
+use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Str;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)
@@ -27,4 +30,21 @@ function registerUser(string $username, string $email): array
         'user_id' => $response->json('data.user.id'),
         'access_token' => $response->json('data.access_token'),
     ];
+}
+
+function analyticsSession(): string
+{
+    return (string) Str::uuid();
+}
+
+function publishedVideo(?User $owner = null): Video
+{
+    $owner ??= User::factory()->create();
+
+    return Video::factory()->for($owner)->published()->create([
+        'like_count' => 0,
+        'comment_count' => 0,
+        'share_count' => 0,
+        'view_count' => 0,
+    ]);
 }

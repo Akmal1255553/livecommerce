@@ -8,6 +8,9 @@ use App\Contracts\Repositories\MediaUploadRepositoryInterface;
 use App\Enums\MediaUploadStatus;
 use App\Models\MediaUpload;
 
+/**
+ * @extends BaseEloquentRepository<MediaUpload>
+ */
 class MediaUploadRepository extends BaseEloquentRepository implements MediaUploadRepositoryInterface
 {
     public function __construct(MediaUpload $model)
@@ -15,6 +18,9 @@ class MediaUploadRepository extends BaseEloquentRepository implements MediaUploa
         parent::__construct($model);
     }
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
     public function create(array $attributes): MediaUpload
     {
         /** @var MediaUpload $upload */
@@ -23,9 +29,9 @@ class MediaUploadRepository extends BaseEloquentRepository implements MediaUploa
         return $upload;
     }
 
-    public function updateStatus(MediaUpload $upload, string $status, ?string $checksum = null): MediaUpload
+    public function updateStatus(MediaUpload $upload, MediaUploadStatus|string $status, ?string $checksum = null): MediaUpload
     {
-        $upload->status = MediaUploadStatus::from($status);
+        $upload->status = $status instanceof MediaUploadStatus ? $status : MediaUploadStatus::from($status);
         if ($checksum !== null) {
             $upload->checksum = $checksum;
         }
@@ -36,6 +42,7 @@ class MediaUploadRepository extends BaseEloquentRepository implements MediaUploa
 
     public function findForVideo(string $videoId): ?MediaUpload
     {
+        /** @var MediaUpload|null */
         return $this->model->newQuery()
             ->where('entity_type', 'video')
             ->where('entity_id', $videoId)

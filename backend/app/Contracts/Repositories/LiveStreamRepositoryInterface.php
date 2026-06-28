@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace App\Contracts\Repositories;
 
-interface LiveStreamRepositoryInterface extends RepositoryInterface
-{
-}
+interface LiveStreamRepositoryInterface extends RepositoryInterface {}

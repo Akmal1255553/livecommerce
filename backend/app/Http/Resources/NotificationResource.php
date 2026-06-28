@@ -23,8 +23,8 @@ class NotificationResource extends JsonResource
             'title' => $this->title,
             'body' => $this->body,
             'data' => NotificationData::fromArray($this->data ?? [])->toArray(),
-            'read_at' => $this->read_at?->toIso8601String(),
-            'created_at' => $this->created_at?->toIso8601String(),
+            'read_at' => $this->read_at !== null ? $this->read_at->toIso8601String() : null,
+            'created_at' => $this->created_at->toIso8601String(),
         ];
     }
 }

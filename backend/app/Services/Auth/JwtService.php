@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace App\Services\Auth;
 
-use App\Enums\UserRole;
-use App\Enums\UserStatus;
 use App\Exceptions\Domain\UnauthorizedException;
 use App\Models\User;
 use Firebase\JWT\JWT;

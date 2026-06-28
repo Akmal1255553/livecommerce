@@ -6,6 +6,7 @@ namespace App\Listeners;
 
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Events\UserFollowed;
+use App\Models\User;
 use App\Services\Notification\NotificationService;
 
 class NotifyOnFollow
@@ -20,7 +21,7 @@ class NotifyOnFollow
         $follower = $this->users->findById($event->followerId);
         $followed = $this->users->findById($event->followingId);
 
-        if ($follower === null || $followed === null) {
+        if (! $follower instanceof User || ! $followed instanceof User) {
             return;
         }
 

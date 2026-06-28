@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Http\Responses\ApiResponse;
+use Illuminate\Support\Facades\Route;
 
 test('api returns business exception as json envelope', function () {
-    \Illuminate\Support\Facades\Route::get('/api/v1/__test/not-found', function () {
+    Route::get('/api/v1/__test/not-found', function () {
         throw new ResourceNotFoundException('Video not found.');
     });
 

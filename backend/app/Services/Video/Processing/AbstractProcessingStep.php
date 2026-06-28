@@ -6,7 +6,6 @@ namespace App\Services\Video\Processing;
 
 use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\VideoProcessing\VideoProcessingStepInterface;
-use App\Enums\VideoProcessingStepName;
 use App\Enums\VideoProcessingStepStatus;
 use App\Events\VideoProcessingFailed;
 use App\Exceptions\Domain\VideoProcessingException;

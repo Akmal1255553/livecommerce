@@ -1,6 +1,6 @@
 # Sprint 3.3 — Video Interactions · Blueprint
 
-**Status:** Blueprint (implementation blocked until approved)  
+**Status:** Approved (2026-06-28)  
 **Phase:** 3 — Video Platform  
 **Depends on:** Sprint 3.2 (approved + merged)  
 **Part of:** [Sprint 3 overview](./SPRINT_3_VIDEO_PLATFORM.md)
@@ -88,17 +88,41 @@ Returns top-level comments with nested `replies` (max 1 level).
 
 **Response: 201** — increments `share_count`; records `share` engagement event.
 
-### 2.6 POST `/metrics/events` (extended)
+### 2.6 Analytics Layer (extended metrics funnel)
 
-Additional `type` values for 3.3:
+Canonical spec: [`docs/ANALYTICS_LAYER.md`](./ANALYTICS_LAYER.md).
+
+All engagement signals flow through `POST /metrics/events` (batch, max 20) and interaction APIs with required `session_id` for funnel correlation.
+
+**Recommendation funnel (Sprint 3.4 + Sprint 9 inputs):**
+
+```
+feed_open → video_impression → video_start → 25% → 50% → 75% → 100% → watch_time → like → comment → share → save → follow_after_watch
+```
+
+| UI action | Analytics `type` | API |
+|-----------|------------------|-----|
+| ❤️ Like | `like` | `POST /videos/{id}/like` |
+| 💬 Comment | `comment` | `POST /videos/{id}/comments` |
+| 👁 View | `view` | `POST /videos/{id}/view` |
+| ⏱ Watch Time | `watch_time` | `POST /metrics/events` |
+| 📌 Save | `save` | `POST /videos/{id}/bookmark` |
+| ↗ Share | `share` | `POST /videos/{id}/share` |
+
+**Additional `type` values (metrics batch):**
 
 | type | payload |
 |------|---------|
+| `video_start` | `{ "position": 0 }` |
+| `video_progress_25` | `{ "percent": 25, "position": N }` |
+| `video_progress_50` | `{ "percent": 50, "position": N }` |
+| `video_progress_75` | `{ "percent": 75, "position": N }` |
+| `video_progress_100` | `{ "percent": 100, "position": N }` |
 | `watch_time` | `{ "seconds": 5, "position": 12 }` |
-| `completion` | `{ "percent": 92 }` |
+| `follow_after_watch` | `{ "creator_id": "uuid" }` |
 | `skip` | `{ "watched_seconds": 2 }` |
 
-Same batch endpoint as 3.1; max 20 events per request.
+Same batch endpoint as 3.1; `MetricsService` is the only write path to `engagement_events`.
 
 ### 2.7 GET `/bookmarks`
 
@@ -277,7 +301,7 @@ File: `tests/Feature/Video/VideoCommentTest.php` — pagination, empty body, max
 
 | Role | Name | Date | Status |
 |------|------|------|--------|
-| CTO / Founder | | | Pending |
-| Backend lead | | | Pending |
+| CTO / Founder | | 2026-06-28 | Approved |
+| Backend lead | | 2026-06-28 | Approved |
 
 **Approved** unlocks `feature/sprint-3.3-interactions`.

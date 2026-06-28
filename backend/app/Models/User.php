@@ -14,6 +14,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
+/**
+ * @property UserRole $role
+ * @property UserStatus $status
+ * @property-read UserProfile|null $profile
+ */
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
@@ -54,6 +59,9 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * @return HasOne<UserProfile, $this>
+     */
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);

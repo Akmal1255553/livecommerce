@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Contracts\Repositories;
 
 use App\Models\Follow;
+use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 interface FollowRepositoryInterface extends RepositoryInterface
@@ -16,12 +17,12 @@ interface FollowRepositoryInterface extends RepositoryInterface
     public function deleteFollow(string $followerId, string $followingId): bool;
 
     /**
-     * @return LengthAwarePaginator<int, \App\Models\User>
+     * @return LengthAwarePaginator<int, User>
      */
     public function paginateFollowers(string $userId, int $page, int $perPage): LengthAwarePaginator;
 
     /**
-     * @return LengthAwarePaginator<int, \App\Models\User>
+     * @return LengthAwarePaginator<int, User>
      */
     public function paginateFollowing(string $userId, int $page, int $perPage): LengthAwarePaginator;
 }

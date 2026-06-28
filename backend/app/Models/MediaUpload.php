@@ -8,7 +8,12 @@ use App\Enums\MediaUploadStatus;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property MediaUploadStatus $status
+ * @property Carbon|null $processed_at
+ */
 class MediaUpload extends Model
 {
     use HasUuids;
@@ -39,6 +44,9 @@ class MediaUpload extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -4,17 +4,13 @@ declare(strict_types=1);
 
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
-use App\Enums\MediaAssetType;
 use App\Enums\VideoProcessingStepName;
-use App\Enums\VideoProcessingStepStatus;
 use App\Enums\VideoStatus;
-use App\Events\VideoPublished;
 use App\Jobs\ProcessVideoPipelineJob;
 use App\Models\EngagementEvent;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoProcessingStep;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
@@ -240,11 +236,11 @@ test('post metrics events accepts video impression with video id', function () {
     expect(EngagementEvent::query()->where('video_id', $video->id)->count())->toBe(1);
 });
 
-test('metrics rejects unknown event type in sprint 3.1', function () {
+test('metrics rejects unknown event type', function () {
     test()->postJson('/api/v1/metrics/events', [
         'events' => [
             [
-                'type' => 'watch_time',
+                'type' => 'unknown_event',
                 'session_id' => (string) Str::uuid(),
             ],
         ],

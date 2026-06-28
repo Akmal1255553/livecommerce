@@ -16,17 +16,19 @@ class UserResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        $profile = $this->profile;
+
         return [
             'id' => $this->id,
             'username' => $this->username,
-            'display_name' => $this->profile?->display_name,
+            'display_name' => $profile !== null ? $profile->display_name : null,
             'avatar_url' => $this->avatar_url,
             'bio' => $this->bio,
             'is_verified' => $this->is_verified,
             'role' => $this->role->value,
-            'follower_count' => $this->profile?->follower_count ?? 0,
-            'following_count' => $this->profile?->following_count ?? 0,
-            'video_count' => $this->profile?->video_count ?? 0,
+            'follower_count' => $profile !== null ? $profile->follower_count : 0,
+            'following_count' => $profile !== null ? $profile->following_count : 0,
+            'video_count' => $profile !== null ? $profile->video_count : 0,
             'is_following' => $this->when(
                 $request->user() !== null
                     && $request->user()->id !== $this->id

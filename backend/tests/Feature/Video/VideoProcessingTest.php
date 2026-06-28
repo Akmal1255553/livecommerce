@@ -2,13 +2,11 @@
 
 declare(strict_types=1);
 
-use App\Contracts\Services\VideoStateMachineInterface;
 use App\Enums\MediaAssetType;
 use App\Enums\VideoProcessingStepName;
 use App\Enums\VideoProcessingStepStatus;
 use App\Enums\VideoStatus;
 use App\Events\VideoPublished;
-use App\Jobs\ProcessVideoPipelineJob;
 use App\Models\MediaAsset;
 use App\Models\User;
 use App\Models\Video;
@@ -16,7 +14,6 @@ use App\Models\VideoProcessingStep;
 use App\Services\Video\Processing\Steps\ValidateVideoStep;
 use App\Services\Video\Processing\Steps\VirusScanStep;
 use Illuminate\Support\Facades\Event;
-use Illuminate\Support\Facades\Queue;
 
 test('confirm upload then pipeline publishes video with hls url', function () {
     Event::fake([VideoPublished::class]);
@@ -126,7 +123,7 @@ test('validate step rejects duration over limit', function () {
 
     try {
         app(ValidateVideoStep::class)->run($video);
-    } catch (\Throwable) {
+    } catch (Throwable) {
         // expected
     }
 

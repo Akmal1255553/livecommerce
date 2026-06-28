@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Services\User;
 
 use App\Contracts\Repositories\RefreshTokenRepositoryInterface;
-use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Exceptions\Domain\UnauthorizedException;
 use App\Models\User;
 use App\Services\BaseService;
@@ -14,7 +13,6 @@ use Illuminate\Support\Facades\Hash;
 class ProfileService extends BaseService
 {
     public function __construct(
-        private readonly UserRepositoryInterface $users,
         private readonly RefreshTokenRepositoryInterface $refreshTokens,
     ) {}
 

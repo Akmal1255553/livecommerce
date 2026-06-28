@@ -431,11 +431,17 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 | `feed_open` | 3.1 | User opens feed tab |
 | `video_impression` | 3.1 | Video card visible ≥ N ms in feed |
 | `watch_time` | 3.3 | Heartbeat while playing |
-| `completion` | 3.3 | Watched ≥ 90% duration |
+| `video_start` | 3.3 | Playback begins |
+| `video_progress_25/50/75/100` | 3.3 | Milestone reached |
+| `view` | 3.3 | View recorded (deduped) |
+| `save` | 3.3 | Bookmark action |
+| `follow_after_watch` | 3.3 | Follow creator after watching |
 | `skip` | 3.3 | Swiped away before 3 s |
 | `like` | 3.3 | Like action |
 | `comment` | 3.3 | Comment created |
 | `share` | 3.3 | Share action |
+
+Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All interaction APIs require `session_id` for correlation.
 
 `MetricsService` records events; controllers dispatch via service, never write metrics tables directly.
 
@@ -521,23 +527,25 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 ---
 
-# Sprint 3.3 — Video Interactions
+# Sprint 3.3 — Video Interactions + Analytics Layer
 
-**Status:** Blueprint — pending approval  
-**Blueprint:** [docs/SPRINT_3.3_BLUEPRINT.md](./docs/SPRINT_3.3_BLUEPRINT.md)  
-**Depends on:** Sprint 3.2 (approved)  
+**Status:** Approved — implementation in progress  
+**Blueprint:** [docs/SPRINT_3.3_BLUEPRINT.md](./docs/SPRINT_3.3_BLUEPRINT.md) · [Analytics Layer](./docs/ANALYTICS_LAYER.md)  
+**Depends on:** Sprint 3.2 (complete — v0.3.2)  
 **Priority:** P0
 
 ## Backend Deliverables
 
-- [ ] Migrations: `video_likes`, `comments`, `bookmarks`, `video_shares` (reposts), `video_views`
-- [ ] `VideoInteractionService` — like, unlike, comment, bookmark, share, view
-- [ ] View count: Redis debounce → `FlushVideoViewsJob`
-- [ ] Metrics: `watch_time`, `completion`, `skip`, `like`, `comment`, `share`
-- [ ] Events: `VideoLiked`, `CommentCreated`, `VideoShared`
-- [ ] Update `VideoResource` — real `is_liked`, `is_bookmarked`
-- [ ] API: like/unlike, view, comments CRUD, bookmark, share, `GET /bookmarks`
-- [ ] Feature tests: like idempotency, comment threads, view debounce, metrics
+- [x] Migrations: `video_likes`, `comments`, `bookmarks`, `video_shares`
+- [x] `VideoInteractionService` — like, unlike, comment, bookmark, share, view
+- [x] View count: Redis debounce → `FlushVideoViewsJob`
+- [x] **Analytics Layer** — full recommendation funnel (`video_start`, progress milestones, `watch_time`, `save`, `view`, `follow_after_watch`); `MetricsService::record()` only write path
+- [x] Interaction APIs require `session_id` (UUID) for funnel correlation
+- [x] Metrics: `like`, `comment`, `share`, `save`, `view`, `watch_time`, progress milestones, `skip`
+- [x] Events: `VideoLiked`, `CommentCreated`, `VideoShared`, `VideoBookmarked`, `VideoViewRecorded`
+- [x] Update `VideoResource` — real `is_liked`, `is_bookmarked`
+- [x] API: like/unlike, view, comments CRUD, bookmark, share, `GET /bookmarks`
+- [x] Feature tests: like idempotency, comment threads, view debounce, analytics funnel
 
 ## Mobile Deliverables
 

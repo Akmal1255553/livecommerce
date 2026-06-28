@@ -7,6 +7,7 @@ namespace App\Contracts\Services;
 use App\Enums\MediaAssetType;
 use App\Models\MediaAsset;
 use App\Models\Video;
+use Illuminate\Support\Collection;
 
 interface MediaAssetServiceInterface
 {
@@ -24,9 +25,9 @@ interface MediaAssetServiceInterface
     public function getPrimary(Video $video, MediaAssetType $type): ?MediaAsset;
 
     /**
-     * @return \Illuminate\Support\Collection<int, MediaAsset>
+     * @return Collection<int, MediaAsset>
      */
-    public function listForVideo(Video $video): \Illuminate\Support\Collection;
+    public function listForVideo(Video $video): Collection;
 
     public function publicUrl(MediaAsset $asset): string;
 

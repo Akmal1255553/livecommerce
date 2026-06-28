@@ -11,6 +11,9 @@ use App\Models\Video;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 
+/**
+ * @extends BaseEloquentRepository<Video>
+ */
 class VideoRepository extends BaseEloquentRepository implements VideoRepositoryInterface
 {
     public function __construct(Video $model)
@@ -41,6 +44,7 @@ class VideoRepository extends BaseEloquentRepository implements VideoRepositoryI
     }
 
     /**
+     * @param  array{id: string, created_at: string}|null  $cursor
      * @param  list<string>|null  $userIds
      * @return Collection<int, Video>
      */
@@ -69,6 +73,7 @@ class VideoRepository extends BaseEloquentRepository implements VideoRepositoryI
             });
         }
 
+        /** @var Collection<int, Video> */
         return $query->limit($limit + 1)->get();
     }
 }

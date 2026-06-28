@@ -3,8 +3,17 @@
 declare(strict_types=1);
 
 use App\Exceptions\BusinessException;
+use App\Http\Middleware\AssignRequestId;
+use App\Http\Middleware\AuthenticateApi;
+use App\Http\Middleware\AuthenticateApiOptional;
+use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\EnsureSeller;
+use App\Http\Middleware\LogApiRequest;
+use App\Http\Middleware\SetLocale;
 use App\Http\Responses\ApiResponse;
+use App\Jobs\FlushVideoViewsJob;
 use Illuminate\Auth\AuthenticationException;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -24,18 +33,21 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
-            'auth.api' => \App\Http\Middleware\AuthenticateApi::class,
-            'auth.api.optional' => \App\Http\Middleware\AuthenticateApiOptional::class,
-            'seller' => \App\Http\Middleware\EnsureSeller::class,
-            'role' => \App\Http\Middleware\EnsureRole::class,
-            'locale' => \App\Http\Middleware\SetLocale::class,
+            'auth.api' => AuthenticateApi::class,
+            'auth.api.optional' => AuthenticateApiOptional::class,
+            'seller' => EnsureSeller::class,
+            'role' => EnsureRole::class,
+            'locale' => SetLocale::class,
         ]);
 
         $middleware->api(prepend: [
-            \App\Http\Middleware\AssignRequestId::class,
-            \App\Http\Middleware\LogApiRequest::class,
-            \App\Http\Middleware\SetLocale::class,
+            AssignRequestId::class,
+            LogApiRequest::class,
+            SetLocale::class,
         ]);
+    })
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->job(new FlushVideoViewsJob)->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (BusinessException $exception, Request $request) {
@@ -100,7 +112,7 @@ return Application::configure(basePath: dirname(__DIR__))
             );
         });
 
-        $exceptions->render(function (\Throwable $exception, Request $request) {
+        $exceptions->render(function (Throwable $exception, Request $request) {
             if (! $request->is('api/*') || app()->hasDebugModeEnabled()) {
                 return null;
             }

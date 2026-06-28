@@ -18,7 +18,7 @@ class FeedController extends Controller
     public function forYou(Request $request): JsonResponse
     {
         $limit = min(max(1, (int) $request->query('limit', 20)), 50);
-        $page = $this->videoService->feedForYou($request->query('cursor'), $limit);
+        $page = $this->videoService->feedForYou($request->query('cursor'), $limit, $request->user());
 
         return ApiResponse::cursorPaginated(
             VideoResource::collection($page->items),

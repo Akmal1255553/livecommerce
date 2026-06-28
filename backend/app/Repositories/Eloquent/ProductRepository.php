@@ -7,6 +7,9 @@ namespace App\Repositories\Eloquent;
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Models\Product;
 
+/**
+ * @extends BaseEloquentRepository<Product>
+ */
 class ProductRepository extends BaseEloquentRepository implements ProductRepositoryInterface
 {
     public function __construct(Product $model)

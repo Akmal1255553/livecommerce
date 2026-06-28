@@ -20,6 +20,7 @@ interface VideoRepositoryInterface extends RepositoryInterface
     public function update(Video $video, array $attributes): Video;
 
     /**
+     * @param  array{id: string, created_at: string}|null  $cursor
      * @param  list<string>|null  $userIds
      * @return Collection<int, Video>
      */

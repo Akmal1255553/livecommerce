@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\DTOs\Pagination\PaginationData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Notification\UpdateNotificationSettingsRequest;
 use App\Http\Requests\User\ChangePasswordRequest;
@@ -14,7 +15,6 @@ use App\Models\User;
 use App\Services\Follow\FollowService;
 use App\Services\Notification\NotificationService;
 use App\Services\User\ProfileService;
-use App\DTOs\Pagination\PaginationData;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
