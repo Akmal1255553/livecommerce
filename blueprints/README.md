@@ -4,7 +4,7 @@ Implementation specifications for Sprint 3 sub-sprints. **No code** for a sub-sp
 
 | Blueprint | Sprint | Status |
 |-----------|--------|--------|
-| [video-processing.md](./video-processing.md) | 3.2 Video Processing | Approved |
+| [video-processing.md](./video-processing.md) | 3.2 Video Processing | Approved **v2** (state machine, DAG, MediaAsset) |
 | [../docs/SPRINT_3.1_BLUEPRINT.md](../docs/SPRINT_3.1_BLUEPRINT.md) | 3.1 Upload Foundation | Approved · [v0.3.1 release](https://github.com/Akmal1255553/livecommerce/releases/tag/v0.3.1-video-upload-foundation) |
 | [../docs/SPRINT_3.3_BLUEPRINT.md](../docs/SPRINT_3.3_BLUEPRINT.md) | 3.3 Video Interactions | Pending approval |
 | [../docs/SPRINT_3.4_BLUEPRINT.md](../docs/SPRINT_3.4_BLUEPRINT.md) | 3.4 Recommendations v1 | Pending approval |

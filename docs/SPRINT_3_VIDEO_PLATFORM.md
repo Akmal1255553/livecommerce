@@ -13,7 +13,7 @@ Roadmap detail: [13_ROADMAP.md](../13_ROADMAP.md#sprint-3--video-platform)
 | Sub-sprint | Focus | Blueprint | Status |
 |------------|-------|-----------|--------|
 | **3.1** | Video Upload Foundation | [SPRINT_3.1_BLUEPRINT.md](./SPRINT_3.1_BLUEPRINT.md) | **Complete** |
-| **3.2** | Video Processing | [blueprints/video-processing.md](../blueprints/video-processing.md) | Approved — ready for implementation |
+| **3.2** | Video Processing | [blueprints/video-processing.md](../blueprints/video-processing.md) | Approved **v2** — state machine, DAG, MediaAsset |
 | **3.3** | Video Interactions | [SPRINT_3.3_BLUEPRINT.md](./SPRINT_3.3_BLUEPRINT.md) | Blueprint — pending approval |
 | **3.4** | Recommendation Engine v1 | [SPRINT_3.4_BLUEPRINT.md](./SPRINT_3.4_BLUEPRINT.md) | Blueprint — pending approval |
 
@@ -48,45 +48,43 @@ StorageService (App\Contracts\Services\StorageServiceInterface)
 
 ## Video processing pipeline
 
-Each confirmed upload enters a **queued pipeline**. Early sub-sprints may ship stubs; interfaces and job order are fixed from 3.1.
+Canonical spec: [blueprints/video-processing.md](../blueprints/video-processing.md) **v2**.
+
+Two layers:
+
+1. **Video State Machine** — `uploading` → `uploaded` → `queued` → `processing` → `published` | `failed` | `rejected` (user-visible; `VideoStateMachine` only).
+2. **DAG Orchestrator** — parallel processing steps with per-step lifecycle (`pending` → `running` → `completed` | `failed` | `retrying` | `skipped`).
 
 ```
-POST /videos/{id}/confirm-upload
-        │
-        ▼
-┌─────────────────┐
-│ VirusScanJob    │  stub → ClamAV / vendor (Sprint 15)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ ExtractMetadata │  duration, width, height, codec (ffprobe)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ GenerateThumb   │  stub → FFmpeg frame (Sprint 3.2)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ TranscodeVideo  │  stub → HLS 720p/480p (Sprint 3.2)
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ ModerateContent │  stub → rules; ML in Sprint 9
-└────────┬────────┘
-         ▼
-┌─────────────────┐
-│ PublishVideo    │  status=published, video_url=HLS manifest
-└─────────────────┘
+confirm-upload → uploaded → queued (job) → processing
+                                              │
+                    ┌─────────────────────────┴─────────────────────────┐
+                    │ Stage 1 parallel: VirusScan | Metadata | Validate │
+                    └─────────────────────────┬─────────────────────────┘
+                                              ▼
+                                    GenerateThumbnail
+                                              ▼
+                    ┌─────────────────────────┴─────────────────────────┐
+                    │ Stage 3 parallel (MVP): HLS 720p | HLS 480p       │
+                    └─────────────────────────┬─────────────────────────┘
+                                              ▼
+                              ModerateContent → PublishVideo → published
 ```
+
+Derivative files (thumbnail, HLS renditions, master playlist) are stored as **`media_assets`** rows — not embedded in the `Video` entity. `PublishVideoStep` denormalizes playback URLs to `videos` for API performance.
+
+**MVP (3.2):** 720p + 480p HLS. **Phased (3.2b):** 360p + 1080p when profiling warrants.
 
 ### Status transitions
 
 | Status | Meaning |
 |--------|---------|
 | `uploading` | Presigned URL issued, awaiting client PUT |
-| `processing` | Pipeline running |
+| `uploaded` | Object confirmed in storage |
+| `queued` | Pipeline job dispatched, awaiting worker |
+| `processing` | DAG orchestrator running |
 | `published` | Visible in feeds |
-| `failed` | Pipeline error (retriable log) |
+| `failed` | Pipeline error (retriable per step) |
 | `rejected` | Moderation rejected |
 
 ---

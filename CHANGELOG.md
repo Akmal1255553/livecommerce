@@ -43,7 +43,7 @@ Implementation **blocked** until each sub-sprint blueprint is marked **Approved*
 | Blueprint | Scope |
 |-----------|-------|
 | [SPRINT_3.1_BLUEPRINT.md](./docs/SPRINT_3.1_BLUEPRINT.md) | Upload, StorageService, MinIO, metrics foundation |
-| [blueprints/video-processing.md](./blueprints/video-processing.md) | FFmpeg, HLS, publish (approved) |
+| [blueprints/video-processing.md](./blueprints/video-processing.md) | FFmpeg, HLS, publish — **v2** (state machine, DAG, MediaAsset) |
 | [SPRINT_3.3_BLUEPRINT.md](./docs/SPRINT_3.3_BLUEPRINT.md) | Likes, comments, bookmarks, shares, views |
 | [SPRINT_3.4_BLUEPRINT.md](./docs/SPRINT_3.4_BLUEPRINT.md) | Trending, popular, new, rule-based For You |
 
@@ -51,7 +51,7 @@ Each blueprint defines: goal, API, DB schema, events, queues, test cases, accept
 
 ### Changed
 
-- Sprint 3.2 blueprint canonical path: [blueprints/video-processing.md](./blueprints/video-processing.md) — **Approved** 2026-06-28
+- Sprint 3.2 blueprint **v2**: [blueprints/video-processing.md](./blueprints/video-processing.md) — **Approved** 2026-06-28 — state machine, DAG orchestrator, `MediaAsset`, idempotent steps; MVP 720p/480p HLS
 
 ### Added
 

@@ -374,7 +374,7 @@ Sprint 3 is split into focused sub-sprints (same pattern as Sprint 2). Feed read
 | Sub-sprint | Focus | Status |
 |------------|-------|--------|
 | **3.1** | Video Upload Foundation | [Blueprint](./docs/SPRINT_3.1_BLUEPRINT.md) | **Complete** |
-| **3.2** | Video Processing | [Blueprint](../blueprints/video-processing.md) | Approved |
+| **3.2** | Video Processing | [Blueprint](../blueprints/video-processing.md) | Approved **v2** |
 | **3.3** | Video Interactions | [Blueprint](./docs/SPRINT_3.3_BLUEPRINT.md) | Blueprint — pending approval |
 | **3.4** | Recommendation Engine v1 | [Blueprint](./docs/SPRINT_3.4_BLUEPRINT.md) | Blueprint — pending approval |
 
@@ -483,21 +483,27 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 # Sprint 3.2 — Video Processing
 
-**Status:** Approved — ready for implementation  
-**Blueprint:** [blueprints/video-processing.md](../blueprints/video-processing.md)  
+**Status:** Approved v2 — ready for implementation  
+**Blueprint:** [blueprints/video-processing.md](../blueprints/video-processing.md) (state machine, DAG, MediaAsset)  
 **Depends on:** Sprint 3.1 (complete — v0.3.1)  
 **Priority:** P0
 
 ## Backend Deliverables
 
-- [ ] `GenerateThumbnailJob` — FFmpeg frame extract → MinIO via `StorageService`
-- [ ] `TranscodeVideoJob` — FFmpeg HLS (720p/480p) → MinIO
-- [ ] `ExtractMetadataJob` — real duration, width, height, codec
-- [ ] `VirusScanJob` — stub with pass-through + log (real scanner in Sprint 15)
-- [ ] Queue error handling: retries, `failed` status, `video_processing_errors` log
-- [ ] `ModerateContentJob` — rule stub (auto-approve MVP; queue for Sprint 14/9)
-- [ ] `PublishVideoJob` — set `published`, populate `video_url` (HLS manifest)
-- [ ] Feature tests: pipeline happy path, failed transcode, thumbnail written
+- [ ] `VideoStateMachine` — `uploaded` → `queued` → `processing` → `published` | `failed`
+- [ ] `VideoProcessingPipelineOrchestrator` — DAG with parallel Stage 1 + Stage 3 (720p/480p MVP)
+- [ ] `media_assets` table + `MediaAssetService`
+- [ ] `ValidateVideoStep` — duration, codec, integrity guards
+- [ ] `ExtractMetadataStep` — ffprobe via `FfmpegTranscoderInterface`
+- [ ] `GenerateThumbnailStep` — FFmpeg frame → `MediaAsset`
+- [ ] `TranscodeHls720Step` / `TranscodeHls480Step` — HLS via `StorageService`
+- [ ] `VirusScanStep` — stub + log (ClamAV in Sprint 15)
+- [ ] `ModerateContentStep` — auto-approve stub
+- [ ] `PublishVideoStep` — assemble master.m3u8, denormalize URLs
+- [ ] Per-step idempotency + `RetryVideoProcessingStepJob`
+- [ ] Feature tests per blueprint §11
+
+**Phased (3.2b):** 360p / 1080p renditions when profiling warrants.
 
 ## Mobile Deliverables
 
@@ -507,11 +513,11 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 ## Acceptance Criteria
 
-- [ ] Uploaded video transcodes to HLS and is playable in feed
-- [ ] Thumbnail generated and served via CDN/MinIO URL
-- [ ] Failed jobs surface `failed` status with retriable error log
-- [ ] Pipeline stages run in order; stubs replaced where specified
-- [ ] Feature tests passing
+- [ ] State machine transitions enforced; no ad-hoc status writes in steps
+- [ ] Uploaded video transcodes to HLS 720p/480p and is playable in feed
+- [ ] Thumbnail + HLS assets in `media_assets`; URLs on publish
+- [ ] Failed jobs → `failed` with auditable step errors; idempotent retries
+- [ ] All blueprint §12 acceptance criteria met
 
 ---
 
