@@ -571,26 +571,21 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 
 # Sprint 3.4 — Recommendation Engine v1
 
-**Status:** Approved (2026-06-28) — implementation in progress  
+**Status:** Complete (backend)  
 **Blueprint:** [blueprints/recommendation-engine-v1.md](../blueprints/recommendation-engine-v1.md) · [Architecture](./docs/22_RECOMMENDATION_ARCHITECTURE.md)  
-**Depends on:** Sprint 3.3 complete — [v0.3.3-video-interactions](https://github.com/Akmal1255553/livecommerce/releases/tag/v0.3.3-video-interactions)  
-**Priority:** P0
-
-## Modules
-
-Rule-based ranking pipeline (no AI). `RecommendationEngineInterface` → `RuleBasedRecommendationEngine` (Sprint 9: `AiRecommendationEngine`).
+**Release:** pending — target `v0.3.4-recommendation-engine`
 
 ## Backend Deliverables
 
-- [ ] `RecommendationEngineInterface` + `RuleBasedRecommendationEngine` + `AiRecommendationEngine` stub
-- [ ] Ranking pipeline: Candidate → Filter → Score → Diversity → Exploration → Final Rank
-- [ ] 9 candidate sources (Category, Seller = stubs)
-- [ ] `config/recommendation.php` — weights 40/20/15/10/10/5 (no hard-coded scores)
-- [ ] `video_engagement_rollups` + `AggregateEngagementRollupsJob`
-- [ ] Diversity layer (author cap) + exploration (90/10)
-- [ ] `GET /feed/trending`, `/feed/popular`, `/feed/new`, enhanced `/feed/for-you`
-- [ ] Redis snapshots + ranked cursor
-- [ ] Feature + unit tests (120+ total)
+- [x] `RecommendationEngineInterface` + `RuleBasedRecommendationEngine` + `AiRecommendationEngine` stub
+- [x] Ranking pipeline: Candidate → Filter → Score → Diversity → Exploration → Final Rank
+- [x] 9 candidate sources (Category, Seller = stubs)
+- [x] `config/recommendation.php` — weights 40/20/15/10/10/5
+- [x] `video_engagement_rollups` + `AggregateEngagementRollupsJob`
+- [x] Diversity layer (author cap) + exploration (90/10)
+- [x] `GET /feed/trending`, `/feed/popular`, `/feed/new`, enhanced `/feed/for-you`
+- [x] Redis snapshots + ranked cursor
+- [x] Feature + unit tests (123 total)
 
 ## Mobile Deliverables
 

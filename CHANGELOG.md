@@ -8,6 +8,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 3.4 — Recommendation Engine v1
+
+- `RecommendationEngineInterface` → `RuleBasedRecommendationEngine` (+ `AiRecommendationEngine` stub)
+- Ranking pipeline: Candidate → Filter → Score → Diversity → Exploration → Final Rank
+- 9 candidate sources (Category, Seller stubs); weights in `config/recommendation.php`
+- `video_engagement_rollups` + `AggregateEngagementRollupsJob`
+- `GET /feed/trending`, `/feed/popular`, `/feed/new`; enhanced `/feed/for-you`
+- Redis snapshots + ranked cursor; `meta.strategy`, `meta.snapshot`, `meta.engine`
+- Tests: `RecommendationFeedTest` (14), unit pipeline tests, rollup job test — **123 tests total**
+
 #### Sprint 3.4 — Recommendation Engine v1 (blueprint approved 2026-06-28)
 
 - Canonical blueprint: [blueprints/recommendation-engine-v1.md](./blueprints/recommendation-engine-v1.md) — **Approved**

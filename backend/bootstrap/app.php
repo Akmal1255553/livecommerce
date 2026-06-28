@@ -11,7 +11,10 @@ use App\Http\Middleware\EnsureSeller;
 use App\Http\Middleware\LogApiRequest;
 use App\Http\Middleware\SetLocale;
 use App\Http\Responses\ApiResponse;
+use App\Jobs\AggregateEngagementRollupsJob;
 use App\Jobs\FlushVideoViewsJob;
+use App\Jobs\RefreshPopularCacheJob;
+use App\Jobs\RefreshTrendingCacheJob;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -48,6 +51,9 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->job(new FlushVideoViewsJob)->everyMinute();
+        $schedule->job(new AggregateEngagementRollupsJob)->everyFifteenMinutes();
+        $schedule->job(new RefreshTrendingCacheJob)->everyFiveMinutes();
+        $schedule->job(new RefreshPopularCacheJob)->everyFifteenMinutes();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (BusinessException $exception, Request $request) {

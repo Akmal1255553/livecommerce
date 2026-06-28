@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Contracts\Recommendation\EngagementEventRepositoryInterface;
+use App\Contracts\Recommendation\RecommendationServiceInterface;
+use App\Contracts\Recommendation\VideoEngagementRollupRepositoryInterface;
 use App\Contracts\Repositories\BookmarkRepositoryInterface;
 use App\Contracts\Repositories\CartRepositoryInterface;
 use App\Contracts\Repositories\CommentRepositoryInterface;
@@ -43,6 +46,7 @@ use App\Listeners\NotifyOnVideoLiked;
 use App\Repositories\Eloquent\BookmarkRepository;
 use App\Repositories\Eloquent\CartRepository;
 use App\Repositories\Eloquent\CommentRepository;
+use App\Repositories\Eloquent\EngagementEventRepository;
 use App\Repositories\Eloquent\FollowRepository;
 use App\Repositories\Eloquent\LiveStreamRepository;
 use App\Repositories\Eloquent\MediaUploadRepository;
@@ -53,6 +57,7 @@ use App\Repositories\Eloquent\RefreshTokenRepository;
 use App\Repositories\Eloquent\StoreRepository;
 use App\Repositories\Eloquent\UserDeviceRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Eloquent\VideoEngagementRollupRepository;
 use App\Repositories\Eloquent\VideoLikeRepository;
 use App\Repositories\Eloquent\VideoRepository;
 use App\Repositories\Eloquent\VideoShareRepository;
@@ -62,6 +67,7 @@ use App\Services\Media\MediaAssetService;
 use App\Services\Media\MediaService;
 use App\Services\Metrics\MetricsService;
 use App\Services\Notification\StubFcmPushNotification;
+use App\Services\Recommendation\RecommendationService;
 use App\Services\Storage\StorageService;
 use App\Services\Video\CommentService;
 use App\Services\Video\Ffmpeg\CliFfmpegTranscoder;
@@ -96,6 +102,8 @@ class RepositoryServiceProvider extends ServiceProvider
         BookmarkRepositoryInterface::class => BookmarkRepository::class,
         VideoShareRepositoryInterface::class => VideoShareRepository::class,
         MediaUploadRepositoryInterface::class => MediaUploadRepository::class,
+        VideoEngagementRollupRepositoryInterface::class => VideoEngagementRollupRepository::class,
+        EngagementEventRepositoryInterface::class => EngagementEventRepository::class,
         HealthServiceInterface::class => HealthService::class,
         StorageServiceInterface::class => StorageService::class,
         MediaServiceInterface::class => MediaService::class,
@@ -105,6 +113,7 @@ class RepositoryServiceProvider extends ServiceProvider
         MetricsServiceInterface::class => MetricsService::class,
         MediaAssetServiceInterface::class => MediaAssetService::class,
         VideoStateMachineInterface::class => VideoStateMachine::class,
+        RecommendationServiceInterface::class => RecommendationService::class,
         SmsProviderInterface::class => StubSmsProvider::class,
         PushNotificationInterface::class => StubFcmPushNotification::class,
     ];

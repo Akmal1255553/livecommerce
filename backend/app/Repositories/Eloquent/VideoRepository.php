@@ -76,4 +76,65 @@ class VideoRepository extends BaseEloquentRepository implements VideoRepositoryI
         /** @var Collection<int, Video> */
         return $query->limit($limit + 1)->get();
     }
+
+    /**
+     * @param  list<string>  $ids
+     * @return Collection<int, Video>
+     */
+    public function findPublishedByIds(array $ids): Collection
+    {
+        if ($ids === []) {
+            return collect();
+        }
+
+        /** @var Collection<int, Video> $videos */
+        $videos = $this->model->newQuery()
+            ->whereIn('id', $ids)
+            ->where('status', VideoStatus::Published)
+            ->where('visibility', VideoVisibility::Public)
+            ->with('user')
+            ->get()
+            ->keyBy('id');
+
+        /** @var Collection<int, Video> */
+        return collect($ids)
+            ->map(static fn (string $id): ?Video => $videos->get($id))
+            ->filter()
+            ->values();
+    }
+
+    /**
+     * @return Collection<int, Video>
+     */
+    public function listExplorationCandidates(int $limit): Collection
+    {
+        $maxViews = (int) config('recommendation.exploration.max_views', 1000);
+        $maxAgeDays = (int) config('recommendation.exploration.max_age_days', 7);
+        $since = Carbon::now()->subDays($maxAgeDays);
+
+        /** @var Collection<int, Video> */
+        return $this->model->newQuery()
+            ->where('status', VideoStatus::Published)
+            ->where('visibility', VideoVisibility::Public)
+            ->where('view_count', '<', $maxViews)
+            ->where(function ($query) use ($since): void {
+                $query->where('published_at', '>=', $since)
+                    ->orWhere(function ($nested) use ($since): void {
+                        $nested->whereNull('published_at')
+                            ->where('created_at', '>=', $since);
+                    });
+            })
+            ->inRandomOrder()
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * @param  array{id: string, created_at: string}|null  $cursor
+     * @return Collection<int, Video>
+     */
+    public function listNewCandidates(int $limit, ?array $cursor = null): Collection
+    {
+        return $this->cursorPaginateFeed($cursor, $limit);
+    }
 }

@@ -21,6 +21,9 @@ readonly class CursorPaginationData extends DataTransferObject
         public ?string $nextCursor,
         public bool $hasMore,
         public int $limit,
+        public ?string $strategy = null,
+        public ?string $snapshot = null,
+        public ?string $engine = null,
     ) {}
 
     /**
@@ -28,11 +31,78 @@ readonly class CursorPaginationData extends DataTransferObject
      */
     public function meta(): array
     {
-        return [
+        $meta = [
             'next_cursor' => $this->nextCursor,
             'prev_cursor' => null,
             'has_more' => $this->hasMore,
             'limit' => $this->limit,
+        ];
+
+        if ($this->strategy !== null) {
+            $meta['strategy'] = $this->strategy;
+        }
+
+        if ($this->snapshot !== null) {
+            $meta['snapshot'] = $this->snapshot;
+        }
+
+        if ($this->engine !== null) {
+            $meta['engine'] = $this->engine;
+        }
+
+        return $meta;
+    }
+
+    /**
+     * @param  Collection<int, T>  $items
+     * @return self<T>
+     */
+    public static function metaWithStrategy(
+        Collection $items,
+        ?string $nextCursor,
+        bool $hasMore,
+        int $limit,
+        ?string $strategy,
+        ?string $snapshot,
+        ?string $engine,
+    ): self {
+        return new self(
+            items: $items,
+            nextCursor: $nextCursor,
+            hasMore: $hasMore,
+            limit: $limit,
+            strategy: $strategy,
+            snapshot: $snapshot,
+            engine: $engine,
+        );
+    }
+
+    public static function encodeRankedCursor(string $snapshot, int $offset): string
+    {
+        return base64_encode((string) json_encode([
+            'snapshot' => $snapshot,
+            'offset' => $offset,
+        ], JSON_THROW_ON_ERROR));
+    }
+
+    /**
+     * @return array{snapshot: string, offset: int}|null
+     */
+    public static function decodeRankedCursor(?string $cursor): ?array
+    {
+        if ($cursor === null || $cursor === '') {
+            return null;
+        }
+
+        $decoded = json_decode(base64_decode($cursor, true) ?: '', true);
+
+        if (! is_array($decoded) || ! isset($decoded['snapshot'], $decoded['offset'])) {
+            return null;
+        }
+
+        return [
+            'snapshot' => (string) $decoded['snapshot'],
+            'offset' => (int) $decoded['offset'],
         ];
     }
 
