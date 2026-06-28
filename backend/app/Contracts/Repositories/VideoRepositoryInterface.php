@@ -10,6 +10,16 @@ use Illuminate\Support\Collection;
 interface VideoRepositoryInterface extends RepositoryInterface
 {
     /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function create(array $attributes): Video;
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function update(Video $video, array $attributes): Video;
+
+    /**
      * @param  list<string>|null  $userIds
      * @return Collection<int, Video>
      */

@@ -19,6 +19,28 @@ class VideoRepository extends BaseEloquentRepository implements VideoRepositoryI
     }
 
     /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function create(array $attributes): Video
+    {
+        /** @var Video $video */
+        $video = $this->model->newQuery()->create($attributes);
+
+        return $video;
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function update(Video $video, array $attributes): Video
+    {
+        $video->fill($attributes);
+        $video->save();
+
+        return $video;
+    }
+
+    /**
      * @param  list<string>|null  $userIds
      * @return Collection<int, Video>
      */

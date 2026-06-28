@@ -1,6 +1,7 @@
 # Sprint 3.1 — Video Upload Foundation · Blueprint
 
-**Status:** Blueprint (implementation blocked until approved)  
+**Status:** Approved (2026-06-28)  
+**Implementation:** Sprint 3.1 backend complete  
 **Phase:** 3 — Video Platform  
 **Depends on:** Sprint 2.3 (Feed Foundation — complete)  
 **Part of:** [Sprint 3 overview](./SPRINT_3_VIDEO_PLATFORM.md)
@@ -299,14 +300,14 @@ File: `tests/Unit/Services/StorageServiceTest.php` — presigned URL generation,
 ## 8. Acceptance criteria
 
 - [ ] Blueprint reviewed and marked **Approved**
-- [ ] `StorageServiceInterface` + Local + S3/MinIO drivers; zero `Storage::` in controllers
-- [ ] `media_uploads`, `video_processing_steps`, `engagement_events` migrations applied
-- [ ] POST `/videos` returns presigned URL; client uploads direct to MinIO
-- [ ] POST `/videos/{id}/confirm-upload` enqueues pipeline; video → `processing`
-- [ ] Pipeline stub jobs run in order with audit rows; video **not** published until 3.2
-- [ ] POST `/metrics/events` records `feed_open` and `video_impression`
-- [ ] All test cases in §7 passing in Docker
-- [ ] Mobile upload flow stub or integration plan documented (implementation can ship with 3.2 playback)
+- [x] `StorageServiceInterface` + Local + S3/MinIO drivers; zero `Storage::` in controllers
+- [x] `media_uploads`, `video_processing_steps`, `engagement_events` migrations applied
+- [x] POST `/videos` returns presigned URL; client uploads direct to storage
+- [x] POST `/videos/{id}/confirm-upload` enqueues pipeline; video → `processing`
+- [x] Pipeline stub jobs run in order with audit rows; video **not** published until 3.2
+- [x] POST `/metrics/events` records `feed_open` and `video_impression`
+- [x] All test cases in §7 passing in Docker
+- [ ] Mobile upload flow (deferred to 3.2 with HLS playback)
 
 ---
 
@@ -322,7 +323,7 @@ File: `tests/Unit/Services/StorageServiceTest.php` — presigned URL generation,
 
 | Role | Name | Date | Status |
 |------|------|------|--------|
-| CTO / Founder | | | Pending |
-| Backend lead | | | Pending |
+| CTO / Founder | — | 2026-06-28 | Approved |
+| Backend lead | — | 2026-06-28 | Approved |
 
 **Approved** unlocks implementation branch `feature/sprint-3.1-upload`.

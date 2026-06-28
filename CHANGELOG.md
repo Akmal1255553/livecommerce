@@ -51,6 +51,16 @@ Each blueprint defines: goal, API, DB schema, events, queues, test cases, accept
 
 ### Added
 
+#### Sprint 3.1 — Video Upload Foundation
+
+- `StorageService` + Local/S3 drivers — no `Storage::` in controllers
+- Migrations: `media_uploads`, `video_processing_steps`, `engagement_events`; `videos` processing columns
+- `VideoUploadService`, `MediaService`, `MetricsService`
+- Pipeline skeleton: `ProcessVideoPipelineJob` + 6 processing steps (stubs; publish deferred to 3.2)
+- Events: `VideoCreated`, `VideoUploadConfirmed` → `DispatchVideoProcessingPipeline`
+- API: `POST /videos`, `POST /videos/{id}/confirm-upload`, `GET /videos/{id}`, `POST /media/presigned-url`, `POST /metrics/events`
+- Tests: `VideoUploadTest.php` (15), `StorageServiceTest.php` (2) — **64 tests total**
+
 #### Sprint 2.3 — Feed Foundation
 
 - `videos` table migration (minimal publishable schema)

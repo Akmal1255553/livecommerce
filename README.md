@@ -14,7 +14,7 @@ Users discover and buy products through short-form video and live streams (TikTo
 ╚══════════════════════════════════════════════════════════════╝
 ```
 
-**Engineering Foundation:** Sprint 0–1 complete · **Sprint 2:** Follow, Notifications, Feed (2.1–2.3) · **Next:** Sprint 3.1 Blueprint approval → implementation
+**Engineering Foundation:** Sprint 0–1 complete · **Sprint 2:** Follow, Notifications, Feed · **Sprint 3.1:** Upload Foundation · **Next:** Sprint 3.2 Video Processing (blueprint approval)
 
 ---
 
@@ -215,6 +215,11 @@ Authenticated endpoints (`Authorization: Bearer {token}`) unless noted:
 | DELETE | `/api/v1/devices/{token}` | 2.2 | Unregister device |
 | GET | `/api/v1/feed/for-you` | 2.3 | For You video feed (cursor, optional auth) |
 | GET | `/api/v1/feed/following` | 2.3 | Following video feed (cursor, auth required) |
+| GET | `/api/v1/videos/{id}` | 3.1 | Video detail (owner sees processing) |
+| POST | `/api/v1/videos` | 3.1 | Initiate video upload (presigned URL) |
+| POST | `/api/v1/videos/{id}/confirm-upload` | 3.1 | Confirm upload + start pipeline |
+| POST | `/api/v1/media/presigned-url` | 3.1 | Generic presigned upload URL |
+| POST | `/api/v1/metrics/events` | 3.1 | Batch engagement events |
 
 Full contract: [API Specification](./docs/04_API_SPECIFICATION.md) · Live docs: http://localhost:8080/docs/api
 
@@ -326,7 +331,8 @@ Branch protection (recommended): `main` and `develop` require passing CI before 
 | 2.1 — Follow System | Complete |
 | 2.2 — Notifications Foundation | Complete |
 | 2.3 — Feed Foundation | Complete |
-| 3.1 — Video Upload Foundation | Blueprint — [pending approval](./docs/SPRINT_3.1_BLUEPRINT.md) |
+| 3.1 — Video Upload Foundation | Complete |
+| 3.2 — Video Processing | Blueprint — pending approval |
 
 Full plan: [Roadmap](./13_ROADMAP.md) · [Master Plan](./12_MASTER_PLAN.md)
 

@@ -6,8 +6,11 @@ use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\MediaController;
+use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\VideoController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -46,10 +49,17 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('users/{id}/follow', [UserController::class, 'unfollow']);
 
         Route::get('feed/following', [FeedController::class, 'following']);
+
+        Route::post('videos', [VideoController::class, 'store']);
+        Route::post('videos/{id}/confirm-upload', [VideoController::class, 'confirmUpload']);
+
+        Route::post('media/presigned-url', [MediaController::class, 'presignedUrl']);
     });
 
     Route::middleware('auth.api.optional')->group(function (): void {
         Route::get('feed/for-you', [FeedController::class, 'forYou']);
+        Route::get('videos/{id}', [VideoController::class, 'show']);
+        Route::post('metrics/events', [MetricsController::class, 'store']);
         Route::get('users/{id}', [UserController::class, 'showPublic']);
         Route::get('users/{id}/followers', [UserController::class, 'followers']);
         Route::get('users/{id}/following', [UserController::class, 'following']);

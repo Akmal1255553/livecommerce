@@ -38,6 +38,9 @@ class Video extends Model
         'share_count',
         'status',
         'visibility',
+        'processing_started_at',
+        'processing_completed_at',
+        'published_at',
     ];
 
     protected function casts(): array
@@ -45,6 +48,9 @@ class Video extends Model
         return [
             'status' => VideoStatus::class,
             'visibility' => VideoVisibility::class,
+            'processing_started_at' => 'datetime',
+            'processing_completed_at' => 'datetime',
+            'published_at' => 'datetime',
             'view_count' => 'integer',
             'like_count' => 'integer',
             'comment_count' => 'integer',
