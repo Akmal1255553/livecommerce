@@ -33,6 +33,37 @@ class LocalStorageDriver implements StorageDriverInterface
         return $this->disk()->delete($path);
     }
 
+    public function get(string $path): string
+    {
+        $contents = $this->disk()->get($path);
+
+        if ($contents === null) {
+            throw new \RuntimeException("Object not found: {$path}");
+        }
+
+        return $contents;
+    }
+
+    public function putFile(string $path, string $localFilePath): void
+    {
+        $stream = fopen($localFilePath, 'rb');
+
+        if ($stream === false) {
+            throw new \RuntimeException("Unable to read local file: {$localFilePath}");
+        }
+
+        try {
+            $this->disk()->put($path, $stream);
+        } finally {
+            fclose($stream);
+        }
+    }
+
+    public function publicUrl(string $path): string
+    {
+        return rtrim((string) config('app.url'), '/').'/storage/uploads/'.$path;
+    }
+
     public function createPresignedPutUrl(string $path, string $mimeType, int $ttlMinutes): PresignedUploadData
     {
         $expiresAt = now()->addMinutes($ttlMinutes)->toIso8601String();

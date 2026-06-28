@@ -10,5 +10,6 @@ enum VideoProcessingStepStatus: string
     case Running = 'running';
     case Completed = 'completed';
     case Failed = 'failed';
+    case Retrying = 'retrying';
     case Skipped = 'skipped';
 }

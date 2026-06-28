@@ -40,6 +40,34 @@ class StorageService extends BaseService implements StorageServiceInterface
         return $this->driver()->createPresignedPutUrl($path, $mimeType, $ttl);
     }
 
+    public function get(string $path): string
+    {
+        return $this->driver()->get($path);
+    }
+
+    public function putFile(string $path, string $localFilePath): void
+    {
+        $this->driver()->putFile($path, $localFilePath);
+    }
+
+    public function publicUrl(string $path): string
+    {
+        return $this->driver()->publicUrl($path);
+    }
+
+    public function downloadToTemp(string $path): string
+    {
+        $tempPath = tempnam(sys_get_temp_dir(), 'lc_vid_');
+
+        if ($tempPath === false) {
+            throw new \RuntimeException('Unable to create temporary file.');
+        }
+
+        file_put_contents($tempPath, $this->get($path));
+
+        return $tempPath;
+    }
+
     private function driver(): StorageDriverInterface
     {
         return config('storage.driver', 'local') === 's3'

@@ -31,6 +31,10 @@ class VideoResource extends JsonResource
             'is_bookmarked' => false,
             'products' => [],
             'status' => $this->status->value,
+            'failure_code' => $this->when(
+                $this->status->value === 'failed' && $request->user()?->id === $this->user_id,
+                $this->failure_code,
+            ),
             'created_at' => $this->created_at?->toIso8601String(),
         ];
     }

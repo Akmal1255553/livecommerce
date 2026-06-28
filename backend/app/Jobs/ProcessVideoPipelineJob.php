@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Jobs;
 
-use App\Services\Video\VideoProcessingPipelineRunner;
+use App\Services\Video\VideoProcessingPipelineOrchestrator;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -19,7 +19,7 @@ class ProcessVideoPipelineJob implements ShouldQueue
 
     public function __construct(public readonly string $videoId) {}
 
-    public function handle(VideoProcessingPipelineRunner $pipeline): void
+    public function handle(VideoProcessingPipelineOrchestrator $pipeline): void
     {
         $pipeline->run($this->videoId);
     }

@@ -20,9 +20,12 @@ use App\Contracts\Services\HealthServiceInterface;
 use App\Contracts\Services\PushNotificationInterface;
 use App\Contracts\Services\SmsProviderInterface;
 use App\Contracts\Services\MediaServiceInterface;
+use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\MetricsServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
+use App\Contracts\VideoProcessing\FfmpegTranscoderInterface;
 use App\Events\UserRegistered;
 use App\Events\VideoUploadConfirmed;
 use App\Listeners\CreateUserProfile;
@@ -41,9 +44,13 @@ use App\Repositories\Eloquent\UserRepository;
 use App\Repositories\Eloquent\VideoRepository;
 use App\Services\Auth\StubSmsProvider;
 use App\Services\Health\HealthService;
+use App\Services\Media\MediaAssetService;
 use App\Services\Media\MediaService;
 use App\Services\Metrics\MetricsService;
 use App\Services\Storage\StorageService;
+use App\Services\Video\Ffmpeg\CliFfmpegTranscoder;
+use App\Services\Video\Ffmpeg\FakeFfmpegTranscoder;
+use App\Services\Video\VideoStateMachine;
 use App\Services\Video\VideoUploadService;
 use App\Storage\Drivers\LocalStorageDriver;
 use App\Storage\Drivers\S3StorageDriver;
@@ -74,6 +81,8 @@ class RepositoryServiceProvider extends ServiceProvider
         MediaServiceInterface::class => MediaService::class,
         VideoUploadServiceInterface::class => VideoUploadService::class,
         MetricsServiceInterface::class => MetricsService::class,
+        MediaAssetServiceInterface::class => MediaAssetService::class,
+        VideoStateMachineInterface::class => VideoStateMachine::class,
         SmsProviderInterface::class => StubSmsProvider::class,
         PushNotificationInterface::class => StubFcmPushNotification::class,
     ];
@@ -86,6 +95,17 @@ class RepositoryServiceProvider extends ServiceProvider
 
         $this->app->singleton(LocalStorageDriver::class);
         $this->app->singleton(S3StorageDriver::class);
+
+        $this->app->singleton(FfmpegTranscoderInterface::class, function ($app): FfmpegTranscoderInterface {
+            if ($app->environment('testing')) {
+                return new FakeFfmpegTranscoder;
+            }
+
+            return new CliFfmpegTranscoder(
+                (string) config('video.ffmpeg_path', 'ffmpeg'),
+                (string) config('video.ffprobe_path', 'ffprobe'),
+            );
+        });
     }
 
     public function boot(): void

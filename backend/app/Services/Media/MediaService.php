@@ -103,4 +103,24 @@ class MediaService extends BaseService implements MediaServiceInterface
     {
         return $this->uploads->findForVideo($videoId);
     }
+
+    public function videoThumbnailPath(string $videoId): string
+    {
+        return 'videos/'.$videoId.'/thumb.jpg';
+    }
+
+    public function videoHlsMasterPath(string $videoId): string
+    {
+        return 'videos/'.$videoId.'/hls/master.m3u8';
+    }
+
+    public function videoHlsRenditionDir(string $videoId, string $rendition): string
+    {
+        return 'videos/'.$videoId.'/hls/'.$rendition;
+    }
+
+    public function videoHlsRenditionPlaylistPath(string $videoId, string $rendition): string
+    {
+        return $this->videoHlsRenditionDir($videoId, $rendition).'/playlist.m3u8';
+    }
 }
