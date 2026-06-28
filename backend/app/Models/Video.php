@@ -12,7 +12,15 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property VideoStatus $status
+ * @property VideoVisibility $visibility
+ * @property Carbon|null $processing_started_at
+ * @property Carbon|null $processing_completed_at
+ * @property Carbon|null $published_at
+ */
 class Video extends Model
 {
     /** @use HasFactory<VideoFactory> */
@@ -62,6 +70,9 @@ class Video extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

@@ -7,6 +7,9 @@ namespace App\Repositories\Eloquent;
 use App\Contracts\Repositories\VideoLikeRepositoryInterface;
 use App\Models\VideoLike;
 
+/**
+ * @extends BaseEloquentRepository<VideoLike>
+ */
 class VideoLikeRepository extends BaseEloquentRepository implements VideoLikeRepositoryInterface
 {
     public function __construct(VideoLike $model)

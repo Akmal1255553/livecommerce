@@ -16,19 +16,28 @@ abstract class BaseEloquentRepository implements RepositoryInterface
     /** @param TModel $model */
     public function __construct(protected Model $model) {}
 
+    /**
+     * @return TModel|null
+     */
     public function findById(int|string $id): ?Model
     {
+        /** @var TModel|null */
         return $this->model->newQuery()->find($id);
     }
 
+    /**
+     * @return TModel
+     */
     public function findByIdOrFail(int|string $id): Model
     {
+        /** @var TModel|null */
         $record = $this->findById($id);
 
         if ($record === null) {
             throw (new ModelNotFoundException)->setModel($this->model::class, [$id]);
         }
 
+        /** @var TModel */
         return $record;
     }
 }

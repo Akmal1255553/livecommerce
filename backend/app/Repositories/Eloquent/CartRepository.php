@@ -7,6 +7,9 @@ namespace App\Repositories\Eloquent;
 use App\Contracts\Repositories\CartRepositoryInterface;
 use App\Models\Cart;
 
+/**
+ * @extends BaseEloquentRepository<Cart>
+ */
 class CartRepository extends BaseEloquentRepository implements CartRepositoryInterface
 {
     public function __construct(Cart $model)

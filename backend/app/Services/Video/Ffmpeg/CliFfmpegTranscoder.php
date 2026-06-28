@@ -98,7 +98,7 @@ class CliFfmpegTranscoder implements FfmpegTranscoderInterface
 
         $segments = glob($outputDir.'/segment_*.ts') ?: [];
 
-        return array_values($segments);
+        return $segments;
     }
 
     public function buildMasterPlaylist(array $variants, string $masterPath): void

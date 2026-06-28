@@ -7,6 +7,9 @@ namespace App\Repositories\Eloquent;
 use App\Contracts\Repositories\LiveStreamRepositoryInterface;
 use App\Models\LiveStream;
 
+/**
+ * @extends BaseEloquentRepository<LiveStream>
+ */
 class LiveStreamRepository extends BaseEloquentRepository implements LiveStreamRepositoryInterface
 {
     public function __construct(LiveStream $model)

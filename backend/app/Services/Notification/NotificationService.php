@@ -59,7 +59,8 @@ class NotificationService extends BaseService
 
     public function notifyNewFollower(User $recipient, User $follower): ?Notification
     {
-        $displayName = $follower->profile?->display_name ?? $follower->username;
+        $profile = $follower->profile;
+        $displayName = $profile !== null ? $profile->display_name : $follower->username;
 
         return $this->notify(
             recipient: $recipient,
@@ -168,7 +169,8 @@ class NotificationService extends BaseService
 
     private function isInAppTypeEnabled(User $user, string $type): bool
     {
-        $settings = $user->profile?->notification_settings ?? [];
+        $profile = $user->profile;
+        $settings = $profile !== null ? ($profile->notification_settings ?? []) : [];
         $types = $settings['types'] ?? [];
 
         if (array_key_exists($type, $types)) {
@@ -180,7 +182,8 @@ class NotificationService extends BaseService
 
     private function shouldSendPush(User $user, string $type): bool
     {
-        $settings = $user->profile?->notification_settings ?? [];
+        $profile = $user->profile;
+        $settings = $profile !== null ? ($profile->notification_settings ?? []) : [];
 
         if (isset($settings['push_enabled']) && ! $settings['push_enabled']) {
             return false;

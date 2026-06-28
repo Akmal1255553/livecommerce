@@ -8,6 +8,9 @@ use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\Models\Notification;
 use Illuminate\Support\Collection;
 
+/**
+ * @extends BaseEloquentRepository<Notification>
+ */
 class NotificationRepository extends BaseEloquentRepository implements NotificationRepositoryInterface
 {
     public function __construct(Notification $model)
@@ -37,6 +40,7 @@ class NotificationRepository extends BaseEloquentRepository implements Notificat
             $query->where('id', '<', $beforeId);
         }
 
+        /** @var Collection<int, Notification> */
         return $query->limit($limit + 1)->get();
     }
 

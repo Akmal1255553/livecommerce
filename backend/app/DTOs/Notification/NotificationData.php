@@ -25,10 +25,12 @@ readonly class NotificationData extends DataTransferObject
         string $entity_id,
         string $deep_link,
     ): self {
+        $profile = $user->profile;
+
         return new self(
             user_id: $user->id,
             avatar: $user->avatar_url,
-            username: $user->profile?->display_name ?? $user->username,
+            username: $profile !== null ? $profile->display_name : $user->username,
             entity_id: $entity_id,
             entity_type: $entity_type,
             deep_link: $deep_link,

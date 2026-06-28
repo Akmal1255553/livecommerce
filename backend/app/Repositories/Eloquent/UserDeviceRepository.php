@@ -7,6 +7,9 @@ namespace App\Repositories\Eloquent;
 use App\Contracts\Repositories\UserDeviceRepositoryInterface;
 use App\Models\UserDevice;
 
+/**
+ * @extends BaseEloquentRepository<UserDevice>
+ */
 class UserDeviceRepository extends BaseEloquentRepository implements UserDeviceRepositoryInterface
 {
     public function __construct(UserDevice $model)

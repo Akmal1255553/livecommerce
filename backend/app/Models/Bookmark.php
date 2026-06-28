@@ -6,7 +6,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property Carbon $created_at
+ */
 class Bookmark extends Model
 {
     public $timestamps = false;
@@ -24,11 +28,17 @@ class Bookmark extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<Video, $this>
+     */
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);

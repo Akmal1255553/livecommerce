@@ -7,6 +7,9 @@ namespace App\Repositories\Eloquent;
 use App\Contracts\Repositories\VideoShareRepositoryInterface;
 use App\Models\VideoShare;
 
+/**
+ * @extends BaseEloquentRepository<VideoShare>
+ */
 class VideoShareRepository extends BaseEloquentRepository implements VideoShareRepositoryInterface
 {
     public function __construct(VideoShare $model)

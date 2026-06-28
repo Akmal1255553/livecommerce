@@ -6,7 +6,7 @@ namespace App\Storage\Drivers;
 
 use App\Contracts\Storage\StorageDriverInterface;
 use App\DTOs\Storage\PresignedUploadData;
-use Illuminate\Contracts\Filesystem\Filesystem;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
 
@@ -14,8 +14,9 @@ class S3StorageDriver implements StorageDriverInterface
 {
     private const DISK = 's3';
 
-    private function disk(): Filesystem
+    private function disk(): FilesystemAdapter
     {
+        /** @var FilesystemAdapter */
         return Storage::disk(self::DISK);
     }
 

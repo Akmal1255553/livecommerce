@@ -7,7 +7,13 @@ namespace App\Models;
 use App\Enums\NotificationType;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property NotificationType $type
+ * @property Carbon|null $read_at
+ * @property Carbon $created_at
+ */
 class Notification extends Model
 {
     public const UPDATED_AT = null;
@@ -30,6 +36,9 @@ class Notification extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

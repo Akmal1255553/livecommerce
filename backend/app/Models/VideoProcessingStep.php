@@ -8,7 +8,15 @@ use App\Enums\VideoProcessingStepName;
 use App\Enums\VideoProcessingStepStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property VideoProcessingStepName $step
+ * @property VideoProcessingStepStatus $status
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
+ * @property Carbon $created_at
+ */
 class VideoProcessingStep extends Model
 {
     public $timestamps = false;
@@ -36,6 +44,9 @@ class VideoProcessingStep extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<Video, $this>
+     */
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);

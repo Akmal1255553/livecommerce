@@ -7,7 +7,12 @@ namespace App\Models;
 use App\Enums\ShareChannel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property ShareChannel $channel
+ * @property Carbon $created_at
+ */
 class VideoShare extends Model
 {
     public $timestamps = false;
@@ -27,11 +32,17 @@ class VideoShare extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<Video, $this>
+     */
     public function video(): BelongsTo
     {
         return $this->belongsTo(Video::class);

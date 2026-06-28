@@ -24,6 +24,7 @@ use App\Models\User;
 use App\Models\Video;
 use App\Services\BaseService;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Redis;
 
@@ -49,7 +50,7 @@ class VideoInteractionService extends BaseService implements VideoInteractionSer
         $video = $this->findPublishedVideo($videoId);
         $lockKey = "like:lock:{$videoId}:{$user->id}";
 
-        Redis::set($lockKey, '1', 'EX', self::LIKE_LOCK_TTL, 'NX');
+        Cache::add($lockKey, true, self::LIKE_LOCK_TTL);
 
         try {
             if ($this->likes->exists($user->id, $videoId)) {
@@ -86,7 +87,7 @@ class VideoInteractionService extends BaseService implements VideoInteractionSer
                 ];
             });
         } finally {
-            Redis::del($lockKey);
+            Cache::forget($lockKey);
         }
     }
 
@@ -126,7 +127,7 @@ class VideoInteractionService extends BaseService implements VideoInteractionSer
         $this->findPublishedVideo($videoId);
 
         $dedupKey = "view:{$videoId}:{$sessionId}";
-        $wasNew = (bool) Redis::set($dedupKey, '1', 'EX', self::VIEW_DEDUP_TTL, 'NX');
+        $wasNew = Cache::add($dedupKey, true, self::VIEW_DEDUP_TTL);
 
         if (! $wasNew) {
             return false;

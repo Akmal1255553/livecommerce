@@ -14,6 +14,9 @@ interface CommentRepositoryInterface extends RepositoryInterface
      */
     public function paginateTopLevel(string $videoId, int $page, int $perPage): LengthAwarePaginator;
 
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
     public function create(array $attributes): Comment;
 
     public function findForVideo(int $commentId, string $videoId): ?Comment;

@@ -49,10 +49,14 @@ class PublishVideoStep extends AbstractProcessingStep
         rename($masterTemp, $masterPath);
 
         try {
-            $variants = [
-                2_500_000 => $this->media->videoHlsRenditionPlaylistPath($video->id, '720p'),
-                1_000_000 => $this->media->videoHlsRenditionPlaylistPath($video->id, '480p'),
-            ];
+            /** @var array<string, string> $variants */
+            $variants = array_combine(
+                ['2500000', '1000000'],
+                [
+                    $this->media->videoHlsRenditionPlaylistPath($video->id, '720p'),
+                    $this->media->videoHlsRenditionPlaylistPath($video->id, '480p'),
+                ],
+            );
 
             $this->transcoder->buildMasterPlaylist($variants, $masterPath);
 

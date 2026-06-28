@@ -43,9 +43,6 @@ final class ApiResponse
         return response()->json(null, 204);
     }
 
-    /**
-     * @param  array<string, mixed>|null  $meta
-     */
     public static function paginated(
         mixed $data,
         PaginationData $pagination,
@@ -54,6 +51,9 @@ final class ApiResponse
         return self::success($data, $status, meta: $pagination->toArray());
     }
 
+    /**
+     * @param  CursorPaginationData<mixed>  $pagination
+     */
     public static function cursorPaginated(
         mixed $data,
         CursorPaginationData $pagination,

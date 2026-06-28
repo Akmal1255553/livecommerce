@@ -99,6 +99,9 @@ class AuthService extends BaseService
         return $this->issueAuthResult($user->fresh(), $deviceId);
     }
 
+    /**
+     * @return array{message: string, retry_after: int}
+     */
     public function resendOtp(string $phone): array
     {
         $user = $this->users->findByPhone($phone);

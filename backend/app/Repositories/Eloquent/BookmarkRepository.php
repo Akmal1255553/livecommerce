@@ -8,6 +8,9 @@ use App\Contracts\Repositories\BookmarkRepositoryInterface;
 use App\Models\Bookmark;
 use Illuminate\Support\Collection;
 
+/**
+ * @extends BaseEloquentRepository<Bookmark>
+ */
 class BookmarkRepository extends BaseEloquentRepository implements BookmarkRepositoryInterface
 {
     public function __construct(Bookmark $model)
@@ -72,6 +75,7 @@ class BookmarkRepository extends BaseEloquentRepository implements BookmarkRepos
             $query->where('id', '<', $cursorId);
         }
 
+        /** @var Collection<int, Bookmark> */
         return $query->limit($limit + 1)->get();
     }
 }

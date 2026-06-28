@@ -23,7 +23,7 @@ class MetricsService extends BaseService implements MetricsServiceInterface
         $accepted = 0;
 
         foreach ($events as $index => $event) {
-            $type = EngagementEventType::tryFrom($event['type'] ?? '');
+            $type = EngagementEventType::tryFrom($event['type']);
 
             if ($type === null) {
                 throw ValidationException::withMessages([
@@ -31,7 +31,7 @@ class MetricsService extends BaseService implements MetricsServiceInterface
                 ]);
             }
 
-            if (! Str::isUuid($event['session_id'] ?? '')) {
+            if (! Str::isUuid($event['session_id'])) {
                 throw ValidationException::withMessages([
                     "events.{$index}.session_id" => ['Must be a valid UUID.'],
                 ]);

@@ -25,6 +25,9 @@ trait RespondsWithJson
         return ApiResponse::paginated($data, $pagination);
     }
 
+    /**
+     * @param  array<string, list<string>>|null  $errors
+     */
     protected function error(string $message, int $status = 400, ?array $errors = null): JsonResponse
     {
         return ApiResponse::error($message, $status, $errors);

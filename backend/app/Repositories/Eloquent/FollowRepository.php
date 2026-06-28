@@ -9,6 +9,9 @@ use App\Models\Follow;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+/**
+ * @extends BaseEloquentRepository<Follow>
+ */
 class FollowRepository extends BaseEloquentRepository implements FollowRepositoryInterface
 {
     public function __construct(Follow $model)

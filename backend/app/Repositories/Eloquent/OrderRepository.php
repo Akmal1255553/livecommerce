@@ -7,6 +7,9 @@ namespace App\Repositories\Eloquent;
 use App\Contracts\Repositories\OrderRepositoryInterface;
 use App\Models\Order;
 
+/**
+ * @extends BaseEloquentRepository<Order>
+ */
 class OrderRepository extends BaseEloquentRepository implements OrderRepositoryInterface
 {
     public function __construct(Order $model)

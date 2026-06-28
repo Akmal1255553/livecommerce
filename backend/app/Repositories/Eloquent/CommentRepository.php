@@ -8,6 +8,9 @@ use App\Contracts\Repositories\CommentRepositoryInterface;
 use App\Models\Comment;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
+/**
+ * @extends BaseEloquentRepository<Comment>
+ */
 class CommentRepository extends BaseEloquentRepository implements CommentRepositoryInterface
 {
     public function __construct(Comment $model)
@@ -20,6 +23,7 @@ class CommentRepository extends BaseEloquentRepository implements CommentReposit
      */
     public function paginateTopLevel(string $videoId, int $page, int $perPage): LengthAwarePaginator
     {
+        /** @var LengthAwarePaginator<int, Comment> */
         return $this->model->newQuery()
             ->where('video_id', $videoId)
             ->whereNull('parent_id')
@@ -39,6 +43,7 @@ class CommentRepository extends BaseEloquentRepository implements CommentReposit
 
     public function findForVideo(int $commentId, string $videoId): ?Comment
     {
+        /** @var Comment|null */
         return $this->model->newQuery()
             ->whereKey($commentId)
             ->where('video_id', $videoId)
