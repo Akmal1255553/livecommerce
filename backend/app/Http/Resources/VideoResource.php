@@ -27,8 +27,8 @@ class VideoResource extends JsonResource
             'view_count' => $this->view_count,
             'like_count' => $this->like_count,
             'comment_count' => $this->comment_count,
-            'is_liked' => false,
-            'is_bookmarked' => false,
+            'is_liked' => (bool) ($this->is_liked ?? false),
+            'is_bookmarked' => (bool) ($this->is_bookmarked ?? false),
             'products' => [],
             'status' => $this->status->value,
             'failure_code' => $this->when(

@@ -8,6 +8,8 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Console\Scheduling\Schedule;
+use App\Jobs\FlushVideoViewsJob;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
@@ -36,6 +38,9 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\LogApiRequest::class,
             \App\Http\Middleware\SetLocale::class,
         ]);
+    })
+    ->withSchedule(function (Schedule $schedule): void {
+        $schedule->job(new FlushVideoViewsJob)->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (BusinessException $exception, Request $request) {

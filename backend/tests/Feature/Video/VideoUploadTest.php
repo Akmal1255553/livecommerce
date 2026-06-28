@@ -240,11 +240,11 @@ test('post metrics events accepts video impression with video id', function () {
     expect(EngagementEvent::query()->where('video_id', $video->id)->count())->toBe(1);
 });
 
-test('metrics rejects unknown event type in sprint 3.1', function () {
+test('metrics rejects unknown event type', function () {
     test()->postJson('/api/v1/metrics/events', [
         'events' => [
             [
-                'type' => 'watch_time',
+                'type' => 'unknown_event',
                 'session_id' => (string) Str::uuid(),
             ],
         ],

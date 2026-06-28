@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -10,7 +11,9 @@ use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\VideoCommentController;
 use App\Http\Controllers\Api\V1\VideoController;
+use App\Http\Controllers\Api\V1\VideoInteractionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -52,6 +55,18 @@ Route::prefix('v1')->group(function (): void {
 
         Route::post('videos', [VideoController::class, 'store']);
         Route::post('videos/{id}/confirm-upload', [VideoController::class, 'confirmUpload']);
+        Route::put('videos/{id}', [VideoController::class, 'update']);
+        Route::delete('videos/{id}', [VideoController::class, 'destroy']);
+
+        Route::post('videos/{id}/like', [VideoInteractionController::class, 'like']);
+        Route::delete('videos/{id}/like', [VideoInteractionController::class, 'unlike']);
+        Route::post('videos/{id}/bookmark', [VideoInteractionController::class, 'bookmark']);
+        Route::delete('videos/{id}/bookmark', [VideoInteractionController::class, 'unbookmark']);
+        Route::post('videos/{id}/share', [VideoInteractionController::class, 'share']);
+        Route::get('bookmarks', [BookmarkController::class, 'index']);
+
+        Route::post('videos/{id}/comments', [VideoCommentController::class, 'store']);
+        Route::delete('videos/{id}/comments/{commentId}', [VideoCommentController::class, 'destroy']);
 
         Route::post('media/presigned-url', [MediaController::class, 'presignedUrl']);
     });
@@ -59,6 +74,8 @@ Route::prefix('v1')->group(function (): void {
     Route::middleware('auth.api.optional')->group(function (): void {
         Route::get('feed/for-you', [FeedController::class, 'forYou']);
         Route::get('videos/{id}', [VideoController::class, 'show']);
+        Route::post('videos/{id}/view', [VideoInteractionController::class, 'view']);
+        Route::get('videos/{id}/comments', [VideoCommentController::class, 'index']);
         Route::post('metrics/events', [MetricsController::class, 'store']);
         Route::get('users/{id}', [UserController::class, 'showPublic']);
         Route::get('users/{id}/followers', [UserController::class, 'followers']);

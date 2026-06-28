@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Contracts\Repositories\BookmarkRepositoryInterface;
 use App\Contracts\Repositories\CartRepositoryInterface;
+use App\Contracts\Repositories\CommentRepositoryInterface;
 use App\Contracts\Repositories\FollowRepositoryInterface;
 use App\Contracts\Repositories\LiveStreamRepositoryInterface;
 use App\Contracts\Repositories\MediaUploadRepositoryInterface;
@@ -14,8 +16,11 @@ use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Contracts\Repositories\RefreshTokenRepositoryInterface;
 use App\Contracts\Repositories\StoreRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
+use App\Contracts\Repositories\VideoLikeRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
+use App\Contracts\Repositories\VideoShareRepositoryInterface;
 use App\Contracts\Repositories\UserDeviceRepositoryInterface;
+use App\Contracts\Services\CommentServiceInterface;
 use App\Contracts\Services\HealthServiceInterface;
 use App\Contracts\Services\PushNotificationInterface;
 use App\Contracts\Services\SmsProviderInterface;
@@ -23,14 +28,21 @@ use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\MetricsServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Contracts\Services\VideoInteractionServiceInterface;
 use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
 use App\Contracts\VideoProcessing\FfmpegTranscoderInterface;
+use App\Events\CommentCreated;
 use App\Events\UserRegistered;
+use App\Events\VideoLiked;
 use App\Events\VideoUploadConfirmed;
 use App\Listeners\CreateUserProfile;
 use App\Listeners\DispatchVideoProcessingPipeline;
+use App\Listeners\NotifyOnComment;
+use App\Listeners\NotifyOnVideoLiked;
+use App\Repositories\Eloquent\BookmarkRepository;
 use App\Repositories\Eloquent\CartRepository;
+use App\Repositories\Eloquent\CommentRepository;
 use App\Repositories\Eloquent\FollowRepository;
 use App\Repositories\Eloquent\LiveStreamRepository;
 use App\Repositories\Eloquent\MediaUploadRepository;
@@ -41,15 +53,19 @@ use App\Repositories\Eloquent\RefreshTokenRepository;
 use App\Repositories\Eloquent\StoreRepository;
 use App\Repositories\Eloquent\UserDeviceRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Eloquent\VideoLikeRepository;
 use App\Repositories\Eloquent\VideoRepository;
+use App\Repositories\Eloquent\VideoShareRepository;
 use App\Services\Auth\StubSmsProvider;
 use App\Services\Health\HealthService;
 use App\Services\Media\MediaAssetService;
 use App\Services\Media\MediaService;
 use App\Services\Metrics\MetricsService;
 use App\Services\Storage\StorageService;
+use App\Services\Video\CommentService;
 use App\Services\Video\Ffmpeg\CliFfmpegTranscoder;
 use App\Services\Video\Ffmpeg\FakeFfmpegTranscoder;
+use App\Services\Video\VideoInteractionService;
 use App\Services\Video\VideoStateMachine;
 use App\Services\Video\VideoUploadService;
 use App\Storage\Drivers\LocalStorageDriver;
@@ -75,11 +91,17 @@ class RepositoryServiceProvider extends ServiceProvider
         NotificationRepositoryInterface::class => NotificationRepository::class,
         UserDeviceRepositoryInterface::class => UserDeviceRepository::class,
         FollowRepositoryInterface::class => FollowRepository::class,
+        VideoLikeRepositoryInterface::class => VideoLikeRepository::class,
+        CommentRepositoryInterface::class => CommentRepository::class,
+        BookmarkRepositoryInterface::class => BookmarkRepository::class,
+        VideoShareRepositoryInterface::class => VideoShareRepository::class,
         MediaUploadRepositoryInterface::class => MediaUploadRepository::class,
         HealthServiceInterface::class => HealthService::class,
         StorageServiceInterface::class => StorageService::class,
         MediaServiceInterface::class => MediaService::class,
         VideoUploadServiceInterface::class => VideoUploadService::class,
+        VideoInteractionServiceInterface::class => VideoInteractionService::class,
+        CommentServiceInterface::class => CommentService::class,
         MetricsServiceInterface::class => MetricsService::class,
         MediaAssetServiceInterface::class => MediaAssetService::class,
         VideoStateMachineInterface::class => VideoStateMachine::class,
@@ -112,5 +134,7 @@ class RepositoryServiceProvider extends ServiceProvider
     {
         Event::listen(UserRegistered::class, CreateUserProfile::class);
         Event::listen(VideoUploadConfirmed::class, DispatchVideoProcessingPipeline::class);
+        Event::listen(VideoLiked::class, NotifyOnVideoLiked::class);
+        Event::listen(CommentCreated::class, NotifyOnComment::class);
     }
 }
