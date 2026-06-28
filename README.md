@@ -332,7 +332,7 @@ Branch protection (recommended): `main` and `develop` require passing CI before 
 | 2.2 — Notifications Foundation | Complete |
 | 2.3 — Feed Foundation | Complete |
 | 3.1 — Video Upload Foundation | Complete |
-| 3.2 — Video Processing | Blueprint — pending approval |
+| 3.2 — Video Processing | [Approved](./blueprints/video-processing.md) — ready for implementation |
 
 Full plan: [Roadmap](./13_ROADMAP.md) · [Master Plan](./12_MASTER_PLAN.md)
 
@@ -401,7 +401,7 @@ Full plan: [Roadmap](./13_ROADMAP.md) · [Master Plan](./12_MASTER_PLAN.md)
 | [Sprint 1 — Authentication](./docs/SPRINT_1_AUTHENTICATION.md) | JWT auth, OTP, profile, mobile auth UX |
 | [Sprint 2.3 — Feed Foundation](./docs/SPRINT_2.3_FEED_FOUNDATION.md) | For You / Following feeds, cursor pagination |
 | [Sprint 3.1 — Upload Blueprint](./docs/SPRINT_3.1_BLUEPRINT.md) | StorageService, presigned upload, pipeline skeleton |
-| [Sprint 3.2 — Processing Blueprint](./docs/SPRINT_3.2_BLUEPRINT.md) | FFmpeg, HLS, publish |
+| [Video Processing Blueprint](./blueprints/video-processing.md) | Sprint 3.2 — FFmpeg, HLS, publish (approved) |
 | [Sprint 3.3 — Interactions Blueprint](./docs/SPRINT_3.3_BLUEPRINT.md) | Likes, comments, views, metrics |
 | [Sprint 3.4 — Recommendations Blueprint](./docs/SPRINT_3.4_BLUEPRINT.md) | Trending, popular, new, For You rules |
 | [Environment Verification](./docs/19_ENVIRONMENT_VERIFICATION.md) | Docker/Flutter gate before Sprint 1 sign-off |

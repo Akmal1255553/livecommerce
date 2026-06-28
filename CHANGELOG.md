@@ -43,15 +43,17 @@ Implementation **blocked** until each sub-sprint blueprint is marked **Approved*
 | Blueprint | Scope |
 |-----------|-------|
 | [SPRINT_3.1_BLUEPRINT.md](./docs/SPRINT_3.1_BLUEPRINT.md) | Upload, StorageService, MinIO, metrics foundation |
-| [SPRINT_3.2_BLUEPRINT.md](./docs/SPRINT_3.2_BLUEPRINT.md) | FFmpeg, HLS, publish |
+| [blueprints/video-processing.md](./blueprints/video-processing.md) | FFmpeg, HLS, publish (approved) |
 | [SPRINT_3.3_BLUEPRINT.md](./docs/SPRINT_3.3_BLUEPRINT.md) | Likes, comments, bookmarks, shares, views |
 | [SPRINT_3.4_BLUEPRINT.md](./docs/SPRINT_3.4_BLUEPRINT.md) | Trending, popular, new, rule-based For You |
 
 Each blueprint defines: goal, API, DB schema, events, queues, test cases, acceptance criteria.
 
-### Added
+### Changed
 
-#### Sprint 3.1 — Video Upload Foundation
+- Sprint 3.2 blueprint canonical path: [blueprints/video-processing.md](./blueprints/video-processing.md) — **Approved** 2026-06-28
+
+### Added
 
 - `StorageService` + Local/S3 drivers — no `Storage::` in controllers
 - Migrations: `media_uploads`, `video_processing_steps`, `engagement_events`; `videos` processing columns

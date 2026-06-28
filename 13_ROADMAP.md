@@ -374,7 +374,7 @@ Sprint 3 is split into focused sub-sprints (same pattern as Sprint 2). Feed read
 | Sub-sprint | Focus | Status |
 |------------|-------|--------|
 | **3.1** | Video Upload Foundation | [Blueprint](./docs/SPRINT_3.1_BLUEPRINT.md) | **Complete** |
-| **3.2** | Video Processing | [Blueprint](./docs/SPRINT_3.2_BLUEPRINT.md) | Blueprint — pending approval |
+| **3.2** | Video Processing | [Blueprint](../blueprints/video-processing.md) | Approved |
 | **3.3** | Video Interactions | [Blueprint](./docs/SPRINT_3.3_BLUEPRINT.md) | Blueprint — pending approval |
 | **3.4** | Recommendation Engine v1 | [Blueprint](./docs/SPRINT_3.4_BLUEPRINT.md) | Blueprint — pending approval |
 
@@ -483,9 +483,9 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 # Sprint 3.2 — Video Processing
 
-**Status:** Blueprint — pending approval  
-**Blueprint:** [docs/SPRINT_3.2_BLUEPRINT.md](./docs/SPRINT_3.2_BLUEPRINT.md)  
-**Depends on:** Sprint 3.1 (approved)  
+**Status:** Approved — ready for implementation  
+**Blueprint:** [blueprints/video-processing.md](../blueprints/video-processing.md)  
+**Depends on:** Sprint 3.1 (complete — v0.3.1)  
 **Priority:** P0
 
 ## Backend Deliverables

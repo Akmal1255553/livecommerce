@@ -13,7 +13,7 @@ Roadmap detail: [13_ROADMAP.md](../13_ROADMAP.md#sprint-3--video-platform)
 | Sub-sprint | Focus | Blueprint | Status |
 |------------|-------|-----------|--------|
 | **3.1** | Video Upload Foundation | [SPRINT_3.1_BLUEPRINT.md](./SPRINT_3.1_BLUEPRINT.md) | **Complete** |
-| **3.2** | Video Processing | [SPRINT_3.2_BLUEPRINT.md](./SPRINT_3.2_BLUEPRINT.md) | Blueprint — pending approval |
+| **3.2** | Video Processing | [blueprints/video-processing.md](../blueprints/video-processing.md) | Approved — ready for implementation |
 | **3.3** | Video Interactions | [SPRINT_3.3_BLUEPRINT.md](./SPRINT_3.3_BLUEPRINT.md) | Blueprint — pending approval |
 | **3.4** | Recommendation Engine v1 | [SPRINT_3.4_BLUEPRINT.md](./SPRINT_3.4_BLUEPRINT.md) | Blueprint — pending approval |
 
