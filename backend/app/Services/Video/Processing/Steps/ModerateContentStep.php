@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Video\Processing\Steps;
 
+use App\Contracts\Services\VideoStateMachineInterface;
 use App\Enums\VideoProcessingStepName;
 use App\Models\Video;
 use App\Services\Video\Processing\AbstractProcessingStep;

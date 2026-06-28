@@ -4,12 +4,18 @@ declare(strict_types=1);
 
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Enums\MediaAssetType;
 use App\Enums\VideoProcessingStepName;
+use App\Enums\VideoProcessingStepStatus;
 use App\Enums\VideoStatus;
+use App\Events\VideoPublished;
+use App\Jobs\ProcessVideoPipelineJob;
 use App\Models\EngagementEvent;
 use App\Models\User;
 use App\Models\Video;
 use App\Models\VideoProcessingStep;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 
 function putVideoRawUpload(string $videoId, string $mimeType = 'video/mp4'): void
@@ -84,6 +90,8 @@ test('post videos rejects file size over limit', function () {
 });
 
 test('owner can confirm upload when object exists', function () {
+    Queue::fake();
+
     $user = registerUser('confirmowner', 'confirmowner@example.com');
 
     $create = test()->withToken($user['access_token'])
@@ -101,7 +109,7 @@ test('owner can confirm upload when object exists', function () {
             'checksum' => 'sha256:abc',
         ])
         ->assertAccepted()
-        ->assertJsonPath('data.video.status', VideoStatus::Processing->value)
+        ->assertJsonPath('data.video.status', VideoStatus::Queued->value)
         ->assertJsonPath('data.message', 'Upload confirmed. Processing started.');
 
     test()->assertDatabaseHas('media_uploads', [
@@ -109,6 +117,8 @@ test('owner can confirm upload when object exists', function () {
         'status' => 'uploaded',
         'checksum' => 'sha256:abc',
     ]);
+
+    Queue::assertPushed(ProcessVideoPipelineJob::class, fn (ProcessVideoPipelineJob $job): bool => $job->videoId === $videoId);
 });
 
 test('confirm upload fails if not owner', function () {
@@ -130,6 +140,8 @@ test('confirm upload fails if not owner', function () {
 });
 
 test('confirm upload fails if status not uploading', function () {
+    Queue::fake();
+
     $user = registerUser('statconflict', 'statconflict@example.com');
 
     $videoId = test()->withToken($user['access_token'])
@@ -166,7 +178,7 @@ test('confirm upload fails if object missing in storage', function () {
         ->assertJsonPath('errors.upload.0', 'Uploaded object was not found in storage.');
 });
 
-test('pipeline stub jobs create video processing step rows', function () {
+test('pipeline creates eight processing step rows', function () {
     $user = registerUser('pipeline', 'pipeline@example.com');
 
     $videoId = test()->withToken($user['access_token'])
@@ -182,28 +194,8 @@ test('pipeline stub jobs create video processing step rows', function () {
         ->postJson("/api/v1/videos/{$videoId}/confirm-upload")
         ->assertAccepted();
 
-    expect(VideoProcessingStep::query()->where('video_id', $videoId)->count())->toBe(6)
-        ->and(VideoProcessingStep::query()->where('video_id', $videoId)->where('step', VideoProcessingStepName::VirusScan->value)->exists())->toBeTrue();
-});
-
-test('after pipeline stubs video stays processing not published', function () {
-    $user = registerUser('stayproc', 'stayproc@example.com');
-
-    $videoId = test()->withToken($user['access_token'])
-        ->postJson('/api/v1/videos', [
-            'mime_type' => 'video/mp4',
-            'file_size' => 1024,
-        ])
-        ->json('data.video.id');
-
-    putVideoRawUpload($videoId);
-
-    test()->withToken($user['access_token'])
-        ->postJson("/api/v1/videos/{$videoId}/confirm-upload")
-        ->assertAccepted();
-
-    $video = Video::query()->find($videoId);
-    expect($video?->status)->toBe(VideoStatus::Processing);
+    expect(VideoProcessingStep::query()->where('video_id', $videoId)->count())->toBe(8)
+        ->and(VideoProcessingStep::query()->where('video_id', $videoId)->where('step', VideoProcessingStepName::Validate->value)->exists())->toBeTrue();
 });
 
 test('post metrics events accepts feed_open', function () {

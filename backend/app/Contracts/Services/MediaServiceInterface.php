@@ -31,4 +31,12 @@ interface MediaServiceInterface
     ): PresignedUploadData;
 
     public function findUploadForVideo(string $videoId): ?MediaUpload;
+
+    public function videoThumbnailPath(string $videoId): string;
+
+    public function videoHlsMasterPath(string $videoId): string;
+
+    public function videoHlsRenditionDir(string $videoId, string $rendition): string;
+
+    public function videoHlsRenditionPlaylistPath(string $videoId, string $rendition): string;
 }

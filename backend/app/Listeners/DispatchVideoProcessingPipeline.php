@@ -11,7 +11,11 @@ class DispatchVideoProcessingPipeline
 {
     public function handle(VideoUploadConfirmed $event): void
     {
-        ProcessVideoPipelineJob::dispatch($event->videoId)
+        $dispatch = ProcessVideoPipelineJob::dispatch($event->videoId)
             ->onQueue('video-processing');
+
+        if (config('queue.default') !== 'sync') {
+            $dispatch->afterResponse();
+        }
     }
 }

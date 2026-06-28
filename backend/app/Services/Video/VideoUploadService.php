@@ -8,6 +8,7 @@ use App\Contracts\Repositories\MediaUploadRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
 use App\Enums\MediaUploadStatus;
 use App\Enums\VideoStatus;
@@ -31,6 +32,7 @@ class VideoUploadService extends BaseService implements VideoUploadServiceInterf
         private readonly MediaUploadRepositoryInterface $uploads,
         private readonly MediaServiceInterface $media,
         private readonly StorageServiceInterface $storage,
+        private readonly VideoStateMachineInterface $stateMachine,
     ) {}
 
     /**
@@ -104,10 +106,8 @@ class VideoUploadService extends BaseService implements VideoUploadServiceInterf
 
         $this->uploads->updateStatus($upload, MediaUploadStatus::Uploaded->value, $checksum);
 
-        $video = $this->videos->update($video, [
-            'status' => VideoStatus::Processing,
-            'processing_started_at' => now(),
-        ]);
+        $video = $this->stateMachine->markUploaded($video);
+        $video = $this->stateMachine->markQueued($video);
 
         event(new VideoUploadConfirmed($video->id, $user->id, $upload->id));
 

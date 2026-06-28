@@ -14,5 +14,11 @@ interface StorageDriverInterface
 
     public function delete(string $path): bool;
 
+    public function get(string $path): string;
+
+    public function putFile(string $path, string $localFilePath): void;
+
+    public function publicUrl(string $path): string;
+
     public function createPresignedPutUrl(string $path, string $mimeType, int $ttlMinutes): PresignedUploadData;
 }

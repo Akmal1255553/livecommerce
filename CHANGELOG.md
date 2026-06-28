@@ -6,7 +6,24 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### Sprint 3.2 — Video Processing (v2 architecture)
+
+- `VideoStateMachine` — `uploaded` → `queued` → `processing` → `published` | `failed`
+- `VideoProcessingPipelineOrchestrator` — DAG stages with 8 idempotent steps
+- `media_assets` table + `MediaAssetService` — decoupled derivative files from `Video`
+- `ValidateVideoStep`, `TranscodeHls720Step`, `TranscodeHls480Step`
+- `FfmpegTranscoderInterface` — `CliFfmpegTranscoder` (prod) / `FakeFfmpegTranscoder` (tests)
+- `StorageService::publicUrl()`, `downloadToTemp()`, `putFile()`
+- `RetryVideoProcessingStepJob` for per-step retry
+- Events: `VideoProcessingStarted`, `VideoPublished`, `VideoProcessingFailed`
+- FFmpeg in Docker `app` image
+- Tests: `VideoProcessingTest.php` (8), `MediaAssetServiceTest.php` (2) — **73 tests total**
+
 ### Changed
+
+- Sprint 3.2 blueprint **v2**: [blueprints/video-processing.md](./blueprints/video-processing.md) — state machine, DAG, MediaAsset
 
 #### Sprint 3 restructure (2026-06-28)
 

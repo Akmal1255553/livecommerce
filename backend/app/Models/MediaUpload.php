@@ -27,6 +27,7 @@ class MediaUpload extends Model
         'storage_path',
         'checksum',
         'status',
+        'processed_at',
     ];
 
     protected function casts(): array
@@ -34,6 +35,7 @@ class MediaUpload extends Model
         return [
             'status' => MediaUploadStatus::class,
             'file_size' => 'integer',
+            'processed_at' => 'datetime',
         ];
     }
 

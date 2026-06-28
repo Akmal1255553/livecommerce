@@ -4,33 +4,43 @@ declare(strict_types=1);
 
 namespace App\Services\Video\Processing;
 
+use App\Contracts\Services\VideoStateMachineInterface;
+use App\Contracts\VideoProcessing\VideoProcessingStepInterface;
 use App\Enums\VideoProcessingStepName;
 use App\Enums\VideoProcessingStepStatus;
-use App\Enums\VideoStatus;
+use App\Events\VideoProcessingFailed;
+use App\Exceptions\Domain\VideoProcessingException;
 use App\Models\Video;
 use App\Models\VideoProcessingStep;
-use App\Contracts\VideoProcessing\VideoProcessingStepInterface;
 use Throwable;
 
 abstract class AbstractProcessingStep implements VideoProcessingStepInterface
 {
+    public function __construct(
+        protected readonly VideoStateMachineInterface $stateMachine,
+    ) {}
+
     public function run(Video $video): void
     {
         if ($this->isCompleted($video)) {
             return;
         }
 
-        $record = $this->startStep($video);
+        $record = $this->acquireStep($video);
 
         try {
-            $this->execute($video);
+            $this->execute($video->fresh() ?? $video);
             $this->completeStep($record, $this->resultStatus());
+        } catch (VideoProcessingException $exception) {
+            $this->failStep($record, $exception->getMessage());
+            $this->stateMachine->markFailed($video->fresh() ?? $video, $exception->failureCode, $exception->getMessage());
+            event(new VideoProcessingFailed($video->id, $this->name()->value, $exception->failureCode));
+
+            throw $exception;
         } catch (Throwable $exception) {
             $this->failStep($record, $exception->getMessage());
-            $video->update([
-                'status' => VideoStatus::Failed,
-                'processing_completed_at' => now(),
-            ]);
+            $this->stateMachine->markFailed($video->fresh() ?? $video, 'transcode_error', $exception->getMessage());
+            event(new VideoProcessingFailed($video->id, $this->name()->value, 'transcode_error'));
 
             throw $exception;
         }
@@ -55,16 +65,31 @@ abstract class AbstractProcessingStep implements VideoProcessingStepInterface
             ->exists();
     }
 
-    private function startStep(Video $video): VideoProcessingStep
+    private function acquireStep(Video $video): VideoProcessingStep
     {
-        return VideoProcessingStep::query()->create([
-            'video_id' => $video->id,
-            'step' => $this->name(),
+        $record = VideoProcessingStep::query()
+            ->where('video_id', $video->id)
+            ->where('step', $this->name())
+            ->whereIn('status', [
+                VideoProcessingStepStatus::Pending,
+                VideoProcessingStepStatus::Retrying,
+            ])
+            ->first();
+
+        if (! $record instanceof VideoProcessingStep) {
+            throw new VideoProcessingException(
+                'validation_failed',
+                'Processing step is not pending: '.$this->name()->value,
+            );
+        }
+
+        $record->update([
             'status' => VideoProcessingStepStatus::Running,
-            'attempt' => 1,
             'started_at' => now(),
-            'created_at' => now(),
+            'error_message' => null,
         ]);
+
+        return $record->fresh() ?? $record;
     }
 
     private function completeStep(VideoProcessingStep $record, VideoProcessingStepStatus $status): void
