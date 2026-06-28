@@ -373,12 +373,14 @@ Sprint 3 is split into focused sub-sprints (same pattern as Sprint 2). Feed read
 
 | Sub-sprint | Focus | Status |
 |------------|-------|--------|
-| **3.1** | Video Upload Foundation | Planned |
-| **3.2** | Video Processing | Planned |
-| **3.3** | Video Interactions | Planned |
-| **3.4** | Recommendation Engine v1 | Planned |
+| **3.1** | Video Upload Foundation | [Blueprint](./docs/SPRINT_3.1_BLUEPRINT.md) | Blueprint — pending approval |
+| **3.2** | Video Processing | [Blueprint](./docs/SPRINT_3.2_BLUEPRINT.md) | Blueprint — pending approval |
+| **3.3** | Video Interactions | [Blueprint](./docs/SPRINT_3.3_BLUEPRINT.md) | Blueprint — pending approval |
+| **3.4** | Recommendation Engine v1 | [Blueprint](./docs/SPRINT_3.4_BLUEPRINT.md) | Blueprint — pending approval |
 
-## Cross-cutting architecture (all of Sprint 3)
+> **Implementation gate:** No Sprint 3 code until the sub-sprint blueprint is marked **Approved**.
+
+---
 
 ### Storage abstraction — no direct `Storage` in controllers
 
@@ -441,7 +443,8 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 # Sprint 3.1 — Video Upload Foundation
 
-**Status:** Planned (next)  
+**Status:** Blueprint — pending approval  
+**Blueprint:** [docs/SPRINT_3.1_BLUEPRINT.md](./docs/SPRINT_3.1_BLUEPRINT.md)  
 **Depends on:** Sprint 2.3  
 **Priority:** P0
 
@@ -449,7 +452,6 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 - [ ] `StorageService` + `StorageDriverInterface` — Local, S3/MinIO drivers
 - [ ] `MediaService` refactor — presigned URLs via `StorageService` (no `Storage::` in controllers)
-- [ ] Migration: `media_uploads` (upload session, key, mime, size, checksum)
 - [ ] Extend `videos` — upload lifecycle fields (`raw_video_url`, processing timestamps)
 - [ ] `VideoUploadService` — initiate upload, confirm upload, enqueue pipeline
 - [ ] Pipeline skeleton: `ProcessVideoPipeline` job chain (stubs for scan/metadata/thumbnail/transcode/moderation)
@@ -480,8 +482,9 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 # Sprint 3.2 — Video Processing
 
-**Status:** Planned  
-**Depends on:** Sprint 3.1  
+**Status:** Blueprint — pending approval  
+**Blueprint:** [docs/SPRINT_3.2_BLUEPRINT.md](./docs/SPRINT_3.2_BLUEPRINT.md)  
+**Depends on:** Sprint 3.1 (approved)  
 **Priority:** P0
 
 ## Backend Deliverables
@@ -513,8 +516,9 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 # Sprint 3.3 — Video Interactions
 
-**Status:** Planned  
-**Depends on:** Sprint 3.2  
+**Status:** Blueprint — pending approval  
+**Blueprint:** [docs/SPRINT_3.3_BLUEPRINT.md](./docs/SPRINT_3.3_BLUEPRINT.md)  
+**Depends on:** Sprint 3.2 (approved)  
 **Priority:** P0
 
 ## Backend Deliverables
@@ -552,8 +556,9 @@ Collect events before scale; store in `video_events` / `engagement_metrics` (app
 
 # Sprint 3.4 — Recommendation Engine v1
 
-**Status:** Planned  
-**Depends on:** Sprint 3.3  
+**Status:** Blueprint — pending approval  
+**Blueprint:** [docs/SPRINT_3.4_BLUEPRINT.md](./docs/SPRINT_3.4_BLUEPRINT.md)  
+**Depends on:** Sprint 3.3 (approved)  
 **Priority:** P0
 
 ## Modules

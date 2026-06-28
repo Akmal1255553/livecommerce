@@ -36,6 +36,19 @@ The monolithic **Sprint 3 — Video Platform** (2 weeks, upload + feed + likes +
 
 **Docs updated:** [13_ROADMAP.md](./13_ROADMAP.md), [12_MASTER_PLAN.md](./12_MASTER_PLAN.md), [docs/17_DEPENDENCY_MATRIX.md](./docs/17_DEPENDENCY_MATRIX.md), [docs/SPRINT_3_VIDEO_PLATFORM.md](./docs/SPRINT_3_VIDEO_PLATFORM.md), [docs01_PRD.md](./docs01_PRD.md) (implementation mapping)
 
+#### Sprint 3 blueprints (2026-06-28)
+
+Implementation **blocked** until each sub-sprint blueprint is marked **Approved**:
+
+| Blueprint | Scope |
+|-----------|-------|
+| [SPRINT_3.1_BLUEPRINT.md](./docs/SPRINT_3.1_BLUEPRINT.md) | Upload, StorageService, MinIO, metrics foundation |
+| [SPRINT_3.2_BLUEPRINT.md](./docs/SPRINT_3.2_BLUEPRINT.md) | FFmpeg, HLS, publish |
+| [SPRINT_3.3_BLUEPRINT.md](./docs/SPRINT_3.3_BLUEPRINT.md) | Likes, comments, bookmarks, shares, views |
+| [SPRINT_3.4_BLUEPRINT.md](./docs/SPRINT_3.4_BLUEPRINT.md) | Trending, popular, new, rule-based For You |
+
+Each blueprint defines: goal, API, DB schema, events, queues, test cases, acceptance criteria.
+
 ### Added
 
 #### Sprint 2.3 — Feed Foundation
