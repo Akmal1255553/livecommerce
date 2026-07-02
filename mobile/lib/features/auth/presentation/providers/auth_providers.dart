@@ -1,7 +1,9 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:livecommerce_mobile/core/config/dev_config.dart';
 import 'package:livecommerce_mobile/core/constants/storage_keys.dart';
+import 'package:livecommerce_mobile/core/errors/error_handler.dart';
 import 'package:livecommerce_mobile/core/network/api_client.dart';
 import 'package:livecommerce_mobile/core/network/auth_interceptor.dart';
 import 'package:livecommerce_mobile/core/storage/secure_token_storage.dart';
@@ -48,12 +50,14 @@ class AuthState {
     this.isLoading = false,
     this.error,
     this.pendingPhone,
+    this.isDevGuest = false,
   });
 
   final AuthUser? user;
   final bool isLoading;
   final String? error;
   final String? pendingPhone;
+  final bool isDevGuest;
 
   bool get isAuthenticated => user != null;
 
@@ -62,6 +66,7 @@ class AuthState {
     bool? isLoading,
     String? error,
     String? pendingPhone,
+    bool? isDevGuest,
     bool clearUser = false,
     bool clearError = false,
     bool clearPendingPhone = false,
@@ -71,6 +76,7 @@ class AuthState {
       isLoading: isLoading ?? this.isLoading,
       error: clearError ? null : (error ?? this.error),
       pendingPhone: clearPendingPhone ? null : (pendingPhone ?? this.pendingPhone),
+      isDevGuest: isDevGuest ?? this.isDevGuest,
     );
   }
 }
@@ -86,8 +92,24 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final user = await _repository.restoreSession();
       state = state.copyWith(user: user, isLoading: false, clearUser: user == null);
     } catch (error) {
-      state = state.copyWith(isLoading: false, error: error.toString());
+      state = state.copyWith(
+        isLoading: false,
+        error: DevConfig.bypassAuth ? null : describeFailure(error),
+      );
     }
+  }
+
+  void enterDevGuestMode() {
+    state = state.copyWith(
+      isLoading: false,
+      clearError: true,
+      isDevGuest: true,
+      user: const AuthUser(
+        id: '00000000-0000-0000-0000-000000000001',
+        username: 'demo',
+        displayName: 'Demo User',
+      ),
+    );
   }
 
   Future<bool> login(String login, String password) async {
@@ -97,7 +119,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: session.user, isLoading: false);
       return true;
     } catch (error) {
-      state = state.copyWith(isLoading: false, error: error.toString());
+      state = state.copyWith(isLoading: false, error: describeFailure(error));
       return false;
     }
   }
@@ -125,7 +147,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return true;
     } catch (error) {
-      state = state.copyWith(isLoading: false, error: error.toString());
+      state = state.copyWith(isLoading: false, error: describeFailure(error));
       return false;
     }
   }
@@ -141,7 +163,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
       return true;
     } catch (error) {
-      state = state.copyWith(isLoading: false, error: error.toString());
+      state = state.copyWith(isLoading: false, error: describeFailure(error));
       return false;
     }
   }
@@ -155,6 +177,17 @@ class AuthNotifier extends StateNotifier<AuthState> {
     String? bio,
     String? locale,
   }) async {
+    if (state.isDevGuest && state.user != null) {
+      state = state.copyWith(
+        user: state.user!.copyWith(
+          displayName: displayName,
+          bio: bio,
+          locale: locale,
+        ),
+      );
+      return true;
+    }
+
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final user = await _repository.updateProfile(
@@ -165,7 +198,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       state = state.copyWith(user: user, isLoading: false);
       return true;
     } catch (error) {
-      state = state.copyWith(isLoading: false, error: error.toString());
+      state = state.copyWith(isLoading: false, error: describeFailure(error));
       return false;
     }
   }

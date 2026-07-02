@@ -11,8 +11,10 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 /**
  * @property VideoStatus $status
@@ -20,6 +22,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $processing_started_at
  * @property Carbon|null $processing_completed_at
  * @property Carbon|null $published_at
+ * @property Collection<int, VideoProduct>|null $video_product_tags
  */
 class Video extends Model
 {
@@ -76,5 +79,24 @@ class Video extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * @return BelongsToMany<Product, $this>
+     */
+    public function products(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class, 'video_products')
+            ->withPivot([
+                'sort_order',
+                'is_featured',
+                'starts_at',
+                'ends_at',
+                'position_x',
+                'position_y',
+                'product_version',
+            ])
+            ->withTimestamps()
+            ->orderByPivot('sort_order');
     }
 }

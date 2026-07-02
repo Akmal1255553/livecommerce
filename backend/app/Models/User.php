@@ -67,6 +67,14 @@ class User extends Authenticatable
         return $this->hasOne(UserProfile::class);
     }
 
+    /**
+     * @return HasOne<Store, $this>
+     */
+    public function store(): HasOne
+    {
+        return $this->hasOne(Store::class);
+    }
+
     public function isActive(): bool
     {
         return $this->status === UserStatus::Active;

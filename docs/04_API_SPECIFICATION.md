@@ -675,21 +675,30 @@ Response includes header: `Retry-After: 45`
 ```json
 {
   "id": 1,
+  "type": "user",
+  "version": 3,
   "items": [
     {
       "id": 1,
-      "product": { ProductResource (compact) },
+      "product": { ProductCardResource },
       "variant": { "id": 1, "name": "Size", "value": "M" },
       "quantity": 2,
-      "unit_price": 250000.00,
-      "total": 500000.00
+      "unit_price": { "amount": 250000, "currency": "UZS" },
+      "line_total": { "amount": 500000, "currency": "UZS" },
+      "discount_amount": { "amount": 0, "currency": "UZS" }
     }
   ],
-  "item_count": 2,
-  "subtotal": 500000.00,
-  "currency": "UZS"
+  "summary": {
+    "subtotal": { "amount": 500000, "currency": "UZS" },
+    "discount_total": { "amount": 0, "currency": "UZS" },
+    "shipping_estimate": { "amount": 25000, "currency": "UZS" },
+    "currency": "UZS",
+    "item_count": 2
+  }
 }
 ```
+
+Guest carts use `type: "guest"` and string item IDs (`{productId}:{variantId|null}`). `version` increments on every mutation.
 
 ---
 
@@ -958,11 +967,27 @@ Response includes header: `Retry-After: 45`
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/cart` | Yes | Get current cart |
-| POST | `/cart/items` | Yes | Add item to cart |
-| PUT | `/cart/items/{itemId}` | Yes | Update item quantity |
-| DELETE | `/cart/items/{itemId}` | Yes | Remove item from cart |
-| DELETE | `/cart` | Yes | Clear cart |
+| POST | `/cart/guest` | No | Create guest cart token |
+| GET | `/cart` | Optional | Get current cart (auth or `X-Guest-Cart-Token`) |
+| POST | `/cart/items` | Yes* | Add item to cart |
+| PUT | `/cart/items/{itemId}` | Yes* | Update item quantity |
+| DELETE | `/cart/items/{itemId}` | Yes* | Remove item from cart |
+| DELETE | `/cart` | Yes* | Clear cart |
+
+\* Authenticated user **or** guest via `X-Guest-Cart-Token` header.
+
+**POST /cart/guest Response: 201 Created**
+```json
+{
+  "success": true,
+  "data": {
+    "guest_cart_token": "uuid",
+    "type": "guest",
+    "version": 1,
+    "items": []
+  }
+}
+```
 
 **POST /cart/items Request:**
 ```json

@@ -10,6 +10,7 @@ use App\DTOs\Auth\AuthResultData;
 use App\DTOs\Auth\TokenPairData;
 use App\Enums\UserRole;
 use App\Enums\UserStatus;
+use App\Events\UserAuthenticated;
 use App\Events\UserRegistered;
 use App\Exceptions\Domain\ConflictException;
 use App\Exceptions\Domain\ResourceNotFoundException;
@@ -203,6 +204,11 @@ class AuthService extends BaseService
     private function issueAuthResult(User $user, ?string $deviceId): AuthResultData
     {
         $tokens = $this->issueTokenPair($user, $deviceId);
+
+        $guestToken = request()->header('X-Guest-Cart-Token');
+        $guestToken = is_string($guestToken) && $guestToken !== '' ? $guestToken : null;
+
+        event(new UserAuthenticated($user, $guestToken));
 
         return new AuthResultData(
             user: $user->loadMissing('profile'),

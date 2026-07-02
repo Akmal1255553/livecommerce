@@ -84,3 +84,26 @@ Map<String, List<String>> _errorsFromBody(Object? data) {
     ),
   );
 }
+
+String describeFailure(Object error) {
+  final failure = mapExceptionToFailure(error);
+
+  if (failure is ValidationFailure) {
+    final fields = failure.fieldErrors;
+    if (fields.containsKey('email') || fields.containsKey('username')) {
+      return 'Bu email yoki username allaqachon ro\'yxatdan o\'tgan. Kirish sahifasiga o\'ting.';
+    }
+    if (fields.containsKey('phone')) {
+      return 'Bu telefon raqami allaqachon ro\'yxatdan o\'tgan.';
+    }
+    if (fields.isNotEmpty) {
+      return fields.values.expand((messages) => messages).join('\n');
+    }
+  }
+
+  if (failure is AuthFailure) {
+    return 'Email yoki parol noto\'g\'ri.';
+  }
+
+  return failure.message;
+}

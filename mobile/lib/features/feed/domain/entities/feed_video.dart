@@ -1,3 +1,5 @@
+import 'product_card.dart';
+
 class FeedVideoUser {
   const FeedVideoUser({
     required this.id,
@@ -35,6 +37,7 @@ class FeedVideo {
     this.commentCount = 0,
     this.status,
     this.createdAt,
+    this.products = const [],
   });
 
   final String id;
@@ -49,8 +52,11 @@ class FeedVideo {
   final int commentCount;
   final String? status;
   final String? createdAt;
+  final List<VideoProductTag> products;
 
   factory FeedVideo.fromJson(Map<String, dynamic> json) {
+    final productsJson = json['products'] as List<dynamic>? ?? [];
+
     return FeedVideo(
       id: json['id'] as String,
       user: FeedVideoUser.fromJson(json['user'] as Map<String, dynamic>),
@@ -64,6 +70,9 @@ class FeedVideo {
       commentCount: json['comment_count'] as int? ?? 0,
       status: json['status'] as String?,
       createdAt: json['created_at'] as String?,
+      products: productsJson
+          .map((item) => VideoProductTag.fromJson(item as Map<String, dynamic>))
+          .toList(),
     );
   }
 }

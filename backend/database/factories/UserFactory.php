@@ -53,6 +53,13 @@ class UserFactory extends Factory
         ]);
     }
 
+    public function seller(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => UserRole::Seller,
+        ]);
+    }
+
     public function configure(): static
     {
         return $this->afterCreating(function (User $user): void {

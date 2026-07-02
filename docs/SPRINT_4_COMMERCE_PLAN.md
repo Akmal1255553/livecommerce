@@ -1,0 +1,278 @@
+# Sprint 4 — Commerce · Master Plan
+
+**Version:** 1  
+**Status:** Active planning  
+**Phase:** 4 — Commerce  
+**Last updated:** 2026-06-28
+
+---
+
+## Purpose
+
+Sprint 4 (Marketplace) is split into **independent sub-sprints**. Each sub-sprint follows the project workflow:
+
+```
+Blueprint → Architecture Review → Approval → Implementation → Tests → Documentation → Release
+```
+
+**Hard gates:**
+
+1. No implementation before blueprint **Approved**.
+2. No sub-sprint **N+1** until sub-sprint **N** CI is green and released.
+3. Never bypass architecture (Services, Repositories, Events, Interfaces).
+4. **ADR required:** any change touching **two or more** of {Cart, Orders, Inventory, Payment} must update [ADR-016](../07_ADR.md#adr-016-commerce-core-cart-orders-inventory-payment) (or superseding ADR) **before** code.
+
+---
+
+## Sub-sprint map
+
+| Sub-sprint | Name | Depends on | Status | Blueprint |
+|------------|------|------------|--------|-----------|
+| **4.1** | Product Catalog | Sprint 3.3 | ✅ Implemented | — (shipped) |
+| **4.2** | Video Commerce | 4.1 | ✅ Shipped | [sprint-4.2-video-commerce.md](../blueprints/sprint-4.2-video-commerce.md) |
+| **4.3** | Shopping Cart | 4.2 | ✅ Shipped | [sprint-4.3-shopping-cart.md](../blueprints/sprint-4.3-shopping-cart.md) |
+| **4.4** | Order System | 4.3 | 📋 Next | TBD |
+| **4.5** | Checkout | 4.4 | 🔒 Blocked | TBD |
+| **4.6** | Seller Dashboard | 4.1, 4.4 | 🔒 Blocked | TBD |
+
+```
+4.1 Product Catalog ✅
+    ↓
+4.2 Video Commerce ✅
+    ↓
+4.3 Shopping Cart ✅
+    ↓
+4.4 Order System ← CURRENT
+    ↓
+4.5 Checkout
+    ↓
+4.6 Seller Dashboard (parallel-safe after 4.4 for orders module)
+```
+
+---
+
+## 4.1 Product Catalog (shipped)
+
+**Delivered:**
+
+- Categories, brands, stores, products, images, variants
+- Public catalog API + seller CRUD on `/api/v1/products`
+- Inventory status (`out_of_stock` when `stock_quantity <= 0`)
+- Discount via `compare_at_price`
+
+---
+
+## 4.2 Video Commerce (shipped)
+
+**Delivered:** `video_products` pivot, `ProductCardResource`, `VideoCommerceService`, `product_version` snapshot, 142 tests.
+
+→ [blueprints/sprint-4.2-video-commerce.md](../blueprints/sprint-4.2-video-commerce.md)
+
+---
+
+## 4.3 Shopping Cart (next)
+
+**Prerequisite:** [ADR-016](../07_ADR.md#adr-016-commerce-core-cart-orders-inventory-payment) **Accepted**
+
+**Goal:** Cart CRUD, guest cart (Redis), merge on login, advisory inventory, live pricing.
+
+| Feature | Detail |
+|---------|--------|
+| Storage | PostgreSQL (user) + Redis (guest) |
+| Inventory | `InventoryServiceInterface::assertAvailable` (checkpoint 1) |
+| Pricing | `PricingServiceInterface::priceCart` (display only) |
+| Events | `CartUpdated`, `CartItemAdded`, `CartItemRemoved` |
+
+**Not in scope:** orders, checkout, payment.
+
+→ Full spec: [blueprints/sprint-4.3-shopping-cart.md](../blueprints/sprint-4.3-shopping-cart.md)  
+→ Architecture: [23_COMMERCE_CORE_ARCHITECTURE.md](./23_COMMERCE_CORE_ARCHITECTURE.md)
+
+---
+
+## 4.4 Order System (planned)
+
+**State machine:**
+
+```
+Draft → Pending → AwaitingPayment → Paid → Packing → Shipped → Delivered → Completed
+         ↘ Cancelled
+Paid → RefundRequested → Refunded
+```
+
+**Architecture:**
+
+```
+OrderStateMachine → OrderService → OrderRepository → OrderEvents
+```
+
+- Every transition validated in state machine
+- No direct status writes outside `OrderService`
+- `order_items` use **price snapshot** columns (not live `products.price`)
+
+**Events:** `OrderCreated`, `OrderCompleted`
+
+**Interfaces:** `TaxServiceInterface`, `ShippingCalculatorInterface` (stubs)
+
+---
+
+## 4.5 Checkout (planned)
+
+**Architecture:**
+
+```
+CheckoutService → PaymentGatewayInterface → Providers
+```
+
+| MVP | Future |
+|-----|--------|
+| `FakePaymentGateway` | Click, Payme, Stripe |
+
+**Events:** `PaymentSucceeded`, `PaymentFailed`
+
+**Rule:** Business logic never depends on a concrete payment provider.
+
+**Inventory:** Re-validate stock at checkout (**checkpoint 2 of 2**) inside transaction before `OrderCreated`.
+
+---
+
+## 4.6 Seller Dashboard (planned)
+
+**Backend REST only** — no frontend complexity.
+
+| Module | Endpoints (indicative) |
+|--------|------------------------|
+| Products | extend existing seller product APIs |
+| Orders | list, detail, status (read-only until 4.4 transitions) |
+| Revenue | aggregates by period |
+| Inventory | low-stock alerts |
+| Analytics | orders, views, conversion stubs |
+
+---
+
+## Cross-cutting commerce architecture
+
+> **Canonical source:** [ADR-016](../07_ADR.md#adr-016-commerce-core-cart-orders-inventory-payment) + [23_COMMERCE_CORE_ARCHITECTURE.md](./23_COMMERCE_CORE_ARCHITECTURE.md)
+
+### A. Price snapshot (OrderItem)
+
+**Rule:** Order line items must **never** read live prices from `products` after creation.
+
+If a product costs 100 000 UZS today and 150 000 UZS tomorrow, existing orders stay unchanged.
+
+`order_items` (Sprint 4.4) stores immutable snapshots:
+
+| Column | Source at checkout |
+|--------|-------------------|
+| `product_name` | `products.title` |
+| `sku` | `products.sku` or variant SKU |
+| `unit_price` | price at checkout time |
+| `discount` | applied per-line discount amount |
+| `currency` | `UZS` |
+
+`CheckoutService` + `PricingServiceInterface` produce snapshots; `OrderRepository` persists them. **No FK price lookups in order display.**
+
+### B. Product versioning (video_products)
+
+Videos can outlive many product edits. Pivot `video_products.product_version` captures `products.version` at attach time.
+
+| Sprint | Scope |
+|--------|-------|
+| 4.2 | `products.version` column + pivot `product_version` on sync |
+| Future | Optional “as tagged” overlay vs live product card |
+
+### C. Inventory double-check + reservation TTL
+
+| Checkpoint | Sprint | Behaviour |
+|------------|--------|-----------|
+| Cart add/update | 4.3 | `assertAvailable` (advisory) |
+| Checkout | 4.5 | `reserveForOrder` + **TTL 15 min** |
+| Unpaid expiry | 4.5 | `ReleaseExpiredInventoryReservationsJob` → auto-release stock |
+| Payment success | 4.5 | `confirmReservation` |
+
+### D. Cart versioning (P0)
+
+`carts.version` incremented on every mutation. `POST /checkout` sends `cart_version`; mismatch → `409 CartStaleException`.
+
+### E. Checkout idempotency (P0)
+
+`Idempotency-Key` header on `POST /checkout`; duplicate key returns same order (24h TTL).
+
+### F. Money value object (P1)
+
+`App\ValueObjects\Money` — `amount` (int) + `currency`. No float in commerce services.
+
+### G. Coupon & shipping stubs (P2)
+
+`CouponServiceInterface` → `NoDiscountCouponService`  
+`ShippingCalculatorInterface` → `FixedShippingCalculator`
+
+### H. Cart events (P1)
+
+`CartMerged`, `CartExpired` (4.3); `CartCheckedOut` (4.5)
+
+---
+
+## Cross-cutting interfaces
+
+| Interface | Introduced in | Purpose |
+|-----------|---------------|---------|
+| `PaymentGatewayInterface` | exists (empty) | 4.5 Checkout |
+| `InventoryServiceInterface` | 4.3 | Stock checks; reservation TTL in 4.5 |
+| `PricingServiceInterface` | 4.3 | Totals, discounts (`Money`) |
+| `CouponServiceInterface` | 4.3 stub | Coupons (no-op MVP) |
+| `ShippingCalculatorInterface` | 4.3 stub | Shipping estimate (fixed rate MVP) |
+| `TaxServiceInterface` | 4.4 | Tax lines |
+
+Implementations are swappable via DI; services depend on interfaces only.
+
+---
+
+## Event registry (Sprint 4)
+
+| Event | Sub-sprint |
+|-------|------------|
+| `ProductAttachedToVideo` | 4.2 |
+| `CartUpdated` | 4.3 |
+| `CartItemAdded` | 4.3 |
+| `CartItemRemoved` | 4.3 |
+| `CartMerged` | 4.3 |
+| `CartExpired` | 4.3 |
+| `CartCheckedOut` | 4.5 |
+| `OrderCreated` | 4.4 |
+| `PaymentSucceeded` | 4.5 |
+| `PaymentFailed` | 4.5 |
+| `OrderCompleted` | 4.4 |
+
+---
+
+## Quality gates (every sub-sprint)
+
+| Gate | Requirement |
+|------|-------------|
+| PHPStan | Level max, 0 errors |
+| Pest | All green (no regression) |
+| Pint | Pass |
+| Architecture | No logic in controllers; no rules in repositories |
+| Docs | Blueprint + API + DB + CHANGELOG updated |
+| Release | Git tag `v0.4.x-*` per sub-sprint |
+
+---
+
+## Documentation index
+
+| When | Document |
+|------|----------|
+| Before each sub-sprint | `blueprints/sprint-4.x-*.md` |
+| After approval | Update `03_DATABASE_DESIGN.md`, `04_API_SPECIFICATION.md` |
+| After release | `CHANGELOG.md`, `13_ROADMAP.md`, `17_DEPENDENCY_MATRIX.md` |
+
+---
+
+## Current action
+
+1. **Review & accept** [ADR-016 v2](../07_ADR.md#adr-016-commerce-core-cart-orders-inventory-payment) (Proposed)
+2. **Review & approve** [sprint-4.3-shopping-cart.md v2](../blueprints/sprint-4.3-shopping-cart.md)
+3. Implement on `feature/sprint-4.3-shopping-cart` → tests → release `v0.4.3-shopping-cart`
+
+**Do not implement 4.3 until ADR-016 is Accepted.**

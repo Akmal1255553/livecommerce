@@ -4,7 +4,7 @@ Version: 1.0
 Project: LiveCommerce Platform  
 Status: Architecture Phase  
 Document Owner: Founder & CTO  
-Last Updated: 2026-06-27
+Last Updated: 2026-06-28
 
 ---
 
@@ -35,6 +35,7 @@ Every major technical decision must be documented here **before implementation**
 | [ADR-013](#adr-013-pest-testing-framework) | Pest Testing Framework | Accepted | 2026-06-27 |
 | [ADR-014](#adr-014-openapi-scramble-documentation) | OpenAPI / Scramble Documentation | Accepted | 2026-06-27 |
 | [ADR-015](#adr-015-mailpit-for-local-email-testing) | Mailpit for Local Email Testing | Accepted | 2026-06-27 |
+| [ADR-016](#adr-016-commerce-core-cart-orders-inventory-payment) | Commerce Core: Cart, Orders, Inventory, Payment | **Accepted** | 2026-06-28 |
 
 ---
 
@@ -591,6 +592,109 @@ None.
 
 ---
 
+## ADR-016: Commerce Core — Cart, Orders, Inventory, Payment
+
+**Status:** Accepted (2026-06-28)  
+**Canonical architecture:** [docs/23_COMMERCE_CORE_ARCHITECTURE.md](./docs/23_COMMERCE_CORE_ARCHITECTURE.md)  
+**Sprints:** 4.3 (Cart) · 4.4 (Orders) · 4.5 (Checkout/Payment) · 4.6 (Seller)
+
+### Context
+
+Sprint 4 commerce spans four tightly coupled concerns: **Cart**, **Orders**, **Inventory**, and **Payment**. Implementing them ad hoc in separate PRs risks inconsistent stock handling, mutable order prices, and payment logic leaking into cart controllers.
+
+Product requirements already established:
+
+1. **Price snapshot** — `order_items` must store `product_name`, `sku`, `unit_price`, `discount`, `currency`; never read live `products.price` after order creation.
+2. **Inventory double-check** — validate at cart add (advisory) and again at checkout (authoritative); never trust cart-time check alone.
+3. **Payment provider isolation** — all providers implement `PaymentGatewayInterface`; business logic never depends on Click/Payme/Stripe directly.
+
+Architecture review v2 (2026-06-28) adds **mandatory** constraints before implementation:
+
+| Priority | Requirement |
+|----------|-------------|
+| **P0** | **Cart versioning** — `carts.version`; checkout rejects stale `cart_version` (409) |
+| **P0** | **Inventory reservation TTL** — 15 minutes; auto-release job if unpaid |
+| **P0** | **Checkout idempotency** — `Idempotency-Key` header; no duplicate orders |
+| **P1** | **Money value object** — no `float` for amounts in services |
+| **P1** | **Cart events** — `CartMerged`, `CartExpired`, `CartCheckedOut` |
+| **P2** | **CouponServiceInterface** — stub returns no discount |
+| **P2** | **ShippingCalculatorInterface** — stub (fixed/zero rate) |
+
+### Problem
+
+Define a single architectural contract for how Cart, Order, Inventory, and Payment modules interact across Sprints 4.3–4.5 before any implementation begins.
+
+### Considered Alternatives
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **A. Monolithic CommerceService** | One entry point | God object; untestable; violates module boundaries |
+| **B. Cart creates orders directly** | Fewer classes | No checkout orchestration; payment coupled to cart |
+| **C. Pipeline: Cart → Checkout → Order → Payment (chosen)** | Clear boundaries, testable interfaces, ADR-gated sprints | More files; requires upfront design |
+| **D. Reserve stock in cart (Redis hold)** | Strong availability UX | Complex TTL, oversell edge cases; rejected for cart — use checkout reservation instead |
+
+### Decision
+
+Adopt **pipeline architecture (C)** documented in [23_COMMERCE_CORE_ARCHITECTURE.md](./docs/23_COMMERCE_CORE_ARCHITECTURE.md) **v2**:
+
+```
+CartService (mutable, versioned)
+    → CheckoutService (idempotent orchestrator, Sprint 4.5)
+        → cart_version check (P0)
+        → Idempotency-Key (P0)
+        → InventoryServiceInterface (reservation + 15min TTL + auto-release)
+        → PricingServiceInterface + Money VO (P1)
+        → CouponServiceInterface (stub P2)
+        → ShippingCalculatorInterface (stub P2)
+        → OrderService + OrderStateMachine (immutable, Sprint 4.4)
+        → PaymentGatewayInterface (external I/O, Sprint 4.5)
+```
+
+**Binding rules:**
+
+| Rule | Detail |
+|------|--------|
+| Cart storage | PostgreSQL for users; Redis for guests (`cart:guest:{token}`, 30d TTL) |
+| Cart versioning | `carts.version` INTEGER; increment every mutation; guest cart JSON includes `version` |
+| Checkout stale cart | `POST /checkout` requires `cart_version`; mismatch → `409 CartStaleException` |
+| Cart items | `product_id`, `variant_id`, `quantity` only — **no persisted prices** |
+| Money | `App\ValueObjects\Money` (`amount` int + `currency`); **no float** in services |
+| Inventory checkpoint 1 | `CartService` → `assertAvailable` (advisory, no reservation) |
+| Inventory checkpoint 2 | `CheckoutService` → `reserveForOrder` → decrement stock + `inventory_reservations` |
+| Reservation TTL | **15 minutes**; `ReleaseExpiredInventoryReservationsJob` auto-releases unpaid stock |
+| Payment confirm | `PaymentSucceeded` → `confirmReservation`; failure/timeout → `releaseReservation` |
+| Idempotency | `Idempotency-Key` on `POST /checkout`; same key → same order response (24h TTL) |
+| Price display | `PricingServiceInterface::priceCart` at read time (`Money`) |
+| Price immutability | `buildOrderLineSnapshots` at checkout → `order_items` |
+| Coupons | `CouponServiceInterface`; MVP `NoDiscountCouponService` |
+| Shipping | `ShippingCalculatorInterface`; MVP fixed/zero rate |
+| Order states | `Draft → … → Completed` (+ `Cancelled`, `RefundRequested`, `Refunded`) |
+| Payment | Only `CheckoutService` and webhook handler call `PaymentGatewayInterface` |
+| Cart events | `CartMerged`, `CartExpired` (4.3); `CartCheckedOut` (4.5) |
+
+**order_items snapshot columns (Sprint 4.4 migration):**
+
+`product_name`, `sku`, `unit_price`, `discount`, `currency`, `quantity`, `variant_name` (nullable), `product_id`, `variant_id`.
+
+**Gate policy:** Any change touching **two or more** of {Cart, Orders, Inventory, Payment} requires updating this ADR (or a superseding ADR) **before** implementation.
+
+### Consequences
+
+- Positive: Consistent stock, pricing, and concurrency semantics across sprints.
+- Positive: Idempotency prevents duplicate charges on network retries.
+- Positive: Cart versioning prevents checkout with stale lines/prices.
+- Positive: Reservation TTL protects limited stock without permanent locks.
+- Negative: Extra tables (`inventory_reservations`, `idempotency_keys`) and scheduled job.
+- Neutral: Coupon/shipping stubs add interfaces now, implementations later.
+
+### Future Review
+
+- Real payment gateways (Click, Payme, Stripe) — Sprint 7+; must implement `PaymentGatewayInterface`.
+- Multi-store carts (single seller per order in MVP).
+- Coupon campaigns — replace `NoDiscountCouponService` via DI.
+
+---
+
 ## Adding New ADRs
 
 1. Assign next ADR number (ADR-016, etc.).
@@ -607,6 +711,8 @@ None.
 |---------|------|--------|---------|
 | 1.0 | 2026-06-27 | Founder & CTO | Initial ADR document with 12 accepted decisions |
 | 1.1 | 2026-06-27 | Architecture Review | P0 patches: ADR-013 (Pest), ADR-014 (Scramble), ADR-015 (Mailpit) |
+| 1.2 | 2026-06-28 | Architecture Review | ADR-016: Commerce Core (Cart, Orders, Inventory, Payment) |
+| 1.3 | 2026-06-28 | Architecture Review | ADR-016 v2: cart versioning, reservation TTL, idempotency, Money VO, coupon/shipping stubs |
 
 ---
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_gen/gen_l10n/app_localizations.dart';
+import 'package:livecommerce_mobile/core/config/dev_config.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
@@ -93,6 +94,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   onPressed: () => context.push('/register'),
                   child: Text('${l10n.noAccount} ${l10n.goToRegister}'),
                 ),
+                if (DevConfig.bypassAuth) ...[
+                  const SizedBox(height: 24),
+                  OutlinedButton(
+                    onPressed: auth.isLoading
+                        ? null
+                        : () {
+                            ref.read(authNotifierProvider.notifier).enterDevGuestMode();
+                            context.go('/home');
+                          },
+                    child: const Text('Demo rejim (auth o\'tkazib yuborish)'),
+                  ),
+                ],
               ],
             ),
           ),

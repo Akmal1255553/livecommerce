@@ -6,6 +6,46 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Planned
+
+#### Sprint 4 — Commerce (sub-sprint plan)
+
+- Master plan: [docs/SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) — 4.1–4.6 sequential gates
+- **4.1** Product Catalog — implemented
+- **4.2** Video Commerce — shipped
+- **4.3** Shopping Cart — shipped
+- **4.4–4.6** Orders, Checkout, Seller Dashboard — blocked until prior sub-sprint released
+
+### Added
+
+#### Sprint 4.3 — Shopping Cart
+
+- `carts` + `cart_items` tables with `carts.version` (optimistic concurrency for checkout in 4.5)
+- `CartService` — user + guest carts, merge on login, advisory inventory checks
+- `Money` value object — no float arithmetic in commerce services
+- `ProductPricingService`, `ProductInventoryService`, coupon/shipping stubs
+- Guest cart in Redis (`cart:guest:{token}`) with `X-Guest-Cart-Token` header
+- Events: `CartItemAdded`, `CartItemRemoved`, `CartUpdated`, `CartMerged`, `CartExpired`
+- API: `POST /cart/guest`, `GET/POST/PUT/DELETE /cart`, `DELETE /cart/items/{id}`
+- Tests: `CartTest` (13) — **155 tests total**
+
+#### Sprint 4.2 — Video Commerce
+
+- `video_products` pivot: ordering, featured, timestamps, overlay positions, `product_version` snapshot
+- `products.version` incremented on seller update
+- `VideoCommerceService` + `GET/PUT /api/v1/videos/{id}/products`
+- `ProductCardData` / `ProductCardResource` overlay payload
+- Feed + video detail hydrate `products` array
+- Event: `ProductAttachedToVideo`
+- Mobile: `ProductCard` + `VideoProductTag` DTOs
+- Tests: `VideoCommerceTest` (11) — **142 tests total**
+
+#### Sprint 4 — Commerce architecture (cross-cutting)
+
+- **Price snapshot** — `order_items` stores immutable price fields at checkout (Sprint 4.4)
+- **Product versioning** — `product_version` on pivot + `products.version` (Sprint 4.2)
+- **Inventory double-check** — cart (4.3) + checkout (4.5)
+
 ### Added
 
 #### Sprint 3.4 — Recommendation Engine v1

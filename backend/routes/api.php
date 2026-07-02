@@ -4,16 +4,21 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookmarkController;
+use App\Http\Controllers\Api\V1\BrandController;
+use App\Http\Controllers\Api\V1\CartController;
+use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VideoCommentController;
 use App\Http\Controllers\Api\V1\VideoController;
 use App\Http\Controllers\Api\V1\VideoInteractionController;
+use App\Http\Controllers\Api\V1\VideoProductController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -57,6 +62,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('videos/{id}/confirm-upload', [VideoController::class, 'confirmUpload']);
         Route::put('videos/{id}', [VideoController::class, 'update']);
         Route::delete('videos/{id}', [VideoController::class, 'destroy']);
+        Route::put('videos/{id}/products', [VideoProductController::class, 'sync']);
 
         Route::post('videos/{id}/like', [VideoInteractionController::class, 'like']);
         Route::delete('videos/{id}/like', [VideoInteractionController::class, 'unlike']);
@@ -69,6 +75,12 @@ Route::prefix('v1')->group(function (): void {
         Route::delete('videos/{id}/comments/{commentId}', [VideoCommentController::class, 'destroy']);
 
         Route::post('media/presigned-url', [MediaController::class, 'presignedUrl']);
+
+        Route::middleware('seller')->group(function (): void {
+            Route::post('products', [ProductController::class, 'store']);
+            Route::put('products/{id}', [ProductController::class, 'update']);
+            Route::delete('products/{id}', [ProductController::class, 'destroy']);
+        });
     });
 
     Route::middleware('auth.api.optional')->group(function (): void {
@@ -77,11 +89,26 @@ Route::prefix('v1')->group(function (): void {
         Route::get('feed/new', [FeedController::class, 'newFeed']);
         Route::get('feed/for-you', [FeedController::class, 'forYou']);
         Route::get('videos/{id}', [VideoController::class, 'show']);
+        Route::get('videos/{id}/products', [VideoProductController::class, 'index']);
         Route::post('videos/{id}/view', [VideoInteractionController::class, 'view']);
         Route::get('videos/{id}/comments', [VideoCommentController::class, 'index']);
         Route::post('metrics/events', [MetricsController::class, 'store']);
         Route::get('users/{id}', [UserController::class, 'showPublic']);
         Route::get('users/{id}/followers', [UserController::class, 'followers']);
         Route::get('users/{id}/following', [UserController::class, 'following']);
+
+        Route::get('products', [ProductController::class, 'index']);
+        Route::get('products/search', [ProductController::class, 'search']);
+        Route::get('products/{id}', [ProductController::class, 'show']);
+        Route::get('categories', [CategoryController::class, 'index']);
+        Route::get('categories/{id}/products', [CategoryController::class, 'products']);
+        Route::get('brands', [BrandController::class, 'index']);
+
+        Route::post('cart/guest', [CartController::class, 'createGuest']);
+        Route::get('cart', [CartController::class, 'show']);
+        Route::post('cart/items', [CartController::class, 'storeItem']);
+        Route::put('cart/items/{id}', [CartController::class, 'updateItem']);
+        Route::delete('cart/items/{id}', [CartController::class, 'destroyItem']);
+        Route::delete('cart', [CartController::class, 'clear']);
     });
 });

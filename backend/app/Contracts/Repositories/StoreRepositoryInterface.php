@@ -4,4 +4,17 @@ declare(strict_types=1);
 
 namespace App\Contracts\Repositories;
 
-interface StoreRepositoryInterface extends RepositoryInterface {}
+use App\Models\Store;
+use App\Models\User;
+
+interface StoreRepositoryInterface extends RepositoryInterface
+{
+    public function findByUserId(string $userId): ?Store;
+
+    public function findActiveByUser(User $user): ?Store;
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    public function create(array $attributes): Store;
+}

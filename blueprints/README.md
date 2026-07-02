@@ -10,5 +10,11 @@ Implementation specifications for Sprint 3 sub-sprints. **No code** for a sub-sp
 | [../docs/ANALYTICS_LAYER.md](../docs/ANALYTICS_LAYER.md) | Analytics funnel (3.3 → 3.4 → 9) | Canonical |
 | [recommendation-engine-v1.md](./recommendation-engine-v1.md) | 3.4 Recommendation Engine v1 | Approved (2026-06-28) |
 | [../docs/22_RECOMMENDATION_ARCHITECTURE.md](../docs/22_RECOMMENDATION_ARCHITECTURE.md) | Ranking pipeline architecture | Canonical |
+| [sprint-4.2-video-commerce.md](./sprint-4.2-video-commerce.md) | 4.2 Video Commerce | Approved (2026-06-28) · shipped |
+| [sprint-4.3-shopping-cart.md](./sprint-4.3-shopping-cart.md) | 4.3 Shopping Cart | Approved (2026-06-28) · shipped |
+| [../docs/23_COMMERCE_CORE_ARCHITECTURE.md](../docs/23_COMMERCE_CORE_ARCHITECTURE.md) | Commerce core architecture | Canonical (ADR-016) |
+| [../docs/SPRINT_4.3_BLUEPRINT.md](../docs/SPRINT_4.3_BLUEPRINT.md) | 4.3 Shopping Cart index | Links to sprint-4.3 blueprint |
+| [../docs/SPRINT_4_COMMERCE_PLAN.md](../docs/SPRINT_4_COMMERCE_PLAN.md) | Sprint 4 sub-sprint master plan (4.1–4.6) | Canonical |
+| [../docs/SPRINT_4.2_BLUEPRINT.md](../docs/SPRINT_4.2_BLUEPRINT.md) | 4.2 Video Commerce index | Links to sprint-4.2 blueprint |
 
 Legacy copies under `docs/SPRINT_3.x_BLUEPRINT.md` remain for changelog links; canonical 3.2 doc is [video-processing.md](./video-processing.md).

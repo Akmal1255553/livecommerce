@@ -610,11 +610,24 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 # Sprint 4 — Marketplace
 
 **Phase:** 4 — Commerce  
-**Duration:** 2 weeks  
+**Duration:** Split into sub-sprints (see [docs/SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md))  
 **Depends on:** Sprint 3.3  
 **Priority:** P0
 
-## Modules
+## Sub-sprints
+
+| ID | Name | Status | Blueprint |
+|----|------|--------|-----------|
+| 4.1 | Product Catalog | ✅ Shipped | — |
+| 4.2 | Video Commerce | ✅ Shipped | [sprint-4.2-video-commerce.md](./blueprints/sprint-4.2-video-commerce.md) |
+| 4.3 | Shopping Cart | ✅ Shipped | [sprint-4.3-shopping-cart.md](./blueprints/sprint-4.3-shopping-cart.md) |
+| 4.4 | Order System | 📋 Next | TBD |
+| 4.5 | Checkout | 🔒 Blocked | TBD |
+| 4.6 | Seller Dashboard | 🔒 Blocked | TBD |
+
+**Gate:** No sub-sprint N+1 until sub-sprint N CI green + released.
+
+---
 
 Products, Categories, Variants, Inventory, Wishlist (Favorites), Cart, Checkout, Orders, Product Search, Product-Video Tagging, Reviews
 

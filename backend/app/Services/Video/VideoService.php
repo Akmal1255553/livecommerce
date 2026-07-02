@@ -7,6 +7,7 @@ namespace App\Services\Video;
 use App\Contracts\Repositories\BookmarkRepositoryInterface;
 use App\Contracts\Repositories\VideoLikeRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
+use App\Contracts\Services\VideoCommerceServiceInterface;
 use App\DTOs\Pagination\CursorPaginationData;
 use App\Models\User;
 use App\Models\Video;
@@ -20,6 +21,7 @@ class VideoService extends BaseService
         private readonly VideoRepositoryInterface $videos,
         private readonly VideoLikeRepositoryInterface $likes,
         private readonly BookmarkRepositoryInterface $bookmarks,
+        private readonly VideoCommerceServiceInterface $videoCommerce,
     ) {}
 
     /**
@@ -82,7 +84,13 @@ class VideoService extends BaseService
      */
     public function enrichVideosForViewer(Collection $videos, ?User $viewer): Collection
     {
-        if ($viewer === null || $videos->isEmpty()) {
+        if ($videos->isEmpty()) {
+            return $videos;
+        }
+
+        $videos = $this->videoCommerce->hydrateForVideos($videos, $viewer);
+
+        if ($viewer === null) {
             return $videos;
         }
 

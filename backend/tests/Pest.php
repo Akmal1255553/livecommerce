@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\Store;
 use App\Models\User;
 use App\Models\Video;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -47,4 +48,24 @@ function publishedVideo(?User $owner = null): Video
         'share_count' => 0,
         'view_count' => 0,
     ]);
+}
+
+/**
+ * @return array{user: User, store: Store, token: string}
+ */
+function createSellerWithStore(): array
+{
+    $user = User::factory()->seller()->create();
+    $store = Store::factory()->for($user)->active()->create();
+
+    $auth = test()->postJson('/api/v1/auth/login', [
+        'login' => $user->email,
+        'password' => 'password',
+    ])->assertOk();
+
+    return [
+        'user' => $user,
+        'store' => $store,
+        'token' => $auth->json('data.access_token'),
+    ];
 }

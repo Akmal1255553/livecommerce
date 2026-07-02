@@ -11,6 +11,7 @@ enum ErrorCode: string
     case NotFound = 'NOT_FOUND';
     case ValidationFailed = 'VALIDATION_FAILED';
     case Conflict = 'CONFLICT';
+    case CartStale = 'CART_STALE';
     case RateLimited = 'RATE_LIMITED';
     case BusinessRule = 'BUSINESS_RULE';
     case InsufficientStock = 'INSUFFICIENT_STOCK';

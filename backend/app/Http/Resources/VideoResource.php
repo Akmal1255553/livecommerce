@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Http\Resources;
 
 use App\Models\Video;
+use App\Models\VideoProduct;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Collection;
 
 /** @mixin Video */
 class VideoResource extends JsonResource
@@ -16,6 +18,9 @@ class VideoResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+        /** @var Collection<int, VideoProduct> $productTags */
+        $productTags = $this->video_product_tags ?? new Collection;
+
         return [
             'id' => $this->id,
             'user' => new UserCompactResource($this->whenLoaded('user')),
@@ -29,7 +34,7 @@ class VideoResource extends JsonResource
             'comment_count' => $this->comment_count,
             'is_liked' => (bool) ($this->is_liked ?? false),
             'is_bookmarked' => (bool) ($this->is_bookmarked ?? false),
-            'products' => [],
+            'products' => VideoProductResource::collection($productTags),
             'status' => $this->status->value,
             'failure_code' => $this->when(
                 $this->status->value === 'failed' && $request->user()?->id === $this->user_id,

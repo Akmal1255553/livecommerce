@@ -8,7 +8,9 @@ use App\Contracts\Recommendation\EngagementEventRepositoryInterface;
 use App\Contracts\Recommendation\RecommendationServiceInterface;
 use App\Contracts\Recommendation\VideoEngagementRollupRepositoryInterface;
 use App\Contracts\Repositories\BookmarkRepositoryInterface;
+use App\Contracts\Repositories\BrandRepositoryInterface;
 use App\Contracts\Repositories\CartRepositoryInterface;
+use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\Contracts\Repositories\CommentRepositoryInterface;
 use App\Contracts\Repositories\FollowRepositoryInterface;
 use App\Contracts\Repositories\LiveStreamRepositoryInterface;
@@ -21,30 +23,41 @@ use App\Contracts\Repositories\StoreRepositoryInterface;
 use App\Contracts\Repositories\UserDeviceRepositoryInterface;
 use App\Contracts\Repositories\UserRepositoryInterface;
 use App\Contracts\Repositories\VideoLikeRepositoryInterface;
+use App\Contracts\Repositories\VideoProductRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
 use App\Contracts\Repositories\VideoShareRepositoryInterface;
+use App\Contracts\Services\CartServiceInterface;
 use App\Contracts\Services\CommentServiceInterface;
+use App\Contracts\Services\CouponServiceInterface;
 use App\Contracts\Services\HealthServiceInterface;
+use App\Contracts\Services\InventoryServiceInterface;
 use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\MetricsServiceInterface;
+use App\Contracts\Services\PricingServiceInterface;
 use App\Contracts\Services\PushNotificationInterface;
+use App\Contracts\Services\ShippingCalculatorInterface;
 use App\Contracts\Services\SmsProviderInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Contracts\Services\VideoCommerceServiceInterface;
 use App\Contracts\Services\VideoInteractionServiceInterface;
 use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
 use App\Contracts\VideoProcessing\FfmpegTranscoderInterface;
 use App\Events\CommentCreated;
+use App\Events\UserAuthenticated;
 use App\Events\UserRegistered;
 use App\Events\VideoLiked;
 use App\Events\VideoUploadConfirmed;
 use App\Listeners\CreateUserProfile;
 use App\Listeners\DispatchVideoProcessingPipeline;
+use App\Listeners\MergeGuestCartOnLogin;
 use App\Listeners\NotifyOnComment;
 use App\Listeners\NotifyOnVideoLiked;
 use App\Repositories\Eloquent\BookmarkRepository;
+use App\Repositories\Eloquent\BrandRepository;
 use App\Repositories\Eloquent\CartRepository;
+use App\Repositories\Eloquent\CategoryRepository;
 use App\Repositories\Eloquent\CommentRepository;
 use App\Repositories\Eloquent\EngagementEventRepository;
 use App\Repositories\Eloquent\FollowRepository;
@@ -59,19 +72,27 @@ use App\Repositories\Eloquent\UserDeviceRepository;
 use App\Repositories\Eloquent\UserRepository;
 use App\Repositories\Eloquent\VideoEngagementRollupRepository;
 use App\Repositories\Eloquent\VideoLikeRepository;
+use App\Repositories\Eloquent\VideoProductRepository;
 use App\Repositories\Eloquent\VideoRepository;
 use App\Repositories\Eloquent\VideoShareRepository;
 use App\Services\Auth\StubSmsProvider;
+use App\Services\Cart\CartService;
+use App\Services\Cart\GuestCartStore;
+use App\Services\Coupon\NoDiscountCouponService;
 use App\Services\Health\HealthService;
+use App\Services\Inventory\ProductInventoryService;
 use App\Services\Media\MediaAssetService;
 use App\Services\Media\MediaService;
 use App\Services\Metrics\MetricsService;
 use App\Services\Notification\StubFcmPushNotification;
+use App\Services\Pricing\ProductPricingService;
 use App\Services\Recommendation\RecommendationService;
+use App\Services\Shipping\FixedShippingCalculator;
 use App\Services\Storage\StorageService;
 use App\Services\Video\CommentService;
 use App\Services\Video\Ffmpeg\CliFfmpegTranscoder;
 use App\Services\Video\Ffmpeg\FakeFfmpegTranscoder;
+use App\Services\Video\VideoCommerceService;
 use App\Services\Video\VideoInteractionService;
 use App\Services\Video\VideoStateMachine;
 use App\Services\Video\VideoUploadService;
@@ -90,6 +111,8 @@ class RepositoryServiceProvider extends ServiceProvider
         RefreshTokenRepositoryInterface::class => RefreshTokenRepository::class,
         VideoRepositoryInterface::class => VideoRepository::class,
         ProductRepositoryInterface::class => ProductRepository::class,
+        CategoryRepositoryInterface::class => CategoryRepository::class,
+        BrandRepositoryInterface::class => BrandRepository::class,
         OrderRepositoryInterface::class => OrderRepository::class,
         CartRepositoryInterface::class => CartRepository::class,
         StoreRepositoryInterface::class => StoreRepository::class,
@@ -101,6 +124,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CommentRepositoryInterface::class => CommentRepository::class,
         BookmarkRepositoryInterface::class => BookmarkRepository::class,
         VideoShareRepositoryInterface::class => VideoShareRepository::class,
+        VideoProductRepositoryInterface::class => VideoProductRepository::class,
         MediaUploadRepositoryInterface::class => MediaUploadRepository::class,
         VideoEngagementRollupRepositoryInterface::class => VideoEngagementRollupRepository::class,
         EngagementEventRepositoryInterface::class => EngagementEventRepository::class,
@@ -109,6 +133,12 @@ class RepositoryServiceProvider extends ServiceProvider
         MediaServiceInterface::class => MediaService::class,
         VideoUploadServiceInterface::class => VideoUploadService::class,
         VideoInteractionServiceInterface::class => VideoInteractionService::class,
+        VideoCommerceServiceInterface::class => VideoCommerceService::class,
+        CartServiceInterface::class => CartService::class,
+        InventoryServiceInterface::class => ProductInventoryService::class,
+        CouponServiceInterface::class => NoDiscountCouponService::class,
+        ShippingCalculatorInterface::class => FixedShippingCalculator::class,
+        PricingServiceInterface::class => ProductPricingService::class,
         CommentServiceInterface::class => CommentService::class,
         MetricsServiceInterface::class => MetricsService::class,
         MediaAssetServiceInterface::class => MediaAssetService::class,
@@ -127,6 +157,8 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->singleton(LocalStorageDriver::class);
         $this->app->singleton(S3StorageDriver::class);
 
+        $this->app->singleton(GuestCartStore::class);
+
         $this->app->singleton(FfmpegTranscoderInterface::class, function ($app): FfmpegTranscoderInterface {
             if ($app->environment('testing')) {
                 return new FakeFfmpegTranscoder;
@@ -142,6 +174,7 @@ class RepositoryServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Event::listen(UserRegistered::class, CreateUserProfile::class);
+        Event::listen(UserAuthenticated::class, MergeGuestCartOnLogin::class);
         Event::listen(VideoUploadConfirmed::class, DispatchVideoProcessingPipeline::class);
         Event::listen(VideoLiked::class, NotifyOnVideoLiked::class);
         Event::listen(CommentCreated::class, NotifyOnComment::class);
