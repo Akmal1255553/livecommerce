@@ -13,7 +13,9 @@ Implementation specifications for Sprint 3 sub-sprints. **No code** for a sub-sp
 | [sprint-4.2-video-commerce.md](./sprint-4.2-video-commerce.md) | 4.2 Video Commerce | Approved (2026-06-28) · shipped |
 | [sprint-4.3-shopping-cart.md](./sprint-4.3-shopping-cart.md) | 4.3 Shopping Cart | Approved (2026-06-28) · shipped |
 | [../docs/23_COMMERCE_CORE_ARCHITECTURE.md](../docs/23_COMMERCE_CORE_ARCHITECTURE.md) | Commerce core architecture | Canonical (ADR-016) |
-| [../docs/SPRINT_4.3_BLUEPRINT.md](../docs/SPRINT_4.3_BLUEPRINT.md) | 4.3 Shopping Cart index | Links to sprint-4.3 blueprint |
+| [../docs/SPRINT_4.3_BLUEPRINT.md](../docs/SPRINT_4.3_BLUEPRINT.md) | 4.3 Shopping Cart index | Shipped |
+| [sprint-4.4-order-system.md](./sprint-4.4-order-system.md) | 4.4 Order System | Approved v2 (2026-06-28) |
+| [../docs/SPRINT_4.4_BLUEPRINT.md](../docs/SPRINT_4.4_BLUEPRINT.md) | 4.4 Order System index | Links to sprint-4.4 blueprint |
 | [../docs/SPRINT_4_COMMERCE_PLAN.md](../docs/SPRINT_4_COMMERCE_PLAN.md) | Sprint 4 sub-sprint master plan (4.1–4.6) | Canonical |
 | [../docs/SPRINT_4.2_BLUEPRINT.md](../docs/SPRINT_4.2_BLUEPRINT.md) | 4.2 Video Commerce index | Links to sprint-4.2 blueprint |
 

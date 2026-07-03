@@ -12,6 +12,7 @@ use App\Http\Middleware\LogApiRequest;
 use App\Http\Middleware\SetLocale;
 use App\Http\Responses\ApiResponse;
 use App\Jobs\AggregateEngagementRollupsJob;
+use App\Jobs\CompleteDeliveredOrdersJob;
 use App\Jobs\FlushVideoViewsJob;
 use App\Jobs\RefreshPopularCacheJob;
 use App\Jobs\RefreshTrendingCacheJob;
@@ -54,6 +55,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new AggregateEngagementRollupsJob)->everyFifteenMinutes();
         $schedule->job(new RefreshTrendingCacheJob)->everyFiveMinutes();
         $schedule->job(new RefreshPopularCacheJob)->everyFifteenMinutes();
+        $schedule->job(new CompleteDeliveredOrdersJob)->daily();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (BusinessException $exception, Request $request) {

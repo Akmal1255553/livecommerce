@@ -27,6 +27,12 @@ enum EngagementEventType: string
     case Save = 'save';
     case FollowAfterWatch = 'follow_after_watch';
 
+    case OrderCreated = 'order_created';
+    case OrderPaid = 'order_paid';
+    case OrderCancelled = 'order_cancelled';
+    case RefundRequested = 'refund_requested';
+    case RefundCompleted = 'refund_completed';
+
     /**
      * Ordered funnel for recommendation scoring (Sprint 3.4 / 9).
      *
@@ -84,7 +90,14 @@ enum EngagementEventType: string
 
     public function requiresVideo(): bool
     {
-        return $this !== self::FeedOpen;
+        return ! in_array($this, [
+            self::FeedOpen,
+            self::OrderCreated,
+            self::OrderPaid,
+            self::OrderCancelled,
+            self::RefundRequested,
+            self::RefundCompleted,
+        ], true);
     }
 
     public function isProgressMilestone(): bool

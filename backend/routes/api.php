@@ -13,7 +13,9 @@ use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\SellerOrderController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VideoCommentController;
 use App\Http\Controllers\Api\V1\VideoController;
@@ -80,7 +82,18 @@ Route::prefix('v1')->group(function (): void {
             Route::post('products', [ProductController::class, 'store']);
             Route::put('products/{id}', [ProductController::class, 'update']);
             Route::delete('products/{id}', [ProductController::class, 'destroy']);
+
+            Route::get('seller/orders', [SellerOrderController::class, 'index']);
+            Route::get('seller/orders/{id}', [SellerOrderController::class, 'show']);
+            Route::put('seller/orders/{id}/status', [SellerOrderController::class, 'updateStatus']);
+            Route::put('seller/refunds/{id}', [SellerOrderController::class, 'resolveRefund']);
         });
+
+        Route::get('orders', [OrderController::class, 'index']);
+        Route::get('orders/{id}', [OrderController::class, 'show']);
+        Route::post('orders/{id}/cancel', [OrderController::class, 'cancel']);
+        Route::post('orders/{id}/refund', [OrderController::class, 'requestRefund']);
+        Route::get('refunds/{id}', [OrderController::class, 'showRefund']);
     });
 
     Route::middleware('auth.api.optional')->group(function (): void {

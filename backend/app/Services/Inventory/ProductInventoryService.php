@@ -7,6 +7,7 @@ namespace App\Services\Inventory;
 use App\Contracts\Repositories\ProductRepositoryInterface;
 use App\Contracts\Services\InventoryServiceInterface;
 use App\Exceptions\InsufficientStockException;
+use App\Models\Product;
 use LogicException;
 
 class ProductInventoryService implements InventoryServiceInterface
@@ -45,7 +46,7 @@ class ProductInventoryService implements InventoryServiceInterface
         throw new LogicException('Inventory reservation is implemented in Sprint 4.5.');
     }
 
-    private function availableQuantity(\App\Models\Product $product, ?int $variantId): int
+    private function availableQuantity(Product $product, ?int $variantId): int
     {
         if ($variantId !== null) {
             $variant = $product->variants->firstWhere('id', $variantId);

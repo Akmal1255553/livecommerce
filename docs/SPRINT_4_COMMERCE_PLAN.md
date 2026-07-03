@@ -31,7 +31,7 @@ Blueprint → Architecture Review → Approval → Implementation → Tests → 
 | **4.1** | Product Catalog | Sprint 3.3 | ✅ Implemented | — (shipped) |
 | **4.2** | Video Commerce | 4.1 | ✅ Shipped | [sprint-4.2-video-commerce.md](../blueprints/sprint-4.2-video-commerce.md) |
 | **4.3** | Shopping Cart | 4.2 | ✅ Shipped | [sprint-4.3-shopping-cart.md](../blueprints/sprint-4.3-shopping-cart.md) |
-| **4.4** | Order System | 4.3 | 📋 Next | TBD |
+| **4.4** | Order System | 4.3 | 📋 Blueprint approved | [sprint-4.4-order-system.md](../blueprints/sprint-4.4-order-system.md) |
 | **4.5** | Checkout | 4.4 | 🔒 Blocked | TBD |
 | **4.6** | Seller Dashboard | 4.1, 4.4 | 🔒 Blocked | TBD |
 
@@ -42,7 +42,7 @@ Blueprint → Architecture Review → Approval → Implementation → Tests → 
     ↓
 4.3 Shopping Cart ✅
     ↓
-4.4 Order System ← CURRENT
+4.4 Order System ← CURRENT (blueprint approved)
     ↓
 4.5 Checkout
     ↓
@@ -92,27 +92,43 @@ Blueprint → Architecture Review → Approval → Implementation → Tests → 
 
 ## 4.4 Order System (planned)
 
-**State machine:**
+**Prerequisite:** [ADR-017](../07_ADR.md#adr-017-order-state-machine-and-order-aggregate) **Accepted** · [blueprint](../blueprints/sprint-4.4-order-system.md) **Approved**
+
+**State machine (ADR-017):**
 
 ```
-Draft → Pending → AwaitingPayment → Paid → Packing → Shipped → Delivered → Completed
-         ↘ Cancelled
-Paid → RefundRequested → Refunded
+Draft → Pending → AwaitingPayment → Paid → Packing → ReadyToShip → Shipped → Delivered → Completed
+
+Pending / AwaitingPayment → Cancelled
+
+Paid | Delivered | Completed → RefundRequested → RefundApproved → Refunded
+                                              ↘ RefundRejected → (restore)
+```
+
+**Aggregate (immutable lines):**
+
+```
+Order
+├── OrderItems      ← snapshot only; NO updates after creation
+├── Payment
+├── Shipment
+└── Timeline        ← order_status_transitions
 ```
 
 **Architecture:**
 
 ```
-OrderStateMachine → OrderService → OrderRepository → OrderEvents
+OrderStateMachine → OrderService → OrderRepository → Order events
 ```
 
-- Every transition validated in state machine
-- No direct status writes outside `OrderService`
-- `order_items` use **price snapshot** columns (not live `products.price`)
+- Every transition validated in state machine (initiator, checks, idempotency — see ADR-017 §5)
+- No direct `orders.status` writes outside `OrderService`
+- `order_items` use **price snapshot** columns (`Money`); INSERT only
+- `orders.version` optimistic lock on transitions
 
-**Events:** `OrderCreated`, `OrderCompleted`
+**Events:** `OrderCreated`, `OrderPaid`, `OrderShipped`, `OrderDelivered`, `OrderCompleted`, `OrderCancelled`, `RefundRequested`, `OrderRefunded`
 
-**Interfaces:** `TaxServiceInterface`, `ShippingCalculatorInterface` (stubs)
+**Interfaces:** `TaxServiceInterface` (stub), `OrderStateMachineInterface`
 
 ---
 

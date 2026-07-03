@@ -621,7 +621,7 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 | 4.1 | Product Catalog | ✅ Shipped | — |
 | 4.2 | Video Commerce | ✅ Shipped | [sprint-4.2-video-commerce.md](./blueprints/sprint-4.2-video-commerce.md) |
 | 4.3 | Shopping Cart | ✅ Shipped | [sprint-4.3-shopping-cart.md](./blueprints/sprint-4.3-shopping-cart.md) |
-| 4.4 | Order System | 📋 Next | TBD |
+| 4.4 | Order System | 📋 Blueprint approved | [sprint-4.4-order-system.md](./blueprints/sprint-4.4-order-system.md) |
 | 4.5 | Checkout | 🔒 Blocked | TBD |
 | 4.6 | Seller Dashboard | 🔒 Blocked | TBD |
 

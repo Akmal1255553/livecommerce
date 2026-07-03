@@ -34,17 +34,26 @@ use App\Contracts\Services\InventoryServiceInterface;
 use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\MetricsServiceInterface;
+use App\Contracts\Services\OrderNumberGeneratorInterface;
+use App\Contracts\Services\OrderServiceInterface;
+use App\Contracts\Services\OrderStateMachineInterface;
 use App\Contracts\Services\PricingServiceInterface;
 use App\Contracts\Services\PushNotificationInterface;
 use App\Contracts\Services\ShippingCalculatorInterface;
 use App\Contracts\Services\SmsProviderInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Contracts\Services\TaxServiceInterface;
 use App\Contracts\Services\VideoCommerceServiceInterface;
 use App\Contracts\Services\VideoInteractionServiceInterface;
 use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
 use App\Contracts\VideoProcessing\FfmpegTranscoderInterface;
 use App\Events\CommentCreated;
+use App\Events\OrderCancelled;
+use App\Events\OrderCreated;
+use App\Events\OrderPaid;
+use App\Events\RefundCompleted;
+use App\Events\RefundRequested;
 use App\Events\UserAuthenticated;
 use App\Events\UserRegistered;
 use App\Events\VideoLiked;
@@ -54,6 +63,7 @@ use App\Listeners\DispatchVideoProcessingPipeline;
 use App\Listeners\MergeGuestCartOnLogin;
 use App\Listeners\NotifyOnComment;
 use App\Listeners\NotifyOnVideoLiked;
+use App\Listeners\RecordOrderAnalytics;
 use App\Repositories\Eloquent\BookmarkRepository;
 use App\Repositories\Eloquent\BrandRepository;
 use App\Repositories\Eloquent\CartRepository;
@@ -85,10 +95,15 @@ use App\Services\Media\MediaAssetService;
 use App\Services\Media\MediaService;
 use App\Services\Metrics\MetricsService;
 use App\Services\Notification\StubFcmPushNotification;
+use App\Services\Order\DateSequenceOrderNumberGenerator;
+use App\Services\Order\OrderService;
+use App\Services\Order\OrderStateMachine;
+use App\Services\Order\ShortCodeOrderNumberGenerator;
 use App\Services\Pricing\ProductPricingService;
 use App\Services\Recommendation\RecommendationService;
 use App\Services\Shipping\FixedShippingCalculator;
 use App\Services\Storage\StorageService;
+use App\Services\Tax\ZeroTaxService;
 use App\Services\Video\CommentService;
 use App\Services\Video\Ffmpeg\CliFfmpegTranscoder;
 use App\Services\Video\Ffmpeg\FakeFfmpegTranscoder;
@@ -139,6 +154,9 @@ class RepositoryServiceProvider extends ServiceProvider
         CouponServiceInterface::class => NoDiscountCouponService::class,
         ShippingCalculatorInterface::class => FixedShippingCalculator::class,
         PricingServiceInterface::class => ProductPricingService::class,
+        OrderServiceInterface::class => OrderService::class,
+        OrderStateMachineInterface::class => OrderStateMachine::class,
+        TaxServiceInterface::class => ZeroTaxService::class,
         CommentServiceInterface::class => CommentService::class,
         MetricsServiceInterface::class => MetricsService::class,
         MediaAssetServiceInterface::class => MediaAssetService::class,
@@ -159,6 +177,14 @@ class RepositoryServiceProvider extends ServiceProvider
 
         $this->app->singleton(GuestCartStore::class);
 
+        $this->app->singleton(OrderNumberGeneratorInterface::class, function ($app): OrderNumberGeneratorInterface {
+            $strategy = (string) config('commerce.order_number.strategy', 'date_sequence');
+
+            return $strategy === 'short_code'
+                ? $app->make(ShortCodeOrderNumberGenerator::class)
+                : $app->make(DateSequenceOrderNumberGenerator::class);
+        });
+
         $this->app->singleton(FfmpegTranscoderInterface::class, function ($app): FfmpegTranscoderInterface {
             if ($app->environment('testing')) {
                 return new FakeFfmpegTranscoder;
@@ -178,5 +204,10 @@ class RepositoryServiceProvider extends ServiceProvider
         Event::listen(VideoUploadConfirmed::class, DispatchVideoProcessingPipeline::class);
         Event::listen(VideoLiked::class, NotifyOnVideoLiked::class);
         Event::listen(CommentCreated::class, NotifyOnComment::class);
+        Event::listen(OrderCreated::class, [RecordOrderAnalytics::class, 'handleOrderCreated']);
+        Event::listen(OrderPaid::class, [RecordOrderAnalytics::class, 'handleOrderPaid']);
+        Event::listen(OrderCancelled::class, [RecordOrderAnalytics::class, 'handleOrderCancelled']);
+        Event::listen(RefundRequested::class, [RecordOrderAnalytics::class, 'handleRefundRequested']);
+        Event::listen(RefundCompleted::class, [RecordOrderAnalytics::class, 'handleRefundCompleted']);
     }
 }

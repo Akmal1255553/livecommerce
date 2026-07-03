@@ -8,4 +8,10 @@ return [
     'shipping_flat_rate_uzs' => (int) env('COMMERCE_SHIPPING_FLAT_RATE_UZS', 0),
     'inventory_reservation_ttl_minutes' => (int) env('COMMERCE_INVENTORY_RESERVATION_TTL_MINUTES', 15),
     'cart_max_quantity_per_line' => (int) env('COMMERCE_CART_MAX_QUANTITY_PER_LINE', 99),
+    'order_number_prefix' => env('COMMERCE_ORDER_NUMBER_PREFIX', 'LC'),
+    'order_number' => [
+        'strategy' => env('COMMERCE_ORDER_NUMBER_STRATEGY', 'date_sequence'),
+    ],
+    'refund_window_days' => (int) env('COMMERCE_REFUND_WINDOW_DAYS', 14),
+    'auto_complete_delivered_days' => (int) env('COMMERCE_AUTO_COMPLETE_DELIVERED_DAYS', 7),
 ];

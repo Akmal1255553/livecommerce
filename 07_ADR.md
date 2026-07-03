@@ -36,6 +36,7 @@ Every major technical decision must be documented here **before implementation**
 | [ADR-014](#adr-014-openapi-scramble-documentation) | OpenAPI / Scramble Documentation | Accepted | 2026-06-27 |
 | [ADR-015](#adr-015-mailpit-for-local-email-testing) | Mailpit for Local Email Testing | Accepted | 2026-06-27 |
 | [ADR-016](#adr-016-commerce-core-cart-orders-inventory-payment) | Commerce Core: Cart, Orders, Inventory, Payment | **Accepted** | 2026-06-28 |
+| [ADR-017](#adr-017-order-state-machine-and-order-aggregate) | Order State Machine & Order Aggregate | **Accepted** | 2026-06-28 |
 
 ---
 
@@ -668,7 +669,7 @@ CartService (mutable, versioned)
 | Price immutability | `buildOrderLineSnapshots` at checkout → `order_items` |
 | Coupons | `CouponServiceInterface`; MVP `NoDiscountCouponService` |
 | Shipping | `ShippingCalculatorInterface`; MVP fixed/zero rate |
-| Order states | `Draft → … → Completed` (+ `Cancelled`, `RefundRequested`, `Refunded`) |
+| Order states | See [ADR-017](./07_ADR.md#adr-017-order-state-machine-and-order-aggregate) — `Draft → … → Completed` + cancel/refund branches |
 | Payment | Only `CheckoutService` and webhook handler call `PaymentGatewayInterface` |
 | Cart events | `CartMerged`, `CartExpired` (4.3); `CartCheckedOut` (4.5) |
 
@@ -695,6 +696,426 @@ CartService (mutable, versioned)
 
 ---
 
+## ADR-017: Order State Machine & Order Aggregate
+
+**Status:** Accepted (2026-06-28)  
+**Sprint:** 4.4 (Order System) · extends [ADR-016](#adr-016-commerce-core-cart-orders-inventory-payment)  
+**Canonical architecture:** [docs/23_COMMERCE_CORE_ARCHITECTURE.md](./docs/23_COMMERCE_CORE_ARCHITECTURE.md) §8  
+**Supersedes:** Informal state sketch in ADR-016 and `SPRINT_4_COMMERCE_PLAN.md` §4.4
+
+### Context
+
+Sprint 4.4 introduces the **Order** domain — the first **immutable** commerce aggregate.  
+[ADR-016](#adr-016-commerce-core-cart-orders-inventory-payment) defines the Cart → Checkout → Order pipeline but only sketches order states.  
+Without a formal state machine and aggregate contract, status writes will leak into controllers, `order_items` will be mutated after checkout, and refund/cancel races will corrupt fulfillment.
+
+Existing DB design (`orders`, `order_items`, `refund_requests`) and API surface (`POST /orders/{id}/cancel`, `PUT /seller/orders/{id}/status`) assume an order lifecycle but do not define **who** may transition **what**, **which events** fire, or **how retries** behave.
+
+### Problem
+
+Define a production-grade **Order aggregate** and **OrderStateMachine** such that:
+
+1. Every status change is validated, audited, and idempotent.
+2. **Order lines are immutable** after order creation — the cornerstone of e-commerce integrity.
+3. Payment, fulfillment, cancellation, and refund branches are explicit and non-overlapping.
+4. `OrderService` is the **only** mutation entry point; repositories never set `orders.status` directly.
+
+### Considered Alternatives
+
+| Option | Pros | Cons |
+|--------|------|------|
+| **A. Free-form `status` string on `orders`** | Fast to ship | Invalid transitions; no audit; refund/cancel bugs |
+| **B. Single `OrderStatus` enum + `OrderStateMachine` (chosen)** | Enforced transitions; testable; auditable timeline | More code; requires migration from legacy `pending_payment` |
+| **C. Separate `payment_status` + `fulfillment_status` without unified machine** | Finer granularity | Combinatorial explosion; hard to expose in API |
+| **D. Event sourcing for orders** | Perfect audit | Overkill for MVP; team unfamiliarity |
+
+**Decision:** **B** — one canonical `OrderStatus` on the aggregate, with `payment_status` as a **read projection** synced on payment transitions (not a second writer). Refund workflow uses `refund_requests` as a child entity; order status reflects refund branch states.
+
+### Decision
+
+#### 1. Order Aggregate Root
+
+`Order` is the **aggregate root**. All mutations to order data flow through it (via `OrderService`).
+
+```
+Order (Aggregate Root)
+├── id: UUID
+├── orderNumber: string
+├── buyerId: UUID
+├── storeId: UUID
+├── status: OrderStatus
+├── version: int                    ← optimistic lock (P0)
+├── items: OrderItem[]              ← IMMUTABLE after construction
+├── payment: PaymentSnapshot
+├── shipment: ShipmentSnapshot
+├── totals: OrderTotals             ← Money VO; frozen at creation
+├── timeline: OrderTimeline         ← append-only transition log
+└── activeRefundId: ?UUID           ← set while refund branch active
+```
+
+**Child entities / value objects:**
+
+| Part | Type | Mutability | Responsibility |
+|------|------|------------|----------------|
+| **OrderItem** | Entity (child) | **Immutable** after `Order::createFromCheckout()` | Price snapshot, SKU, qty — never updated |
+| **PaymentSnapshot** | Value object | Updated **only** via payment transitions | `provider`, `method`, `transaction_id`, `currency`, `amount` (`Money`), `status`, `reference`, `paid_at` |
+| **ShipmentSnapshot** | Value object | Updated **only** via fulfillment transitions | `address`, `carrier`, `tracking_number`, `estimated_delivery`, `actual_delivery` (`delivered_at`), `shipped_at` |
+| **OrderTimeline** | Collection | Append-only — **separate `order_status_transitions` table** (not JSON on `orders`) | Audit, support, analytics, AI |
+| **OrderTotals** | Value object | **Immutable** | `subtotal`, `discount`, `shipping`, `tax`, `total` — all `Money` |
+
+```php
+// Conceptual — Sprint 4.4 implementation
+final class Order
+{
+  /** @param list<OrderItem> $items */
+  public static function createFromCheckout(
+    CheckoutContext $ctx,
+    array $items,
+    OrderTotals $totals,
+    PaymentSnapshot $payment,
+    ShipmentSnapshot $shipment,
+  ): self;
+
+  /** Only method that changes lifecycle status. */
+  public function transition(
+    OrderStatus $to,
+    Actor $actor,
+    ?string $idempotencyKey = null,
+    ?string $reason = null,
+  ): OrderStatusTransition;
+
+  /** @throws OrderItemImmutableException */
+  public function updateItemQuantity(int $itemId, int $qty): never;
+}
+```
+
+#### 2. Immutability rule (P0 — non-negotiable)
+
+> **Nobody may modify `OrderItem` after the order is created.**  
+> Forbidden fields: entire `OrderItem` row, `quantity`, `unit_price`, `discount`, `product_title`, `sku`, `variant_name`, `line_total`.  
+> Allowed mutations: **`orders.status`**, **PaymentSnapshot**, **ShipmentSnapshot**, append-only **timeline** — only via `OrderService::transition()`.
+
+| Allowed after creation | Forbidden after creation |
+|------------------------|--------------------------|
+| `status` transitions | Change `quantity` on `order_items` |
+| `payment_*` fields via payment transitions | Change `unit_price`, `discount`, `product_title`, `sku` |
+| `shipment_*` fields via fulfillment transitions | Add/remove `order_items` rows |
+| Append `order_status_transitions` | DELETE `order_items` |
+| Create `refund_requests` (child workflow) | Re-price order from live `products.price` |
+| — | Change `orders.order_number` or order-level totals |
+
+#### 2.1 Public order number (P0)
+
+`order_number` is the **only** customer-facing identifier.  
+**Never** use auto-increment IDs or raw UUID in support/UI.
+
+| Requirement | Rule |
+|-------------|------|
+| Format | `LC-YYYYMMDD-000001` (daily sequence) **or** `LC-7YQ29AF4` (opaque short code) |
+| Unique | UNIQUE constraint; generator retries on collision |
+| Opaque | Must not reveal total platform order volume |
+| Immutable | Set once at creation; never updated |
+
+Implementation: `OrderNumberGeneratorInterface` — see [sprint-4.4-order-system.md](./blueprints/sprint-4.4-order-system.md) §2.1.
+
+#### 2.2 Immutability enforcement
+
+1. `OrderItem` has **no public setters** — constructor + `fromSnapshot()` only.
+2. `OrderRepository` exposes **no** `updateOrderItem()` method.
+3. PHPStan baseline rule: no `order_items` UPDATE queries outside migrations.
+4. Tests: `OrderImmutabilityTest` — assert `OrderItemImmutableException` on any line mutation attempt.
+
+**Why:** Buyer, seller, and tax reports must reflect the **contract at purchase time**. Mutable lines enable fraud, accounting drift, and dispute loss.
+
+#### 3. Status inventory
+
+`App\Enums\OrderStatus` (string-backed):
+
+| Status | Phase | Terminal? | Description |
+|--------|-------|-----------|-------------|
+| `draft` | Pre-commit | No | Ephemeral — checkout transaction only; not visible in buyer API |
+| `pending` | Creation | No | Order persisted; inventory reserved; payment not initiated |
+| `awaiting_payment` | Payment | No | Gateway session / payment URL active |
+| `paid` | Fulfillment | No | Payment confirmed; seller may pack |
+| `packing` | Fulfillment | No | Seller preparing order |
+| `ready_to_ship` | Fulfillment | No | Packed; awaiting carrier pickup |
+| `shipped` | Fulfillment | No | In transit |
+| `delivered` | Fulfillment | No | Received by buyer |
+| `completed` | Closed | **Yes** | Order fulfilled; return window may still apply |
+| `cancelled` | Closed | **Yes** | Order voided before/at payment |
+| `refund_requested` | Refund | No | Buyer requested refund; fulfillment frozen |
+| `refund_approved` | Refund | No | Seller/admin approved; payout pending |
+| `refund_rejected` | Refund | No | Refund denied; restores pre-request fulfillment status |
+| `refunded` | Closed | **Yes** | Money returned; inventory restock rules apply |
+
+**Note:** `refund_rejected` is a **visible** order status. On entry, aggregate stores `status_before_refund` to restore on exit (see transition `RefundRejected → *`).
+
+#### 4. State machine diagram
+
+**Happy path (fulfillment):**
+
+```
+Draft
+  ↓
+Pending
+  ↓
+AwaitingPayment
+  ↓
+Paid
+  ↓
+Packing
+  ↓
+ReadyToShip
+  ↓
+Shipped
+  ↓
+Delivered
+  ↓
+Completed
+```
+
+**Cancellation branch:**
+
+```
+Pending ──────────────→ Cancelled
+AwaitingPayment ──────→ Cancelled
+```
+
+**Refund branch** (entry from `Paid`, `Delivered`, or `Completed` within policy window):
+
+```
+Paid / Delivered / Completed
+  ↓
+RefundRequested
+  ↓                    ↘
+RefundApproved      RefundRejected → (restore status_before_refund)
+  ↓
+Refunded
+```
+
+```mermaid
+stateDiagram-v2
+    direction TB
+
+    [*] --> Draft
+    Draft --> Pending: checkout commits
+
+    Pending --> AwaitingPayment: payment initiated
+    Pending --> Cancelled: buyer/system cancel
+
+    AwaitingPayment --> Paid: payment succeeded
+    AwaitingPayment --> Cancelled: payment failed / TTL / buyer cancel
+
+    Paid --> Packing: seller starts packing
+    Paid --> RefundRequested: buyer refund request
+
+    Packing --> ReadyToShip: packed
+    ReadyToShip --> Shipped: handed to carrier
+    Shipped --> Delivered: delivery confirmed
+    Delivered --> Completed: auto-complete / buyer confirm
+    Delivered --> RefundRequested: buyer refund request
+    Completed --> RefundRequested: buyer refund request
+
+    RefundRequested --> RefundApproved: seller/admin approve
+    RefundRequested --> RefundRejected: seller/admin reject
+    RefundApproved --> Refunded: payment gateway refund confirmed
+    RefundRejected --> Paid: restore if was paid
+    RefundRejected --> Delivered: restore if was delivered
+    RefundRejected --> Completed: restore if was completed
+
+    Cancelled --> [*]
+    Completed --> [*]
+    Refunded --> [*]
+```
+
+#### 5. Transition catalogue
+
+Each row is the **only** legal edge. `OrderStateMachine::assertCanTransition($from, $to, $actor)` enforces this table.
+
+| # | From | To | Initiator | Preconditions / checks | Events published | Reversible? | Idempotency |
+|---|------|-----|-----------|------------------------|------------------|-------------|-------------|
+| T01 | `draft` | `pending` | **System** (`CheckoutService`) | Cart version match; stock reserved; snapshots built; totals > 0 | `OrderCreated` | No | Same `checkout` idempotency key → same order (ADR-016) |
+| T02 | `pending` | `awaiting_payment` | **System** (`CheckoutService`) | `PaymentGateway::initiate()` succeeded; reservation active | `OrderPaymentInitiated` | No | `Idempotency-Key` on checkout response cached |
+| T03 | `pending` | `cancelled` | **Buyer** or **System** | No payment captured; reservation releasable | `OrderCancelled` | No | `POST /orders/{id}/cancel` + `Idempotency-Key`; if already `cancelled` → 200 same body |
+| T04 | `awaiting_payment` | `paid` | **System** (payment webhook / `FakePaymentGateway`) | Webhook signature valid; amount matches `order.total`; reservation active | `PaymentSucceeded`, `OrderPaid` | No | Gateway `transaction_id` UNIQUE; duplicate webhook → no-op |
+| T05 | `awaiting_payment` | `cancelled` | **Buyer**, **System** (TTL job), or **System** (payment failed) | Payment not completed; reservation expired or `PaymentFailed` | `PaymentFailed` (if applicable), `OrderCancelled` | No | Reservation TTL job idempotent per `reservation_group_id`; cancel endpoint idempotent |
+| T06 | `paid` | `packing` | **Seller** | Store owns order; not in refund branch | `OrderFulfillmentStarted` | No | `PUT /seller/orders/{id}/status` + `Idempotency-Key`; if already `packing` → 200 |
+| T07 | `paid` | `refund_requested` | **Buyer** | Within refund policy window; no open refund | `RefundRequested`, `OrderRefundRequested` | No | `POST /orders/{id}/refund` + `Idempotency-Key`; one open refund per order |
+| T08 | `packing` | `ready_to_ship` | **Seller** | Tracking optional at this step | `OrderReadyToShip` | No | Idempotency-Key on status PUT |
+| T09 | `ready_to_ship` | `shipped` | **Seller** | `tracking_number` required (configurable) | `OrderShipped` | No | Idempotency-Key; duplicate → 200 |
+| T10 | `shipped` | `delivered` | **Seller**, **System** (carrier webhook stub), or **Buyer** (confirm delivery) | `shipped_at` set | `OrderDelivered` | No | Idempotency-Key |
+| T11 | `delivered` | `completed` | **System** (auto job) or **Buyer** | Delivery confirmed; optional grace period elapsed | `OrderCompleted` | No | Job keyed by `order_id`; second run no-op |
+| T12 | `delivered` | `refund_requested` | **Buyer** | Return window open; order not completed or completed with extended window | `RefundRequested`, `OrderRefundRequested` | No | Idempotency-Key on refund POST |
+| T13 | `completed` | `refund_requested` | **Buyer** | Extended return policy (config) | `RefundRequested`, `OrderRefundRequested` | No | Same as T12 |
+| T14 | `refund_requested` | `refund_approved` | **Seller** or **Admin** | Refund request exists; reason reviewed | `RefundApproved`, `OrderRefundApproved` | No | `PUT /seller/refunds/{id}` + Idempotency-Key |
+| T15 | `refund_requested` | `refund_rejected` | **Seller** or **Admin** | Refund request exists | `RefundRejected`, `OrderRefundRejected` | No | Idempotency-Key |
+| T16 | `refund_rejected` | `paid` / `delivered` / `completed` | **System** (`OrderService`) | Restores `status_before_refund` from aggregate | `OrderRefundRestored` | No | Automatic on T15; idempotent if already restored |
+| T17 | `refund_approved` | `refunded` | **System** (payment gateway refund webhook) | Refund amount ≤ paid total; gateway confirmed | `RefundCompleted`, `OrderRefunded`, `PaymentRefunded` | No | Gateway refund `transaction_id` UNIQUE |
+| T18 | `paid` → `cancelled` | — | **—** | **Not allowed** — use refund branch | — | — | — |
+| T19 | `shipped`+ → `cancelled` | — | **—** | **Not allowed** — use refund branch | — | — | — |
+
+**Actor enum:** `App\Enums\OrderActor` → `buyer`, `seller`, `admin`, `system`, `payment_gateway`.
+
+#### 6. Implementation contract
+
+```
+OrderController / SellerOrderController
+        ↓
+   OrderService                    ← sole application entry point
+        ↓
+   OrderStateMachine               ← validates transition table
+        ↓
+   Order (aggregate)               ← transition(); append timeline
+        ↓
+   OrderRepository                 ← save aggregate; NO status SQL helpers
+```
+
+**Rules:**
+
+| Rule | Detail |
+|------|--------|
+| No controller status writes | Controllers call `OrderService::transition()` only |
+| No repository `updateStatus()` | Repository persists full aggregate; state machine runs in service layer |
+| Optimistic locking | `orders.version` incremented every transition; mismatch → `409 OrderConcurrentModificationException` |
+| Timeline append | Every successful transition inserts `order_status_transitions` row |
+| Refund child entity | `refund_requests` holds `reason`, `status`; order status mirrors branch |
+
+```php
+interface OrderStateMachineInterface
+{
+    public function assertCanTransition(
+        OrderStatus $from,
+        OrderStatus $to,
+        OrderActor $actor,
+    ): void;
+
+    /** @return list<OrderStatus> */
+    public function allowedTargets(OrderStatus $from, OrderActor $actor): array;
+}
+```
+
+#### 7. Persistence
+
+**`orders`** (add/align columns in Sprint 4.4 migration):
+
+| Column | Notes |
+|--------|-------|
+| `status` | `OrderStatus` enum string |
+| `version` | INTEGER NOT NULL DEFAULT 1 — optimistic lock |
+| `status_before_refund` | VARCHAR(20) NULLABLE — set on T07/T12/T13; used on T16 |
+| `payment_status` | Projection: `pending`, `paid`, `failed`, `refunded` |
+| `paid_at`, `shipped_at`, `delivered_at`, `completed_at`, `cancelled_at` | Set by transitions |
+
+**`order_items`** — snapshot columns per ADR-016; **INSERT only** after order creation.
+
+**`order_status_transitions`** (new — audit + idempotency):
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | BIGSERIAL | PK |
+| order_id | UUID | FK → orders |
+| from_status | VARCHAR(30) | |
+| to_status | VARCHAR(30) | |
+| actor_type | VARCHAR(20) | `buyer`, `seller`, `admin`, `system`, `payment_gateway` |
+| actor_id | UUID | NULLABLE (null for system/gateway) |
+| reason | TEXT | NULLABLE |
+| idempotency_key | VARCHAR(64) | NULLABLE |
+| metadata | JSONB | NULLABLE — gateway refs, job ids |
+| created_at | TIMESTAMP | |
+
+**Unique index:** `(order_id, idempotency_key)` WHERE `idempotency_key IS NOT NULL`.
+
+**`refund_requests`** — align `status` with: `requested`, `approved`, `rejected`, `processing`, `completed`, `failed`.
+
+#### 8. Domain events
+
+| Event | When | Consumers (MVP) |
+|-------|------|-----------------|
+| `OrderCreated` | T01 | Analytics (`order_created`), seller notification (4.6) |
+| `OrderConfirmed` | T02 | Payment session started |
+| `OrderPaid` | T04 | `order_paid`, seller notification, inventory `confirmReservation` |
+| `OrderCancelled` | T03, T05 | `order_cancelled`, inventory `releaseReservation` |
+| `OrderPackingStarted` | T06 | Seller dashboard |
+| `OrderReadyToShip` | T08 | Buyer notification |
+| `OrderShipped` | T09 | Buyer tracking notification |
+| `OrderDelivered` | T10 | Auto-complete job schedule |
+| `OrderCompleted` | T11 | Analytics, review prompt (future) |
+| `RefundRequested` | T07, T12, T13 | `refund_requested`, seller queue |
+| `RefundApproved` | T14 | Payment refund initiation (4.5+) |
+| `RefundRejected` | T15 | Buyer notification |
+| `RefundCompleted` | T17 | `refund_completed`, inventory restock, analytics |
+| `PaymentSucceeded` / `PaymentFailed` | T04 / T05 | From ADR-016 payment layer |
+
+Events are **facts** (past tense). They fire **after** DB commit (Laravel `DB::afterCommit`).
+
+#### 9. Idempotency strategy (P0)
+
+| Surface | Mechanism |
+|---------|-----------|
+| Checkout → `draft`/`pending` | ADR-016 `Idempotency-Key` on `POST /checkout` |
+| Buyer cancel | `Idempotency-Key` header; same key + same order → cached response |
+| Seller status PUT | `Idempotency-Key` header **or** `If-Match: {order.version}` |
+| Payment webhook | Unique `payment_reference` / gateway transaction id |
+| Refund request | `Idempotency-Key`; one active refund per order |
+| Scheduled jobs | `order_id` + target status — skip if already at target |
+| Transition replay | `order_status_transitions.idempotency_key` unique per order |
+
+**Idempotent transition pattern:**
+
+```php
+if ($order->status === $targetStatus) {
+    return $order; // no-op success
+}
+$this->stateMachine->assertCanTransition($order->status, $targetStatus, $actor);
+// ... apply transition in transaction with version check
+```
+
+#### 10. API mapping (Sprint 4.4 / 4.5 / 4.6)
+
+| API | Transitions |
+|-----|-------------|
+| `POST /checkout` (4.5) | T01 → T02 (T04 async via webhook) |
+| `POST /orders/{id}/cancel` | T03, T05 (buyer-initiated) |
+| `PUT /seller/orders/{id}/status` | T06, T08, T09, T10 (seller fulfillment) |
+| `POST /orders/{id}/refund` | T07, T12, T13 |
+| `PUT /seller/refunds/{id}` | T14, T15 |
+| Payment webhook handler | T04, T05, T17 |
+| `CompleteDeliveredOrdersJob` | T11 |
+| `ReleaseExpiredInventoryReservationsJob` | T05 (system cancel) |
+
+### Consequences
+
+- **Positive:** Immutable order lines — accounting-safe, dispute-safe, ADR-016 price snapshot enforced at aggregate level.
+- **Positive:** Every transition auditable via `order_status_transitions`.
+- **Positive:** Idempotent payment/refund/cancel — safe under retries and duplicate webhooks.
+- **Positive:** Seller and buyer permissions explicit per transition.
+- **Negative:** Migration from legacy `pending_payment` status string in `03_DATABASE_DESIGN.md`.
+- **Negative:** `order_status_transitions` table + `orders.version` add write overhead.
+- **Neutral:** `draft` status exists only inside checkout transaction; never listed in buyer order history.
+
+### Relationship to ADR-016
+
+| ADR-016 topic | ADR-017 resolution |
+|---------------|-------------------|
+| Order states sketch | Fully specified machine (this ADR) |
+| `OrderService` immutable | Aggregate + immutability rules §2 |
+| `order_items` snapshot | `OrderItem` child entity — INSERT only |
+| Checkout idempotency | T01 tied to checkout key |
+| Inventory reservation TTL | T05 system cancel on expiry |
+| Payment webhooks | T04, T05, T17 |
+
+**Gate policy:** Sprint 4.4 implementation **must not start** until ADR-017 is **Accepted**.  
+Changes to transitions after acceptance require ADR-017 amendment or ADR-018.
+
+### Future Review
+
+- Partial refunds (line-level refund amounts) — requires ADR amendment; lines still immutable, refund allocation separate.
+- Multi-parcel shipments (`Shipment` as collection) — post-MVP.
+- Admin override transitions — explicit `admin` actor already reserved.
+- Carrier webhook integration — `OrderDelivered` via `system` actor.
+
+---
+
 ## Adding New ADRs
 
 1. Assign next ADR number (ADR-016, etc.).
@@ -713,6 +1134,8 @@ CartService (mutable, versioned)
 | 1.1 | 2026-06-27 | Architecture Review | P0 patches: ADR-013 (Pest), ADR-014 (Scramble), ADR-015 (Mailpit) |
 | 1.2 | 2026-06-28 | Architecture Review | ADR-016: Commerce Core (Cart, Orders, Inventory, Payment) |
 | 1.3 | 2026-06-28 | Architecture Review | ADR-016 v2: cart versioning, reservation TTL, idempotency, Money VO, coupon/shipping stubs |
+| 1.4 | 2026-06-28 | Architecture Review | ADR-017: Order State Machine & Order Aggregate (Accepted) |
+| 1.5 | 2026-06-28 | Architecture Review | ADR-017 / blueprint v2: order number generator, snapshots, analytics events |
 
 ---
 

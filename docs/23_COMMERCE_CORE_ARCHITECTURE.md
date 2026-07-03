@@ -4,7 +4,7 @@
 **Status:** Accepted (ADR-016 v2, 2026-06-28)  
 **ADR:** [07_ADR.md § ADR-016](../07_ADR.md#adr-016-commerce-core-cart-orders-inventory-payment)  
 **Master plan:** [SPRINT_4_COMMERCE_PLAN.md](./SPRINT_4_COMMERCE_PLAN.md)  
-**Last updated:** 2026-06-28
+**Last updated:** 2026-06-28 (ADR-017 proposed)
 
 ---
 
@@ -315,9 +315,47 @@ On `PaymentFailed` / timeout → `InventoryService::releaseReservation`
 
 ---
 
-## 8. Order state machine (Sprint 4.4)
+## 8. Order state machine & aggregate (Sprint 4.4)
 
-Unchanged — see v1 doc. `order_items` use `Money` columns + snapshot fields.
+**Canonical spec:** [ADR-017](../07_ADR.md#adr-017-order-state-machine-and-order-aggregate) — **Accepted** (2026-06-28).
+
+### 8.1 Aggregate root
+
+```
+Order (Aggregate Root)
+├── OrderItem[]          ← IMMUTABLE (P0): quantity, unit_price, discount, product_title, sku
+├── PaymentSnapshot      ← provider, transaction_id, currency, amount, status (P1)
+├── ShipmentSnapshot     ← carrier, tracking_number, estimated_delivery, actual_delivery (P1)
+├── OrderTotals          ← frozen Money snapshots
+└── OrderTimeline        ← order_status_transitions table only — NOT JSON (P0)
+```
+
+**Public ID:** `order_number` — `LC-YYYYMMDD-000001` or `LC-7YQ29AF4`; never auto-increment.
+
+**Hard rule:** No UPDATE on `order_items` after checkout.  
+Only `status`, payment/shipment snapshots, and timeline append via `OrderService::transition()`.
+
+### 8.2 Lifecycle overview
+
+**Happy path:** `draft` → `pending` → `awaiting_payment` → `paid` → `packing` → `ready_to_ship` → `shipped` → `delivered` → `completed`
+
+**Cancel branch:** `pending` / `awaiting_payment` → `cancelled`
+
+**Refund branch:** `paid` | `delivered` | `completed` → `refund_requested` → `refund_approved` → `refunded`  
+or `refund_requested` → `refund_rejected` → restore `status_before_refund`
+
+### 8.3 Implementation stack
+
+```
+OrderController → OrderService → OrderStateMachine → Order (aggregate) → OrderRepository
+```
+
+- `orders.version` — optimistic lock on every transition (409 on conflict)
+- `order_status_transitions` — audit + per-transition idempotency keys
+- Events: `OrderCreated`, `OrderConfirmed`, `OrderPaid`, `OrderPackingStarted`, `OrderShipped`, `OrderDelivered`, `OrderCompleted`, `RefundRequested`, `RefundCompleted`, …
+- Analytics (P2): `order_created`, `order_paid`, `order_cancelled`, `refund_requested`, `refund_completed` via `RecordOrderAnalytics`
+
+Full transition table (initiator, checks, events, reversibility, idempotency): **ADR-017 §5**.
 
 ---
 

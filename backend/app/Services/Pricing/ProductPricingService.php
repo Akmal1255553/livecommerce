@@ -11,6 +11,8 @@ use App\Contracts\Services\ShippingCalculatorInterface;
 use App\DTOs\Cart\CartLinePricing;
 use App\DTOs\Cart\CartPricingResult;
 use App\DTOs\Cart\CouponApplication;
+use App\DTOs\Order\OrderLineSnapshot;
+use App\DTOs\Order\OrderTotals;
 use App\Models\Cart;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -104,6 +106,53 @@ class ProductPricingService implements PricingServiceInterface
         return $pricing->subtotal
             ->subtract($pricing->discountTotal)
             ->add($pricing->shippingEstimate);
+    }
+
+    public function buildOrderLineSnapshots(Cart $cart): array
+    {
+        $pricing = $this->priceCart($cart);
+
+        return array_map(
+            fn (CartLinePricing $line): OrderLineSnapshot => new OrderLineSnapshot(
+                productId: (string) $line->product->id,
+                variantId: $line->variant?->id,
+                productTitle: $line->product->title,
+                variantName: $line->variant?->name,
+                sku: $line->variant !== null ? $line->variant->sku : $line->product->sku,
+                quantity: $line->quantity,
+                unitPrice: $line->unitPrice,
+                discount: $line->discountAmount,
+                lineTotal: $line->lineTotal,
+            ),
+            $pricing->lines,
+        );
+    }
+
+    public function calculateOrderTotals(
+        array $snapshots,
+        ?CouponApplication $coupon,
+        Money $shipping,
+    ): OrderTotals {
+        $subtotal = Money::zero();
+        $discount = Money::zero();
+
+        foreach ($snapshots as $snapshot) {
+            $subtotal = $subtotal->add($snapshot->lineTotal);
+            $discount = $discount->add($snapshot->discount);
+        }
+
+        $couponDiscount = $coupon !== null ? $coupon->discount : Money::zero();
+        $discount = $discount->add($couponDiscount);
+        $tax = Money::zero();
+        $total = $subtotal->subtract($couponDiscount)->add($shipping)->add($tax);
+
+        return new OrderTotals(
+            subtotal: $subtotal,
+            shipping: $shipping,
+            discount: $discount,
+            tax: $tax,
+            total: $total,
+        );
     }
 
     private function priceSingleLine(

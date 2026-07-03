@@ -14,9 +14,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **4.1** Product Catalog — implemented
 - **4.2** Video Commerce — shipped
 - **4.3** Shopping Cart — shipped
-- **4.4–4.6** Orders, Checkout, Seller Dashboard — blocked until prior sub-sprint released
+- **4.4** Order System — shipped
+- **4.5–4.6** Checkout, Seller Dashboard — blocked until prior sub-sprint released
 
 ### Added
+
+#### Sprint 4.4 — Order System
+
+- `orders`, `order_items`, `order_status_transitions`, `refund_requests`, `order_number_sequences` tables
+- ADR-017 state machine — 19 transitions, optimistic `orders.version`, append-only timeline
+- Immutable `order_items` line snapshots; `OrderService` + `OrderStateMachine`
+- Order number generator (`LC-YYYYMMDD-000001` default)
+- Buyer API: `GET/POST /orders`, cancel, refund request
+- Seller API: `GET/PUT /seller/orders`, `PUT /seller/refunds/{id}`
+- Events: `OrderCreated`, `OrderPaid`, fulfillment + refund lifecycle (13 events)
+- `RecordOrderAnalytics` listener; `CompleteDeliveredOrdersJob` (daily)
+- Tests: `OrderTest`, `OrderImmutabilityTest`, `SellerOrderTest`, `RefundTest`, `OrderStateMachineTest` — **187 tests total**
 
 #### Sprint 4.3 — Shopping Cart
 
@@ -42,7 +55,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Sprint 4 — Commerce architecture (cross-cutting)
 
-- **Price snapshot** — `order_items` stores immutable price fields at checkout (Sprint 4.4)
+- **Price snapshot** — `order_items` stores immutable price fields at checkout (Sprint 4.4 — shipped)
 - **Product versioning** — `product_version` on pivot + `products.version` (Sprint 4.2)
 - **Inventory double-check** — cart (4.3) + checkout (4.5)
 
