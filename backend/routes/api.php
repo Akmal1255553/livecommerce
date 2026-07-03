@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CategoryController;
+use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
@@ -88,6 +89,8 @@ Route::prefix('v1')->group(function (): void {
             Route::put('seller/orders/{id}/status', [SellerOrderController::class, 'updateStatus']);
             Route::put('seller/refunds/{id}', [SellerOrderController::class, 'resolveRefund']);
         });
+
+        Route::post('checkout', [CheckoutController::class, 'store']);
 
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{id}', [OrderController::class, 'show']);

@@ -27,6 +27,7 @@ use App\Contracts\Repositories\VideoProductRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
 use App\Contracts\Repositories\VideoShareRepositoryInterface;
 use App\Contracts\Services\CartServiceInterface;
+use App\Contracts\Services\CheckoutServiceInterface;
 use App\Contracts\Services\CommentServiceInterface;
 use App\Contracts\Services\CouponServiceInterface;
 use App\Contracts\Services\HealthServiceInterface;
@@ -37,6 +38,7 @@ use App\Contracts\Services\MetricsServiceInterface;
 use App\Contracts\Services\OrderNumberGeneratorInterface;
 use App\Contracts\Services\OrderServiceInterface;
 use App\Contracts\Services\OrderStateMachineInterface;
+use App\Contracts\Services\PaymentGatewayInterface;
 use App\Contracts\Services\PricingServiceInterface;
 use App\Contracts\Services\PushNotificationInterface;
 use App\Contracts\Services\ShippingCalculatorInterface;
@@ -88,6 +90,7 @@ use App\Repositories\Eloquent\VideoShareRepository;
 use App\Services\Auth\StubSmsProvider;
 use App\Services\Cart\CartService;
 use App\Services\Cart\GuestCartStore;
+use App\Services\Checkout\CheckoutService;
 use App\Services\Coupon\NoDiscountCouponService;
 use App\Services\Health\HealthService;
 use App\Services\Inventory\ProductInventoryService;
@@ -99,6 +102,7 @@ use App\Services\Order\DateSequenceOrderNumberGenerator;
 use App\Services\Order\OrderService;
 use App\Services\Order\OrderStateMachine;
 use App\Services\Order\ShortCodeOrderNumberGenerator;
+use App\Services\Payment\FakePaymentGateway;
 use App\Services\Pricing\ProductPricingService;
 use App\Services\Recommendation\RecommendationService;
 use App\Services\Shipping\FixedShippingCalculator;
@@ -149,11 +153,13 @@ class RepositoryServiceProvider extends ServiceProvider
         VideoUploadServiceInterface::class => VideoUploadService::class,
         VideoInteractionServiceInterface::class => VideoInteractionService::class,
         VideoCommerceServiceInterface::class => VideoCommerceService::class,
+        CheckoutServiceInterface::class => CheckoutService::class,
         CartServiceInterface::class => CartService::class,
         InventoryServiceInterface::class => ProductInventoryService::class,
         CouponServiceInterface::class => NoDiscountCouponService::class,
         ShippingCalculatorInterface::class => FixedShippingCalculator::class,
         PricingServiceInterface::class => ProductPricingService::class,
+        PaymentGatewayInterface::class => FakePaymentGateway::class,
         OrderServiceInterface::class => OrderService::class,
         OrderStateMachineInterface::class => OrderStateMachine::class,
         TaxServiceInterface::class => ZeroTaxService::class,

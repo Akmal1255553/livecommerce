@@ -1,9 +1,9 @@
 # Sprint 4 — Commerce · Master Plan
 
-**Version:** 1  
+**Version:** 2  
 **Status:** Active planning  
-**Phase:** 4 — Commerce  
-**Last updated:** 2026-06-28
+**Phase:** 4 — Commerce · **Phase A — Commerce MVP**  
+**Last updated:** 2026-07-03
 
 ---
 
@@ -24,16 +24,46 @@ Blueprint → Architecture Review → Approval → Implementation → Tests → 
 
 ---
 
+4. **Phase A gate:** Sprint 5 (Seller Platform) and Sprint 6 (Live Commerce) are **blocked** until Phase A (4.5 + 4.5M) is CI green and released. Without 4.5M mobile screens there is **no MVP**.
+
+---
+
+## Phase A — Commerce MVP
+
+Phase A closes the **end-to-end purchase journey** (backend + mobile). Nothing in Seller Platform or Live Commerce starts until Phase A ships.
+
+| Sub-sprint | Layer | Name | Closes |
+|------------|-------|------|--------|
+| **4.5** | Backend | Checkout | Cart → order, inventory reservation, fake payment |
+| **4.5M** | Mobile | Mobile Commerce | Feed overlay → product → cart → checkout → orders |
+
+```
+4.4 Order System ✅
+    ↓
+4.5 Checkout (backend)          ← Phase A starts
+    ↓
+4.5M Mobile Commerce (Flutter)  ← MVP gate — no MVP without this
+    ↓
+─── Phase A complete ───
+    ↓
+4.6 Seller Dashboard (backend REST)  ·  Sprint 5 Seller Platform
+    ↓
+Sprint 6 Live Commerce
+```
+
+---
+
 ## Sub-sprint map
 
 | Sub-sprint | Name | Depends on | Status | Blueprint |
 |------------|------|------------|--------|-----------|
-| **4.1** | Product Catalog | Sprint 3.3 | ✅ Implemented | — (shipped) |
+| **4.1** | Product Catalog | Sprint 3.3 | ✅ Shipped | — (shipped) |
 | **4.2** | Video Commerce | 4.1 | ✅ Shipped | [sprint-4.2-video-commerce.md](../blueprints/sprint-4.2-video-commerce.md) |
 | **4.3** | Shopping Cart | 4.2 | ✅ Shipped | [sprint-4.3-shopping-cart.md](../blueprints/sprint-4.3-shopping-cart.md) |
-| **4.4** | Order System | 4.3 | 📋 Blueprint approved | [sprint-4.4-order-system.md](../blueprints/sprint-4.4-order-system.md) |
-| **4.5** | Checkout | 4.4 | 🔒 Blocked | TBD |
-| **4.6** | Seller Dashboard | 4.1, 4.4 | 🔒 Blocked | TBD |
+| **4.4** | Order System | 4.3 | ✅ Shipped | [sprint-4.4-order-system.md](../blueprints/sprint-4.4-order-system.md) |
+| **4.5** | Checkout | 4.4 | ✅ Shipped | — |
+| **4.5M** | Mobile Commerce | 4.5 | 🔒 Next | [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md) |
+| **4.6** | Seller Dashboard | 4.1, 4.4 | 🔒 Blocked (after Phase A) | TBD |
 
 ```
 4.1 Product Catalog ✅
@@ -42,11 +72,13 @@ Blueprint → Architecture Review → Approval → Implementation → Tests → 
     ↓
 4.3 Shopping Cart ✅
     ↓
-4.4 Order System ← CURRENT (blueprint approved)
+4.4 Order System ✅
     ↓
-4.5 Checkout
+4.5 Checkout ✅                    ← shipped
     ↓
-4.6 Seller Dashboard (parallel-safe after 4.4 for orders module)
+4.5M Mobile Commerce              ← CURRENT
+    ↓
+4.6 Seller Dashboard (parallel-safe after Phase A)
 ```
 
 ---
@@ -90,7 +122,9 @@ Blueprint → Architecture Review → Approval → Implementation → Tests → 
 
 ---
 
-## 4.4 Order System (planned)
+## 4.4 Order System (shipped)
+
+**Released:** `v0.4.4-order-system`
 
 **Prerequisite:** [ADR-017](../07_ADR.md#adr-017-order-state-machine-and-order-aggregate) **Accepted** · [blueprint](../blueprints/sprint-4.4-order-system.md) **Approved**
 
@@ -150,9 +184,39 @@ CheckoutService → PaymentGatewayInterface → Providers
 
 **Inventory:** Re-validate stock at checkout (**checkpoint 2 of 2**) inside transaction before `OrderCreated`.
 
+**Release:** `v0.4.5-checkout`
+
+---
+
+## 4.5M Mobile Commerce (planned)
+
+**Prerequisite:** Sprint 4.5 released (`v0.4.5-checkout`) — `POST /checkout` stable.
+
+**Goal:** Mobile screens that complete the **Commerce MVP**. Backend APIs without this sprint do not constitute a shippable product.
+
+| Screen | Detail |
+|--------|--------|
+| Product Overlay UI | Tap product tag on video feed |
+| Product Page | Detail, variants, add to cart |
+| Cart Screen | Items, quantities, totals |
+| Checkout Screen | Address, payment method (fake), summary |
+| Order Success | Post-checkout confirmation |
+| Order History | List buyer orders |
+| My Orders | Order detail, status, timeline |
+
+**Architecture:** `mobile/lib/features/commerce/` — Clean Architecture, Riverpod, existing `ProductCard` / `VideoProductTag` DTOs.
+
+**Not in scope:** seller flows, live pinning UI, real payment gateways, video upload.
+
+→ Full spec: [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md)
+
+**Release:** `v0.4.5m-mobile-commerce`
+
 ---
 
 ## 4.6 Seller Dashboard (planned)
+
+**Blocked until Phase A (4.5 + 4.5M) is released.**
 
 **Backend REST only** — no frontend complexity.
 
@@ -273,6 +337,23 @@ Implementations are swappable via DI; services depend on interfaces only.
 | Docs | Blueprint + API + DB + CHANGELOG updated |
 | Release | Git tag `v0.4.x-*` per sub-sprint |
 
+### Release Audit (major sprints)
+
+After each **major** sprint (`4.5`, `4.5M`, `5.0`, `6.0`, …) run [21_SPRINT_RELEASE_AUDIT.md](./21_SPRINT_RELEASE_AUDIT.md):
+
+| Audit | Scope |
+|-------|--------|
+| Architecture | ADR + Blueprint compliance |
+| API | `04_API_SPECIFICATION.md` ↔ `routes/api.php` |
+| Mobile | Real APIs, no prod stubs (when mobile ships) |
+| E2E Smoke | User journey smoke test |
+
+**Phase A completion** requires **4.5 + 4.5M + Full E2E Audit** before Sprint 5 / Sprint 6.
+
+```powershell
+.\scripts\sprint-audit.ps1   # QA + route export; then complete manual checklists
+```
+
 ---
 
 ## Documentation index
@@ -287,8 +368,7 @@ Implementations are swappable via DI; services depend on interfaces only.
 
 ## Current action
 
-1. **Review & accept** [ADR-016 v2](../07_ADR.md#adr-016-commerce-core-cart-orders-inventory-payment) (Proposed)
-2. **Review & approve** [sprint-4.3-shopping-cart.md v2](../blueprints/sprint-4.3-shopping-cart.md)
-3. Implement on `feature/sprint-4.3-shopping-cart` → tests → release `v0.4.3-shopping-cart`
-
-**Do not implement 4.3 until ADR-016 is Accepted.**
+1. **Approve** [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md)
+2. Implement on `feature/sprint-4.5m-mobile-commerce` → release `v0.4.5m-mobile-commerce`
+3. **Full E2E Audit** — [21_SPRINT_RELEASE_AUDIT.md](./21_SPRINT_RELEASE_AUDIT.md) §4
+4. **Phase A complete** → unblock Sprint 5 / Sprint 6

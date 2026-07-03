@@ -13,5 +13,5 @@ return [
         'strategy' => env('COMMERCE_ORDER_NUMBER_STRATEGY', 'date_sequence'),
     ],
     'refund_window_days' => (int) env('COMMERCE_REFUND_WINDOW_DAYS', 14),
-    'auto_complete_delivered_days' => (int) env('COMMERCE_AUTO_COMPLETE_DELIVERED_DAYS', 7),
+    'checkout_idempotency_ttl_hours' => (int) env('COMMERCE_CHECKOUT_IDEMPOTENCY_TTL_HOURS', 24),
 ];

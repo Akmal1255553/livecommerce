@@ -29,7 +29,8 @@ These rules are enforced through code review, CI/CD pipelines, and architectural
 9. [Security Rules](#9-security-rules)
 10. [Performance Rules](#10-performance-rules)
 11. [Documentation Rules](#11-documentation-rules)
-12. [Document Revision History](#12-document-revision-history)
+12. [Sprint Release Audit](#12-sprint-release-audit)
+13. [Document Revision History](#13-document-revision-history)
 
 ---
 
@@ -670,10 +671,28 @@ What are the trade-offs?
 
 ---
 
-## 12. Document Revision History
+## 12. Sprint Release Audit
+
+After each **major** sprint release (`4.5`, `4.5M`, `5.0`, `6.0`, …), complete the [Sprint Release Audit](./21_SPRINT_RELEASE_AUDIT.md) **before** tagging and starting the next sprint:
+
+1. **Architecture Audit** — ADR + Blueprint compliance  
+2. **API Audit** — `04_API_SPECIFICATION.md` matches `routes/api.php`  
+3. **Mobile Audit** — production paths use real APIs (when mobile ships)  
+4. **E2E Smoke Test** — critical user journey (full script after Phase A)
+
+```powershell
+.\scripts\sprint-audit.ps1   # automated: QA + route export
+```
+
+**Phase A gate:** Commerce MVP requires 4.5 + 4.5M + **Full E2E Audit** before Seller Platform or Live Commerce.
+
+---
+
+## 13. Document Revision History
 
 | Version | Date | Author | Changes |
 |---------|------|--------|---------|
+| 1.1 | 2026-07-03 | Founder & CTO | Sprint Release Audit process (§12) |
 | 1.0 | 2026-06-27 | Founder & CTO | Initial engineering rules document |
 
 ---
@@ -684,6 +703,6 @@ What are the trade-offs?
 - [API Specification](./04_API_SPECIFICATION.md)
 - [Project Structure](./05_PROJECT_STRUCTURE.md)
 - [PRD](../docs01_PRD.md)
-- [Project Context](../PROJECT_CONTEXT.md)
+- [Sprint Release Audit](./21_SPRINT_RELEASE_AUDIT.md)
 
 **Status:** Architecture Phase — Pending Review

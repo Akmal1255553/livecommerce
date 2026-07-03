@@ -219,9 +219,9 @@ Sprint 0  → Foundation (docs ✔, repo ☐)
 Sprint 1  → Auth & Users
 Sprint 2  → Social & Notifications
 Sprint 3  → Video Platform (3.1 Upload → 3.2 Processing → 3.3 Interactions → 3.4 Recommendations)
-Sprint 4  → Marketplace (products, cart, orders)
-Sprint 5  → Seller Platform
-Sprint 6  → Live Commerce
+Sprint 4  → Marketplace backend (4.1–4.4) + Phase A (4.5 + 4.5M + E2E Audit) ← MVP gate
+Sprint 5  → Seller Platform (blocked until Phase A)
+Sprint 6  → Live Commerce (blocked until Phase A)
 Sprint 7  → Payments
 Sprint 14 → Admin & Moderation (core)
 Sprint 15 → Scaling & Performance

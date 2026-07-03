@@ -10,14 +10,27 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 #### Sprint 4 — Commerce (sub-sprint plan)
 
-- Master plan: [docs/SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) — 4.1–4.6 sequential gates
-- **4.1** Product Catalog — implemented
+- Master plan: [docs/SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) — 4.1–4.6 + **Phase A**
+- **4.1** Product Catalog — shipped
 - **4.2** Video Commerce — shipped
 - **4.3** Shopping Cart — shipped
 - **4.4** Order System — shipped
-- **4.5–4.6** Checkout, Seller Dashboard — blocked until prior sub-sprint released
+- **Phase A — Commerce MVP:** **4.5** Checkout — shipped → **4.5M** Mobile Commerce → **E2E Audit**
+- **4.6** Seller Dashboard — after Phase A
 
 ### Added
+
+#### Sprint 4.5 — Checkout
+
+- `CheckoutService` — cart → order orchestration per ADR-016
+- `POST /api/v1/checkout` — `cart_version`, `Idempotency-Key`, shipping address
+- `inventory_reservations` + `ProductInventoryService` reserve/confirm/release
+- `checkout_idempotency_keys` — 24h TTL, duplicate key returns same order
+- `FakePaymentGateway` — synchronous MVP payment to `paid`
+- Events: `CartCheckedOut`, `PaymentSucceeded`, `PaymentFailed`
+- `ReleaseExpiredInventoryReservationsJob` (every minute)
+- Release Audit process: [docs/21_SPRINT_RELEASE_AUDIT.md](./docs/21_SPRINT_RELEASE_AUDIT.md), `scripts/sprint-audit.ps1`
+- Tests: `CheckoutTest` (6) — **193 tests total**
 
 #### Sprint 4.4 — Order System
 

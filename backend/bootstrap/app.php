@@ -16,6 +16,7 @@ use App\Jobs\CompleteDeliveredOrdersJob;
 use App\Jobs\FlushVideoViewsJob;
 use App\Jobs\RefreshPopularCacheJob;
 use App\Jobs\RefreshTrendingCacheJob;
+use App\Jobs\ReleaseExpiredInventoryReservationsJob;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Application;
@@ -56,6 +57,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new RefreshTrendingCacheJob)->everyFiveMinutes();
         $schedule->job(new RefreshPopularCacheJob)->everyFifteenMinutes();
         $schedule->job(new CompleteDeliveredOrdersJob)->daily();
+        $schedule->job(new ReleaseExpiredInventoryReservationsJob)->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->render(function (BusinessException $exception, Request $request) {
