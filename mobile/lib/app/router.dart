@@ -15,6 +15,13 @@ import 'package:livecommerce_mobile/features/commerce/presentation/screens/order
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/orders_screen.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/product_screen.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/screens/feed_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/public_store_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_apply_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_dashboard_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_order_detail_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_orders_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_product_form_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_products_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -112,6 +119,40 @@ class AppRouter {
           builder: (context, state) {
             final id = state.pathParameters['id']!;
             return OrderDetailScreen(orderId: id);
+          },
+        ),
+        GoRoute(
+          path: '/seller/apply',
+          builder: (context, state) => const SellerApplyScreen(),
+        ),
+        GoRoute(
+          path: '/seller',
+          builder: (context, state) => const SellerDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/seller/products',
+          builder: (context, state) => const SellerProductsScreen(),
+        ),
+        GoRoute(
+          path: '/seller/products/new',
+          builder: (context, state) => const SellerProductFormScreen(),
+        ),
+        GoRoute(
+          path: '/seller/orders',
+          builder: (context, state) => const SellerOrdersScreen(),
+        ),
+        GoRoute(
+          path: '/seller/orders/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return SellerOrderDetailScreen(orderId: id);
+          },
+        ),
+        GoRoute(
+          path: '/stores/:slug',
+          builder: (context, state) {
+            final slug = state.pathParameters['slug']!;
+            return PublicStoreScreen(slug: slug);
           },
         ),
       ],

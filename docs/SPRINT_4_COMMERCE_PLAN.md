@@ -64,6 +64,7 @@ Sprint 6 Live Commerce
 | **4.5** | Checkout | 4.4 | ✅ Shipped | — |
 | **4.5M** | Mobile Commerce | 4.5 | ✅ Shipped | [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md) |
 | **4.6** | Seller Dashboard | Phase A | ✅ Shipped | [sprint-4.6-seller-dashboard.md](../blueprints/sprint-4.6-seller-dashboard.md) |
+| **5** | Seller Platform | 4.6 | ✅ Shipped | [sprint-5-seller-platform.md](../blueprints/sprint-5-seller-platform.md) |
 
 ```
 4.1 Product Catalog ✅
@@ -80,7 +81,9 @@ Sprint 6 Live Commerce
     ↓
 4.6 Seller Dashboard ✅           ← shipped
     ↓
-Sprint 5 Seller Platform (mobile)
+Sprint 5 Seller Platform ✅       ← mobile shipped
+    ↓
+Sprint 6 Live Commerce
 ```
 
 ---
@@ -372,5 +375,6 @@ After each **major** sprint (`4.5`, `4.5M`, `5.0`, `6.0`, …) run [21_SPRINT_RE
 ## Current action
 
 1. ~~Release `v0.4.5m-mobile-commerce`~~ — code shipped
-2. **Full E2E Audit** — [SPRINT_4.5M_RELEASE_AUDIT.md](./SPRINT_4.5M_RELEASE_AUDIT.md) §4 smoke checklist
-3. **Phase A complete** → unblock Sprint 5 / Sprint 6
+2. ~~Full E2E Audit~~ — Phase A signed off
+3. ~~Sprint 4.6 / Sprint 5~~ — seller API + mobile seller UI shipped
+4. **Next:** Sprint 6 Live Commerce

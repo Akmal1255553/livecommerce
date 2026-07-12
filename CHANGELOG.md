@@ -13,6 +13,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 5 — Seller Platform (mobile)
+
+- Feature module `mobile/lib/features/seller/` — apply, dashboard, products, orders, public store
+- Routes: `/seller`, `/seller/apply`, `/seller/products`, `/seller/products/new`, `/seller/orders`, `/seller/orders/:id`, `/stores/:slug`
+- Profile: “Become a seller” / “Seller center” based on `AuthUser.role`
+- Wires Sprint 4.6 + existing seller product/order APIs
+- Blueprint: [blueprints/sprint-5-seller-platform.md](./blueprints/sprint-5-seller-platform.md)
+
 #### Sprint 4.6 — Seller Dashboard (backend)
 
 - `StoreService` — apply (auto-approve), dashboard KPIs, analytics summary, public storefront

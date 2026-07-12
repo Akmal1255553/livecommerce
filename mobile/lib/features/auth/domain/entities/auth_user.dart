@@ -6,6 +6,7 @@ class AuthUser {
     this.avatarUrl,
     this.bio,
     this.locale = 'uz',
+    this.role = 'user',
     this.phoneVerified = false,
   });
 
@@ -15,7 +16,10 @@ class AuthUser {
   final String? avatarUrl;
   final String? bio;
   final String locale;
+  final String role;
   final bool phoneVerified;
+
+  bool get isSeller => role == 'seller' || role == 'admin';
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
     return AuthUser(
@@ -25,6 +29,7 @@ class AuthUser {
       avatarUrl: json['avatar_url'] as String?,
       bio: json['bio'] as String?,
       locale: json['locale'] as String? ?? 'uz',
+      role: json['role'] as String? ?? 'user',
       phoneVerified: json['phone_verified'] as bool? ?? false,
     );
   }
@@ -36,6 +41,7 @@ class AuthUser {
         'avatar_url': avatarUrl,
         'bio': bio,
         'locale': locale,
+        'role': role,
         'phone_verified': phoneVerified,
       };
 
@@ -43,6 +49,7 @@ class AuthUser {
     String? displayName,
     String? bio,
     String? locale,
+    String? role,
     bool? phoneVerified,
   }) {
     return AuthUser(
@@ -52,6 +59,7 @@ class AuthUser {
       avatarUrl: avatarUrl,
       bio: bio ?? this.bio,
       locale: locale ?? this.locale,
+      role: role ?? this.role,
       phoneVerified: phoneVerified ?? this.phoneVerified,
     );
   }

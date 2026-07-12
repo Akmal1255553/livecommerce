@@ -108,8 +108,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
         id: '00000000-0000-0000-0000-000000000001',
         username: 'demo',
         displayName: 'Demo User',
+        role: 'user',
       ),
     );
+  }
+
+  Future<void> refreshUser() async {
+    try {
+      final user = await _repository.restoreSession();
+      if (user != null) {
+        state = state.copyWith(user: user, clearError: true);
+      }
+    } catch (_) {
+      // Keep current session on refresh failure.
+    }
   }
 
   Future<bool> login(String login, String password) async {
