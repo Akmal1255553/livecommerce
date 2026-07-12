@@ -44,6 +44,7 @@ use App\Contracts\Services\PushNotificationInterface;
 use App\Contracts\Services\ShippingCalculatorInterface;
 use App\Contracts\Services\SmsProviderInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Contracts\Services\StoreServiceInterface;
 use App\Contracts\Services\TaxServiceInterface;
 use App\Contracts\Services\VideoCommerceServiceInterface;
 use App\Contracts\Services\VideoInteractionServiceInterface;
@@ -107,6 +108,7 @@ use App\Services\Pricing\ProductPricingService;
 use App\Services\Recommendation\RecommendationService;
 use App\Services\Shipping\FixedShippingCalculator;
 use App\Services\Storage\StorageService;
+use App\Services\Store\StoreService;
 use App\Services\Tax\ZeroTaxService;
 use App\Services\Video\CommentService;
 use App\Services\Video\Ffmpeg\CliFfmpegTranscoder;
@@ -149,6 +151,7 @@ class RepositoryServiceProvider extends ServiceProvider
         EngagementEventRepositoryInterface::class => EngagementEventRepository::class,
         HealthServiceInterface::class => HealthService::class,
         StorageServiceInterface::class => StorageService::class,
+        StoreServiceInterface::class => StoreService::class,
         MediaServiceInterface::class => MediaService::class,
         VideoUploadServiceInterface::class => VideoUploadService::class,
         VideoInteractionServiceInterface::class => VideoInteractionService::class,

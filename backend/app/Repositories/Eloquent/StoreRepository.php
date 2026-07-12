@@ -34,6 +34,21 @@ class StoreRepository extends BaseEloquentRepository implements StoreRepositoryI
             ->first();
     }
 
+    public function findBySlug(string $slug): ?Store
+    {
+        /** @var Store|null */
+        return $this->model->newQuery()->where('slug', $slug)->first();
+    }
+
+    public function findActiveBySlug(string $slug): ?Store
+    {
+        /** @var Store|null */
+        return $this->model->newQuery()
+            ->where('slug', $slug)
+            ->where('status', StoreStatus::Active)
+            ->first();
+    }
+
     /**
      * @param  array<string, mixed>  $attributes
      */

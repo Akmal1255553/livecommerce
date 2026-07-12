@@ -63,7 +63,7 @@ Sprint 6 Live Commerce
 | **4.4** | Order System | 4.3 | ✅ Shipped | [sprint-4.4-order-system.md](../blueprints/sprint-4.4-order-system.md) |
 | **4.5** | Checkout | 4.4 | ✅ Shipped | — |
 | **4.5M** | Mobile Commerce | 4.5 | ✅ Shipped | [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md) |
-| **4.6** | Seller Dashboard | 4.1, 4.4 | 🔒 Blocked (after Phase A E2E) | TBD |
+| **4.6** | Seller Dashboard | Phase A | ✅ Shipped | [sprint-4.6-seller-dashboard.md](../blueprints/sprint-4.6-seller-dashboard.md) |
 
 ```
 4.1 Product Catalog ✅
@@ -76,9 +76,11 @@ Sprint 6 Live Commerce
     ↓
 4.5 Checkout ✅
     ↓
-4.5M Mobile Commerce ✅           ← shipped; Phase A E2E Audit next
+4.5M Mobile Commerce ✅
     ↓
-4.6 Seller Dashboard (after Phase A E2E sign-off)
+4.6 Seller Dashboard ✅           ← shipped
+    ↓
+Sprint 5 Seller Platform (mobile)
 ```
 
 ---
@@ -215,19 +217,19 @@ CheckoutService → PaymentGatewayInterface → Providers
 
 ---
 
-## 4.6 Seller Dashboard (planned)
+## 4.6 Seller Dashboard ✅
 
-**Blocked until Phase A (4.5 + 4.5M) is released.**
+**Backend REST only** — Flutter seller UI in Sprint 5.
 
-**Backend REST only** — no frontend complexity.
+| Module | Endpoints |
+|--------|-----------|
+| Apply | `POST /seller/apply` (auto-approve) |
+| Dashboard | `GET /seller/dashboard` |
+| Analytics | `GET /seller/analytics/summary` |
+| Storefront | `GET /stores/{slug}`, `GET /stores/{slug}/products` |
 
-| Module | Endpoints (indicative) |
-|--------|------------------------|
-| Products | extend existing seller product APIs |
-| Orders | list, detail, status (read-only until 4.4 transitions) |
-| Revenue | aggregates by period |
-| Inventory | low-stock alerts |
-| Analytics | orders, views, conversion stubs |
+→ Blueprint: [sprint-4.6-seller-dashboard.md](../blueprints/sprint-4.6-seller-dashboard.md)  
+**Release:** `v0.4.6-seller-dashboard`
 
 ---
 

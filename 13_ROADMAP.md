@@ -658,9 +658,9 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 | **Phase A** | **Commerce MVP** | ✅ Complete | [SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) |
 | 4.5 | Checkout (backend) | ✅ Shipped | — |
 | 4.5M | Mobile Commerce | ✅ Shipped | [sprint-4.5m-mobile-commerce.md](./blueprints/sprint-4.5m-mobile-commerce.md) |
-| 4.6 | Seller Dashboard | 🔒 After Phase A | TBD |
+| 4.6 | Seller Dashboard | ✅ Shipped | [sprint-4.6-seller-dashboard.md](./blueprints/sprint-4.6-seller-dashboard.md) |
 
-**Phase A gate:** Sprint 5 (Seller Platform) and Sprint 6 (Live Commerce) **blocked** until 4.5 + 4.5M released **and** [Full E2E Audit](./docs/21_SPRINT_RELEASE_AUDIT.md) signed off. **Next:** sign off [SPRINT_4.5M_RELEASE_AUDIT.md](./docs/SPRINT_4.5M_RELEASE_AUDIT.md).
+**Phase A gate:** Sprint 5 (Seller Platform) and Sprint 6 (Live Commerce) unblocked after Phase A E2E. **Next:** Sprint 5 mobile seller UI.
 
 **Gate:** No sub-sprint N+1 until sub-sprint N CI green + released.
 
@@ -684,7 +684,7 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 - [x] Order Success screen
 - [x] Order History + My Orders (detail)
 - [x] Happy-path wiring: feed → buy → order list (live APIs)
-- [ ] [Release Audit](./docs/21_SPRINT_RELEASE_AUDIT.md): Mobile ✅ code audit; E2E smoke pending sign-off — [SPRINT_4.5M_RELEASE_AUDIT.md](./docs/SPRINT_4.5M_RELEASE_AUDIT.md)
+- [x] [Release Audit](./docs/21_SPRINT_RELEASE_AUDIT.md): Mobile ✅; E2E smoke ✅ on Render — [SPRINT_4.5M_RELEASE_AUDIT.md](./docs/SPRINT_4.5M_RELEASE_AUDIT.md)
 
 ### Phase A — Full E2E Audit (mandatory)
 

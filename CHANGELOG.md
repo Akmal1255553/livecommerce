@@ -11,20 +11,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **ADR-018 / Render:** free-tier API path via Render Blueprint (`render.yaml`) + optional Supabase; Railway when paid. See [docs/24_RENDER_DEPLOY.md](./docs/24_RENDER_DEPLOY.md).
 - Preferred infra is **Supabase (Postgres)** + **Render/Railway (API)**; Docker optional. See [docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md](./docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md).
 
-### Planned
-
-#### Sprint 4 — Commerce (sub-sprint plan)
-
-- Master plan: [docs/SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) — 4.1–4.6 + **Phase A**
-- **4.1** Product Catalog — shipped
-- **4.2** Video Commerce — shipped
-- **4.3** Shopping Cart — shipped
-- **4.4** Order System — shipped
-- **4.5** Checkout — shipped
-- **4.5M** Mobile Commerce — shipped → **Phase A Full E2E Audit** (gate before Sprint 5)
-- **4.6** Seller Dashboard — after Phase A
-
 ### Added
+
+#### Sprint 4.6 — Seller Dashboard (backend)
+
+- `StoreService` — apply (auto-approve), dashboard KPIs, analytics summary, public storefront
+- `POST /api/v1/seller/apply`, `GET /seller/dashboard`, `GET /seller/analytics/summary`
+- `GET /api/v1/stores/{slug}`, `GET /stores/{slug}/products`
+- Feature tests: `SellerDashboardTest`
+- Note: seller product CUD remains on `/products` (+ `?mine=1`); spec `/seller/products` deferred
+- Blueprint: [blueprints/sprint-4.6-seller-dashboard.md](./blueprints/sprint-4.6-seller-dashboard.md)
 
 #### Sprint 4.5M — Mobile Commerce
 

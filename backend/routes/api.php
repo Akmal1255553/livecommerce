@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\SellerOrderController;
+use App\Http\Controllers\Api\V1\SellerStoreController;
+use App\Http\Controllers\Api\V1\StoreController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\VideoCommentController;
 use App\Http\Controllers\Api\V1\VideoController;
@@ -79,7 +81,12 @@ Route::prefix('v1')->group(function (): void {
 
         Route::post('media/presigned-url', [MediaController::class, 'presignedUrl']);
 
+        Route::post('seller/apply', [SellerStoreController::class, 'apply']);
+
         Route::middleware('seller')->group(function (): void {
+            Route::get('seller/dashboard', [SellerStoreController::class, 'dashboard']);
+            Route::get('seller/analytics/summary', [SellerStoreController::class, 'analyticsSummary']);
+
             Route::post('products', [ProductController::class, 'store']);
             Route::put('products/{id}', [ProductController::class, 'update']);
             Route::delete('products/{id}', [ProductController::class, 'destroy']);
@@ -119,6 +126,9 @@ Route::prefix('v1')->group(function (): void {
         Route::get('categories', [CategoryController::class, 'index']);
         Route::get('categories/{id}/products', [CategoryController::class, 'products']);
         Route::get('brands', [BrandController::class, 'index']);
+
+        Route::get('stores/{slug}', [StoreController::class, 'show']);
+        Route::get('stores/{slug}/products', [StoreController::class, 'products']);
 
         Route::post('cart/guest', [CartController::class, 'createGuest']);
         Route::get('cart', [CartController::class, 'show']);

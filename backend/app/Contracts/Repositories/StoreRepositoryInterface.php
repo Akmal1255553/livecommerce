@@ -13,6 +13,10 @@ interface StoreRepositoryInterface extends RepositoryInterface
 
     public function findActiveByUser(User $user): ?Store;
 
+    public function findBySlug(string $slug): ?Store;
+
+    public function findActiveBySlug(string $slug): ?Store;
+
     /**
      * @param  array<string, mixed>  $attributes
      */
