@@ -1,7 +1,12 @@
 <?php
 
 declare(strict_types=1);
-use Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess;
+
+$scrambleMiddleware = ['web'];
+
+if (class_exists(\Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess::class)) {
+    $scrambleMiddleware[] = \Dedoc\Scramble\Http\Middleware\RestrictedDocsAccess::class;
+}
 
 return [
     'api_path' => 'api',
@@ -24,10 +29,7 @@ return [
 
     'servers' => null,
 
-    'middleware' => [
-        'web',
-        RestrictedDocsAccess::class,
-    ],
+    'middleware' => $scrambleMiddleware,
 
     'extensions' => [],
 ];

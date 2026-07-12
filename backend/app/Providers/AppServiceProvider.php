@@ -5,9 +5,7 @@ declare(strict_types=1);
 namespace App\Providers;
 
 use App\Logging\StructuredLogger;
-use Dedoc\Scramble\Scramble;
-use Dedoc\Scramble\Support\Generator\OpenApi;
-use Dedoc\Scramble\Support\Generator\SecurityScheme;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -26,14 +24,17 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         if ($this->app->environment('production')) {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
         }
 
-        Scramble::configure()
-            ->withDocumentTransformers(function (OpenApi $openApi): void {
-                $openApi->secure(
-                    SecurityScheme::http('bearer', 'JWT')
-                );
-            });
+        // Scramble is require-dev — absent in production Docker (--no-dev).
+        if (class_exists(\Dedoc\Scramble\Scramble::class)) {
+            \Dedoc\Scramble\Scramble::configure()
+                ->withDocumentTransformers(function ($openApi): void {
+                    $openApi->secure(
+                        \Dedoc\Scramble\Support\Generator\SecurityScheme::http('bearer', 'JWT')
+                    );
+                });
+        }
     }
 }
