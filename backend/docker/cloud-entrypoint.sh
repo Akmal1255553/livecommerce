@@ -18,6 +18,7 @@ elif ! echo "$APP_KEY" | grep -q '^base64:'; then
   export APP_KEY="base64:${APP_KEY}"
 fi
 
+php artisan package:discover --ansi --no-interaction || true
 php artisan config:clear
 php artisan migrate --force --no-interaction
 

@@ -35,9 +35,10 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
 COPY . .
-RUN composer dump-autoload --optimize \
+# Skip Composer scripts at build time — artisan needs APP_KEY / env (only available at runtime on Render).
+RUN composer dump-autoload --optimize --no-scripts \
     && chmod +x docker/cloud-entrypoint.sh \
-    && mkdir -p storage/framework/{cache,sessions,views} storage/logs bootstrap/cache \
+    && mkdir -p storage/framework/cache storage/framework/sessions storage/framework/views storage/logs bootstrap/cache \
     && chmod -R ug+rwx storage bootstrap/cache
 
 ENV PORT=10000
