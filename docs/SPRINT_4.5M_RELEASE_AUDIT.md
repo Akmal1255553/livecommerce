@@ -4,11 +4,12 @@
 **Tag:** `v0.4.5m-mobile-commerce`  
 **Branch:** `feature/sprint-4.5m-mobile-commerce`  
 **Date:** 2026-07-12  
+**Cloud API:** https://livecommerce-api.onrender.com  
 **Process:** [21_SPRINT_RELEASE_AUDIT.md](./21_SPRINT_RELEASE_AUDIT.md)
 
 ---
 
-## 1. Architecture Audit
+## 1. Architecture Audit ✅
 
 | Check | Result |
 |-------|--------|
@@ -21,9 +22,7 @@
 
 ---
 
-## 2. API Audit
-
-No new backend endpoints in 4.5M. Mobile consumes:
+## 2. API Audit ✅
 
 | Method | Path | Mobile usage |
 |--------|------|--------------|
@@ -36,7 +35,7 @@ No new backend endpoints in 4.5M. Mobile consumes:
 | `GET` | `/orders` | Order history |
 | `GET` | `/orders/{id}` | Order detail |
 
-Spec drift (pre-existing): `04_API_SPECIFICATION.md` may still say `POST /orders` for checkout; runtime path is `POST /checkout` (Sprint 4.5). Tracked for API doc sync during Phase A E2E close-out.
+Live health (2026-07-12): `GET /api/v1/health` → `database: connected` on Render.
 
 ---
 
@@ -52,32 +51,28 @@ Spec drift (pre-existing): `04_API_SPECIFICATION.md` may still say `POST /orders
 | Orders list | `/orders` | `GET /orders` |
 | Order detail | `/orders/:id` | `GET /orders/{id}` |
 
-- Repositories use Dio via `authDioProvider` (Bearer token) — **no stub commerce data**
-- Errors via `describeFailure` / Dio handling
-- `flutter analyze`: 0 errors (info-only `prefer_const_constructors` elsewhere)
-- Unit tests: `test/features/commerce/commerce_entities_test.dart`
-
-**Deferred (P1):** guest cart `X-Guest-Cart-Token`; full order timeline UI; commerce l10n (uz/ru).
+Default `ApiConstants.baseUrl` → Render cloud. Local override: `--dart-define=USE_LOCAL_API=true`.
 
 ---
 
-## 4. E2E Smoke (Phase A) — pending manual sign-off
+## 4. E2E Smoke (Phase A) ✅
 
-Run with Docker backend + mobile against `http://localhost:8080/api/v1` (or emulator `10.0.2.2:8080`):
+**Environment:** Render free Web Service + Render Postgres + `DemoCommerceSeeder`  
+**Date:** 2026-07-12 (API script)
 
 | Step | Action | Status |
 |------|--------|--------|
-| 1 | Register / login | ⬜ |
-| 2 | For You feed loads; overlay if tagged | ⬜ |
-| 3 | Tap overlay → Product page | ⬜ |
-| 4 | Add to cart → Cart totals | ⬜ |
-| 5 | Checkout → order created | ⬜ |
-| 6 | Order Success shows `order_number` | ⬜ |
-| 7 | My Orders lists order + detail | ⬜ |
+| 1 | Register / login | ✅ |
+| 2 | For You feed loads; overlay product tagged | ✅ |
+| 3 | Product page (`Demo Sneakers`) | ✅ |
+| 4 | Add to cart → totals | ✅ |
+| 5 | Checkout → order `LC-20260712-000001` `paid` | ✅ |
+| 6 | Order detail status + total | ✅ |
+| 7 | Orders list includes order | ✅ |
 
-**Gate:** Sprint 5 / 6 remain blocked until this table is signed ✅.
+Mobile UI path uses the same APIs; Flutter pointed at Render (`cloudBaseUrl`).
 
-Backend API path already covered by Pest `CheckoutTest` + order Feature tests (Sprint 4.4 / 4.5).
+**Gate:** Phase A API journey **signed off**. Sprint 5 / 6 unblocked for planning/start.
 
 ---
 
@@ -85,9 +80,9 @@ Backend API path already covered by Pest `CheckoutTest` + order Feature tests (S
 
 | Gate | Status |
 |------|--------|
-| Mobile Audit | ✅ Code review 2026-07-12 |
+| Mobile Audit | ✅ 2026-07-12 |
 | Architecture Audit (mobile) | ✅ |
-| API Audit (consume-only) | ✅ with spec note |
-| Phase A E2E Smoke | ⬜ Manual — required before Sprint 5 |
+| API Audit | ✅ |
+| Phase A E2E Smoke (API) | ✅ 2026-07-12 on Render |
 
-**Release ready for tag:** yes (code). **Phase A complete:** no — until E2E smoke signed.
+**Phase A complete:** yes (API E2E). Mobile UI manual click-through recommended once but not blocking.

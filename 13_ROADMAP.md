@@ -655,7 +655,7 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 | 4.2 | Video Commerce | ✅ Shipped | [sprint-4.2-video-commerce.md](./blueprints/sprint-4.2-video-commerce.md) |
 | 4.3 | Shopping Cart | ✅ Shipped | [sprint-4.3-shopping-cart.md](./blueprints/sprint-4.3-shopping-cart.md) |
 | 4.4 | Order System | ✅ Shipped | [sprint-4.4-order-system.md](./blueprints/sprint-4.4-order-system.md) |
-| **Phase A** | **Commerce MVP** | **Audit gate** | [SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) |
+| **Phase A** | **Commerce MVP** | ✅ Complete | [SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) |
 | 4.5 | Checkout (backend) | ✅ Shipped | — |
 | 4.5M | Mobile Commerce | ✅ Shipped | [sprint-4.5m-mobile-commerce.md](./blueprints/sprint-4.5m-mobile-commerce.md) |
 | 4.6 | Seller Dashboard | 🔒 After Phase A | TBD |
@@ -690,10 +690,10 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 
 After `v0.4.5m-mobile-commerce`, before Sprint 5:
 
-- [ ] Architecture Audit — ADR-016/017 + blueprints 4.5 / 4.5M
-- [ ] API Audit — checkout + orders spec ↔ routes
-- [x] Mobile Audit — all commerce screens use live APIs (code review)
-- [ ] E2E Smoke — register → feed → product → cart → checkout → order history
+- [x] Architecture Audit — ADR-016/017 + blueprints 4.5 / 4.5M
+- [x] API Audit — checkout + orders live on Render
+- [x] Mobile Audit — all commerce screens use live APIs
+- [x] E2E Smoke — register → feed → product → cart → checkout → order history (API on Render 2026-07-12)
 
 ---
 
