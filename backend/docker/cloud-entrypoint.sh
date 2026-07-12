@@ -22,8 +22,11 @@ php artisan package:discover --ansi --no-interaction || true
 php artisan config:clear
 php artisan migrate --force --no-interaction
 
+# Idempotent demo catalog when empty (or SEED_ON_BOOT=true)
 if [ "$SEED_ON_BOOT" = "true" ]; then
-  php artisan db:seed --force --no-interaction
+  php artisan db:seed --class=DemoCommerceSeeder --force --no-interaction
+else
+  php artisan db:seed --class=DemoCommerceSeeder --force --no-interaction || true
 fi
 
 exec php artisan serve --host=0.0.0.0 --port="$PORT"
