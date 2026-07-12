@@ -1,0 +1,61 @@
+# LiveCommerce — Render Blueprint (free-tier friendly)
+# Docs: docs/24_RENDER_DEPLOY.md
+# Deploy: https://dashboard.render.com/select-repo?type=blueprint
+
+databases:
+  - name: livecommerce-db
+    plan: free
+    databaseName: livecommerce
+    user: livecommerce
+
+services:
+  - type: web
+    name: livecommerce-api
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /up
+    envVars:
+      - key: APP_NAME
+        value: LiveCommerce
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: livecommerce-db
+          property: connectionString
+      - key: DATABASE_URL
+        fromDatabase:
+          name: livecommerce-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: sync
+      - key: SESSION_DRIVER
+        value: file
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: MAIL_MAILER
+        value: log
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_TTL
+        value: "15"
+      - key: JWT_REFRESH_TTL
+        value: "43200"

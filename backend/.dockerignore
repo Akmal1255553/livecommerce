@@ -1,0 +1,16 @@
+# Keep Railway image lean
+.git
+.github
+.env
+.env.*
+!.env.example
+.phpunit.result.cache
+.phpstan
+vendor
+node_modules
+storage/logs/*
+storage/framework/cache/*
+storage/framework/sessions/*
+storage/framework/views/*
+tests
+**/tests

@@ -6,6 +6,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Changed
+
+- **ADR-018 / Render:** free-tier API path via Render Blueprint (`render.yaml`) + optional Supabase; Railway when paid. See [docs/24_RENDER_DEPLOY.md](./docs/24_RENDER_DEPLOY.md).
+- Preferred infra is **Supabase (Postgres)** + **Render/Railway (API)**; Docker optional. See [docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md](./docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md).
+
 ### Planned
 
 #### Sprint 4 — Commerce (sub-sprint plan)

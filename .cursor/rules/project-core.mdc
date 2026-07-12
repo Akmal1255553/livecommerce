@@ -12,7 +12,7 @@ Mobile-first AI live commerce (TikTok-style video + shopping).
 
 - Backend: Laravel 12, PHP 8.4, PostgreSQL, Redis, Pest, Pint, PHPStan, Scramble
 - Mobile: Flutter 3, Riverpod, GoRouter, Dio, Clean Architecture
-- Infra: Docker Compose (see `docker/docker-compose.yml`)
+- Infra: **Supabase** (Postgres) + **Railway** (API + Redis) — ADR-018; Docker Compose optional fallback (`docker/docker-compose.yml`)
 
 ## Architecture rules
 

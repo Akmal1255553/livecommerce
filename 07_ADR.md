@@ -27,7 +27,7 @@ Every major technical decision must be documented here **before implementation**
 | [ADR-005](#adr-005-jwt-authentication) | JWT Authentication | Accepted | 2026-06-27 |
 | [ADR-006](#adr-006-repository-pattern) | Repository Pattern | Accepted | 2026-06-27 |
 | [ADR-007](#adr-007-service-layer) | Service Layer | Accepted | 2026-06-27 |
-| [ADR-008](#adr-008-docker-for-local-development) | Docker for Local Development | Accepted | 2026-06-27 |
+| [ADR-008](#adr-008-docker-for-local-development) | Docker for Local Development | Superseded → ADR-018 | 2026-06-27 |
 | [ADR-009](#adr-009-riverpod-for-state-management) | Riverpod for State Management | Accepted | 2026-06-27 |
 | [ADR-010](#adr-010-s3-compatible-object-storage) | S3-Compatible Object Storage | Accepted | 2026-06-27 |
 | [ADR-011](#adr-011-agora-as-default-streaming-provider) | Agora as Default Streaming Provider | Accepted | 2026-06-27 |
@@ -37,6 +37,7 @@ Every major technical decision must be documented here **before implementation**
 | [ADR-015](#adr-015-mailpit-for-local-email-testing) | Mailpit for Local Email Testing | Accepted | 2026-06-27 |
 | [ADR-016](#adr-016-commerce-core-cart-orders-inventory-payment) | Commerce Core: Cart, Orders, Inventory, Payment | **Accepted** | 2026-06-28 |
 | [ADR-017](#adr-017-order-state-machine-and-order-aggregate) | Order State Machine & Order Aggregate | **Accepted** | 2026-06-28 |
+| [ADR-018](#adr-018-supabase--railway-cloud-runtime) | Supabase + Railway Cloud Runtime | **Accepted** | 2026-07-12 |
 
 ---
 
@@ -313,7 +314,7 @@ None.
 
 ## ADR-008: Docker for Local Development
 
-**Status:** Accepted  
+**Status:** Superseded by [ADR-018](#adr-018-supabase--railway-cloud-runtime)  
 **Date:** 2026-06-27
 
 ### Context
@@ -1116,6 +1117,46 @@ Changes to transitions after acceptance require ADR-017 amendment or ADR-018.
 
 ---
 
+## ADR-018: Supabase + Railway Cloud Runtime
+
+**Status:** Accepted  
+**Date:** 2026-07-12  
+**Supersedes:** ADR-008 (as preferred local/prod path)
+
+### Context
+
+Docker Desktop is unreliable / undesired on the founder Windows machine. Supabase and Railway apps are already installed. The stack (Laravel + PostgreSQL + Redis + S3-compatible storage) must keep working without local Docker Compose.
+
+### Problem
+
+Where should Postgres, Redis, object storage, and the Laravel API run when Docker is not used?
+
+### Decision
+
+| Concern | Provider | Notes |
+|---------|----------|-------|
+| **PostgreSQL** | **Supabase** | Managed Postgres; connection via pooler (`6543`) for app, direct (`5432`) for migrations |
+| **Laravel API** | **Render** (free) or **Railway** (paid) | Docker Web Service; see [24_RENDER_DEPLOY.md](./docs/24_RENDER_DEPLOY.md) |
+| **Redis** | **Railway Redis** | Same project as API (ADR-004 unchanged) |
+| **Object storage** | **Supabase Storage** (S3-compatible) or Railway Bucket | Replaces MinIO for cloud path (ADR-010) |
+| **Mail** | `log` driver / Resend / SMTP | Mailpit only when Docker fallback is used |
+
+**Mobile** points at the Railway public API (`API_BASE_URL`), not `localhost:8080`.
+
+Docker Compose (`docker/`) remains **optional** offline fallback — not required for day-to-day MVP work.
+
+### Consequences
+
+- Positive: No Docker Desktop; shared cloud DB/API; easy demo on real devices.
+- Negative: Needs network; free-tier limits; secrets live in Railway/Supabase dashboards.
+- Neutral: Application code and module contracts unchanged.
+
+### Future Review
+
+Add staging environment on Railway; Cloudflare R2 if Supabase Storage limits bind; CI deploy from GitHub → Railway.
+
+---
+
 ## Adding New ADRs
 
 1. Assign next ADR number (ADR-016, etc.).
@@ -1136,6 +1177,7 @@ Changes to transitions after acceptance require ADR-017 amendment or ADR-018.
 | 1.3 | 2026-06-28 | Architecture Review | ADR-016 v2: cart versioning, reservation TTL, idempotency, Money VO, coupon/shipping stubs |
 | 1.4 | 2026-06-28 | Architecture Review | ADR-017: Order State Machine & Order Aggregate (Accepted) |
 | 1.5 | 2026-06-28 | Architecture Review | ADR-017 / blueprint v2: order number generator, snapshots, analytics events |
+| 1.6 | 2026-07-12 | Founder & CTO | ADR-018: Supabase + Railway; ADR-008 superseded as preferred path |
 
 ---
 
