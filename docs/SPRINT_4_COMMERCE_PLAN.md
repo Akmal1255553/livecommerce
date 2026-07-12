@@ -62,8 +62,8 @@ Sprint 6 Live Commerce
 | **4.3** | Shopping Cart | 4.2 | ✅ Shipped | [sprint-4.3-shopping-cart.md](../blueprints/sprint-4.3-shopping-cart.md) |
 | **4.4** | Order System | 4.3 | ✅ Shipped | [sprint-4.4-order-system.md](../blueprints/sprint-4.4-order-system.md) |
 | **4.5** | Checkout | 4.4 | ✅ Shipped | — |
-| **4.5M** | Mobile Commerce | 4.5 | 🔒 Next | [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md) |
-| **4.6** | Seller Dashboard | 4.1, 4.4 | 🔒 Blocked (after Phase A) | TBD |
+| **4.5M** | Mobile Commerce | 4.5 | ✅ Shipped | [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md) |
+| **4.6** | Seller Dashboard | 4.1, 4.4 | 🔒 Blocked (after Phase A E2E) | TBD |
 
 ```
 4.1 Product Catalog ✅
@@ -74,11 +74,11 @@ Sprint 6 Live Commerce
     ↓
 4.4 Order System ✅
     ↓
-4.5 Checkout ✅                    ← shipped
+4.5 Checkout ✅
     ↓
-4.5M Mobile Commerce              ← CURRENT
+4.5M Mobile Commerce ✅           ← shipped; Phase A E2E Audit next
     ↓
-4.6 Seller Dashboard (parallel-safe after Phase A)
+4.6 Seller Dashboard (after Phase A E2E sign-off)
 ```
 
 ---
@@ -188,7 +188,7 @@ CheckoutService → PaymentGatewayInterface → Providers
 
 ---
 
-## 4.5M Mobile Commerce (planned)
+## 4.5M Mobile Commerce ✅
 
 **Prerequisite:** Sprint 4.5 released (`v0.4.5-checkout`) — `POST /checkout` stable.
 
@@ -202,13 +202,14 @@ CheckoutService → PaymentGatewayInterface → Providers
 | Checkout Screen | Address, payment method (fake), summary |
 | Order Success | Post-checkout confirmation |
 | Order History | List buyer orders |
-| My Orders | Order detail, status, timeline |
+| My Orders | Order detail, status |
 
 **Architecture:** `mobile/lib/features/commerce/` — Clean Architecture, Riverpod, existing `ProductCard` / `VideoProductTag` DTOs.
 
 **Not in scope:** seller flows, live pinning UI, real payment gateways, video upload.
 
-→ Full spec: [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md)
+→ Full spec: [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md)  
+→ Release audit: [SPRINT_4.5M_RELEASE_AUDIT.md](./SPRINT_4.5M_RELEASE_AUDIT.md)
 
 **Release:** `v0.4.5m-mobile-commerce`
 
@@ -368,7 +369,6 @@ After each **major** sprint (`4.5`, `4.5M`, `5.0`, `6.0`, …) run [21_SPRINT_RE
 
 ## Current action
 
-1. **Approve** [sprint-4.5m-mobile-commerce.md](../blueprints/sprint-4.5m-mobile-commerce.md)
-2. Implement on `feature/sprint-4.5m-mobile-commerce` → release `v0.4.5m-mobile-commerce`
-3. **Full E2E Audit** — [21_SPRINT_RELEASE_AUDIT.md](./21_SPRINT_RELEASE_AUDIT.md) §4
-4. **Phase A complete** → unblock Sprint 5 / Sprint 6
+1. ~~Release `v0.4.5m-mobile-commerce`~~ — code shipped
+2. **Full E2E Audit** — [SPRINT_4.5M_RELEASE_AUDIT.md](./SPRINT_4.5M_RELEASE_AUDIT.md) §4 smoke checklist
+3. **Phase A complete** → unblock Sprint 5 / Sprint 6

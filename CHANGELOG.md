@@ -15,10 +15,22 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **4.2** Video Commerce — shipped
 - **4.3** Shopping Cart — shipped
 - **4.4** Order System — shipped
-- **Phase A — Commerce MVP:** **4.5** Checkout — shipped → **4.5M** Mobile Commerce → **E2E Audit**
+- **4.5** Checkout — shipped
+- **4.5M** Mobile Commerce — shipped → **Phase A Full E2E Audit** (gate before Sprint 5)
 - **4.6** Seller Dashboard — after Phase A
 
 ### Added
+
+#### Sprint 4.5M — Mobile Commerce
+
+- Feature module `mobile/lib/features/commerce/` — domain, repository, Riverpod providers
+- Screens: Product, Cart, Checkout, Order Success, Orders, Order Detail
+- Feed product overlay chip → `/products/:id`
+- Cart badge + orders entry on feed AppBar; My Orders on profile
+- Live API wiring: `GET /products/{id}`, cart CRUD, `POST /checkout` (+ `Idempotency-Key`), `GET /orders`
+- Routes: `/products/:id`, `/cart`, `/checkout`, `/order-success`, `/orders`, `/orders/:id`
+- Tests: `commerce_entities_test.dart` (Cart / MoneyAmount parsing)
+- Release Audit notes: [docs/SPRINT_4.5M_RELEASE_AUDIT.md](./docs/SPRINT_4.5M_RELEASE_AUDIT.md)
 
 #### Sprint 4.5 — Checkout
 

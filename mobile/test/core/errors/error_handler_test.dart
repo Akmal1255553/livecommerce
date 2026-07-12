@@ -17,7 +17,7 @@ void main() {
   });
 
   test('maps auth exception to auth failure', () {
-    const failure = mapExceptionToFailure(AuthException('Unauthenticated.'));
+    final failure = mapExceptionToFailure(AuthException('Unauthenticated.'));
 
     expect(failure, isA<AuthFailure>());
   });

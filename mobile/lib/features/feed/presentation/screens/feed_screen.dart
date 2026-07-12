@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:livecommerce_mobile/features/commerce/presentation/widgets/product_overlay_chip.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
+import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
@@ -18,7 +21,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   void initState() {
     super.initState();
     _pageController = PageController();
-    Future.microtask(() => ref.read(feedNotifierProvider.notifier).load());
+    Future.microtask(() {
+      ref.read(feedNotifierProvider.notifier).load();
+      ref.read(cartNotifierProvider.notifier).load();
+    });
   }
 
   @override
@@ -30,6 +36,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(feedNotifierProvider);
+    final cart = ref.watch(cartNotifierProvider);
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -38,6 +45,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         foregroundColor: Colors.white,
         title: const Text('LiveCommerce'),
         actions: [
+          IconButton(
+            icon: Badge(
+              isLabelVisible: cart.itemCount > 0,
+              label: Text('${cart.itemCount}'),
+              child: const Icon(Icons.shopping_cart_outlined),
+            ),
+            onPressed: () => context.push('/cart'),
+          ),
+          IconButton(
+            icon: const Icon(Icons.receipt_long_outlined),
+            onPressed: () => context.push('/orders'),
+          ),
           IconButton(
             icon: const Icon(Icons.person_outline),
             onPressed: () => context.push('/profile'),
@@ -174,8 +193,21 @@ class _FeedVideoPage extends StatelessWidget {
 
   final FeedVideo video;
 
+  ProductCard? get _overlayProduct {
+    if (video.products.isEmpty) {
+      return null;
+    }
+    final featured = video.products.where((tag) => tag.isFeatured).toList();
+    if (featured.isNotEmpty) {
+      return featured.first.product;
+    }
+    return video.products.first.product;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final overlayProduct = _overlayProduct;
+
     return Stack(
       fit: StackFit.expand,
       children: [
@@ -196,6 +228,13 @@ class _FeedVideoPage extends StatelessWidget {
             ),
           ),
         ),
+        if (overlayProduct != null)
+          Positioned(
+            left: 16,
+            right: 96,
+            bottom: 140,
+            child: ProductOverlayChip(product: overlayProduct),
+          ),
         Positioned(
           left: 16,
           right: 80,

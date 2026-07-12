@@ -655,12 +655,12 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 | 4.2 | Video Commerce | ✅ Shipped | [sprint-4.2-video-commerce.md](./blueprints/sprint-4.2-video-commerce.md) |
 | 4.3 | Shopping Cart | ✅ Shipped | [sprint-4.3-shopping-cart.md](./blueprints/sprint-4.3-shopping-cart.md) |
 | 4.4 | Order System | ✅ Shipped | [sprint-4.4-order-system.md](./blueprints/sprint-4.4-order-system.md) |
-| **Phase A** | **Commerce MVP** | **In progress** | [SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) |
+| **Phase A** | **Commerce MVP** | **Audit gate** | [SPRINT_4_COMMERCE_PLAN.md](./docs/SPRINT_4_COMMERCE_PLAN.md) |
 | 4.5 | Checkout (backend) | ✅ Shipped | — |
-| 4.5M | Mobile Commerce | 🔒 Next | [sprint-4.5m-mobile-commerce.md](./blueprints/sprint-4.5m-mobile-commerce.md) |
+| 4.5M | Mobile Commerce | ✅ Shipped | [sprint-4.5m-mobile-commerce.md](./blueprints/sprint-4.5m-mobile-commerce.md) |
 | 4.6 | Seller Dashboard | 🔒 After Phase A | TBD |
 
-**Phase A gate:** Sprint 5 (Seller Platform) and Sprint 6 (Live Commerce) **blocked** until 4.5 + 4.5M released **and** [Full E2E Audit](./docs/21_SPRINT_RELEASE_AUDIT.md) signed off. **Without 4.5M there is no MVP.**
+**Phase A gate:** Sprint 5 (Seller Platform) and Sprint 6 (Live Commerce) **blocked** until 4.5 + 4.5M released **and** [Full E2E Audit](./docs/21_SPRINT_RELEASE_AUDIT.md) signed off. **Next:** sign off [SPRINT_4.5M_RELEASE_AUDIT.md](./docs/SPRINT_4.5M_RELEASE_AUDIT.md).
 
 **Gate:** No sub-sprint N+1 until sub-sprint N CI green + released.
 
@@ -675,16 +675,16 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 - [x] Event: `CartCheckedOut`, `PaymentSucceeded`
 - [x] Feature tests: `CheckoutTest` (6)
 
-### Sprint 4.5M — Mobile Commerce
+### Sprint 4.5M — Mobile Commerce ✅
 
-- [ ] Product Overlay UI on video feed
-- [ ] Product Page (detail, variants, add to cart)
-- [ ] Cart Screen
-- [ ] Checkout Screen
-- [ ] Order Success screen
-- [ ] Order History + My Orders (detail, timeline)
-- [ ] Happy-path integration: feed → buy → order list
-- [ ] [Release Audit](./docs/21_SPRINT_RELEASE_AUDIT.md): Mobile + E2E smoke (Phase A script)
+- [x] Product Overlay UI on video feed
+- [x] Product Page (detail, variants, add to cart)
+- [x] Cart Screen
+- [x] Checkout Screen
+- [x] Order Success screen
+- [x] Order History + My Orders (detail)
+- [x] Happy-path wiring: feed → buy → order list (live APIs)
+- [ ] [Release Audit](./docs/21_SPRINT_RELEASE_AUDIT.md): Mobile ✅ code audit; E2E smoke pending sign-off — [SPRINT_4.5M_RELEASE_AUDIT.md](./docs/SPRINT_4.5M_RELEASE_AUDIT.md)
 
 ### Phase A — Full E2E Audit (mandatory)
 
@@ -692,7 +692,7 @@ After `v0.4.5m-mobile-commerce`, before Sprint 5:
 
 - [ ] Architecture Audit — ADR-016/017 + blueprints 4.5 / 4.5M
 - [ ] API Audit — checkout + orders spec ↔ routes
-- [ ] Mobile Audit — all commerce screens use live APIs
+- [x] Mobile Audit — all commerce screens use live APIs (code review)
 - [ ] E2E Smoke — register → feed → product → cart → checkout → order history
 
 ---
@@ -718,12 +718,12 @@ Products, Categories, Variants, Inventory, Wishlist (Favorites), Cart, Checkout,
 
 **Phase A (4.5M) — Commerce MVP (P0):**
 
-- [ ] Product tag overlay on video feed
-- [ ] Product detail screen (images, variants, add to cart)
-- [ ] Shopping cart screen
-- [ ] Checkout screen (address, payment method, order summary)
-- [ ] Order success screen
-- [ ] Order history + order detail (My Orders)
+- [x] Product tag overlay on video feed
+- [x] Product detail screen (images, variants, add to cart)
+- [x] Shopping cart screen
+- [x] Checkout screen (address, payment method, order summary)
+- [x] Order success screen
+- [x] Order history + order detail (My Orders)
 
 **Post–Phase A:**
 
@@ -740,12 +740,12 @@ Products, Categories, Variants, Inventory, Wishlist (Favorites), Cart, Checkout,
 
 - [ ] Users can browse products by category (backend ✅; mobile post–Phase A)
 - [ ] Users can search and filter products (backend ✅; mobile post–Phase A)
-- [ ] Users can view product details with variants (Phase A — 4.5M)
-- [ ] Users can add products to cart and modify quantities (Phase A — 4.5M)
-- [ ] Users can complete checkout (order created) — Phase A: 4.5 backend + 4.5M mobile
-- [ ] Users can view order history and track status (Phase A — 4.5M)
-- [ ] Users can tag products in videos (backend ✅)
-- [ ] Users can tap product tags in videos to view/buy (Phase A — 4.5M)
+- [x] Users can view product details with variants (Phase A — 4.5M)
+- [x] Users can add products to cart and modify quantities (Phase A — 4.5M)
+- [x] Users can complete checkout (order created) — Phase A: 4.5 backend + 4.5M mobile
+- [x] Users can view order history and track status (Phase A — 4.5M)
+- [x] Users can tag products in videos (backend ✅)
+- [x] Users can tap product tags in videos to view/buy (Phase A — 4.5M)
 - [ ] Verified buyers can leave reviews (post-MVP)
 - [ ] All commerce endpoints have Feature tests passing (backend ✅; mobile tests in 4.5M)
 
