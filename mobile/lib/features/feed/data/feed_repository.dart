@@ -33,11 +33,31 @@ class FeedRemoteDataSource {
 
     return FeedPage(
       videos: data
-          .map((item) => FeedVideo.fromJson(item as Map<String, dynamic>))
+          .map((item) => _parseFeedItem(item as Map<String, dynamic>))
+          .whereType<FeedVideo>()
           .toList(),
       nextCursor: meta['next_cursor'] as String?,
       hasMore: meta['has_more'] as bool? ?? false,
     );
+  }
+
+  /// Sprint 6.0 mixed feed wraps videos as `{ type: "video", data: {...} }`.
+  /// Live items are skipped until mobile 6.1; legacy flat video payloads still work.
+  FeedVideo? _parseFeedItem(Map<String, dynamic> item) {
+    final type = item['type'] as String?;
+    if (type == 'live') {
+      return null;
+    }
+
+    final payload = type == 'video' && item['data'] is Map<String, dynamic>
+        ? item['data'] as Map<String, dynamic>
+        : item;
+
+    if (payload['id'] == null || payload['user'] == null) {
+      return null;
+    }
+
+    return FeedVideo.fromJson(payload);
   }
 }
 
