@@ -1141,18 +1141,31 @@ Allowed transitions: `confirmed → processing → shipped → delivered`.
 
 ---
 
-### 7.12 Live Streaming
+### 7.12 Live Sessions & Discover
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| GET | `/live` | Optional | List active live streams |
-| POST | `/live/start` | Seller | Start a live stream |
-| GET | `/live/{id}` | Optional | Get stream detail + tokens |
-| POST | `/live/{id}/end` | Seller | End live stream |
-| POST | `/live/{id}/pin-product` | Seller | Pin product during stream |
+| GET | `/discover` | Optional | Mixed ContentItem cursor page (video + live) |
+| GET | `/feed/for-you` | Optional | Mixed ContentItem (same shape as discover) |
+| GET | `/live` | Optional | Live-only list (ops/debug; not primary discovery) |
+| POST | `/live/start` | Seller | Start a LiveSession |
+| GET | `/live/{id}` | Optional | Detail + publisher/subscriber tokens |
+| POST | `/live/{id}/end` | Seller | End session |
+| POST | `/live/{id}/pin-product` | Seller | Pin product (`offset_seconds` from `started_at`) |
 | DELETE | `/live/{id}/pin-product/{productId}` | Seller | Unpin product |
-| GET | `/live/{id}/chat` | Optional | Get chat messages (cursor) |
-| POST | `/live/{id}/chat` | Yes | Send chat message |
+| GET | `/live/{id}/chat` | Optional | Chat messages (`?after_id=&limit=`) |
+| POST | `/live/{id}/chat` | Yes | Send `type=user` message |
+| POST | `/live/{id}/join` | Yes | Viewer join → metrics + analytics |
+| POST | `/live/{id}/leave` | Yes | Viewer leave → metrics + analytics |
+
+**ContentItem shape:**
+```json
+{
+  "type": "video|live",
+  "id": "uuid",
+  "payload": { }
+}
+```
 
 **POST /live/start Request:**
 ```json
@@ -1168,6 +1181,8 @@ Allowed transitions: `confirmed → processing → shipped → delivered`.
   "message": "Great products!"
 }
 ```
+
+Chat message `type`: `user` | `system` | `commerce`. Pin actions emit `system` messages.
 
 ---
 

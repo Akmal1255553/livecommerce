@@ -61,12 +61,12 @@ class ExplorationStage implements RankingPipelineStageInterface
             $item = $pool[$index];
             $index++;
 
-            if (isset($placedIds[$item->videoId])) {
+            if (isset($placedIds[$item->key()])) {
                 continue;
             }
 
             $result[] = $item;
-            $placedIds[$item->videoId] = true;
+            $placedIds[$item->key()] = true;
 
             return true;
         }
@@ -87,6 +87,7 @@ class ExplorationStage implements RankingPipelineStageInterface
                 score: 0.0,
                 signals: ['exploration' => 1.0],
                 sources: $candidate->sources,
+                type: $candidate->type,
             );
         }
 

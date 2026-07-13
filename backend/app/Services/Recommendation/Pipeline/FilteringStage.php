@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\Services\Recommendation\Pipeline;
 
 use App\Contracts\Recommendation\RankingPipelineStageInterface;
+use App\Enums\LiveSessionStatus;
 use App\Enums\VideoStatus;
 use App\Enums\VideoVisibility;
+use App\Models\LiveSession;
 use App\Models\Video;
 use App\Services\Recommendation\DTOs\RankedCollection;
 use App\Services\Recommendation\DTOs\RankingContext;
@@ -19,6 +21,19 @@ class FilteringStage implements RankingPipelineStageInterface
         $filtered = [];
 
         foreach ($items->items as $item) {
+            if ($item->isLive()) {
+                /** @var LiveSession|null $session */
+                $session = $context->liveSessions->get($item->videoId);
+
+                if ($session === null || $session->status !== LiveSessionStatus::Live) {
+                    continue;
+                }
+
+                $filtered[] = $item;
+
+                continue;
+            }
+
             if (isset($exclusions[$item->videoId])) {
                 continue;
             }

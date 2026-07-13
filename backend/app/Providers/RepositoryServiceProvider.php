@@ -13,6 +13,7 @@ use App\Contracts\Repositories\CartRepositoryInterface;
 use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\Contracts\Repositories\CommentRepositoryInterface;
 use App\Contracts\Repositories\FollowRepositoryInterface;
+use App\Contracts\Repositories\LiveSessionRepositoryInterface;
 use App\Contracts\Repositories\LiveStreamRepositoryInterface;
 use App\Contracts\Repositories\MediaUploadRepositoryInterface;
 use App\Contracts\Repositories\NotificationRepositoryInterface;
@@ -32,6 +33,8 @@ use App\Contracts\Services\CommentServiceInterface;
 use App\Contracts\Services\CouponServiceInterface;
 use App\Contracts\Services\HealthServiceInterface;
 use App\Contracts\Services\InventoryServiceInterface;
+use App\Contracts\Services\LiveAnalyticsServiceInterface;
+use App\Contracts\Services\LiveSessionServiceInterface;
 use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\MetricsServiceInterface;
@@ -45,13 +48,16 @@ use App\Contracts\Services\ShippingCalculatorInterface;
 use App\Contracts\Services\SmsProviderInterface;
 use App\Contracts\Services\StorageServiceInterface;
 use App\Contracts\Services\StoreServiceInterface;
+use App\Contracts\Services\StreamingProviderInterface;
 use App\Contracts\Services\TaxServiceInterface;
 use App\Contracts\Services\VideoCommerceServiceInterface;
 use App\Contracts\Services\VideoInteractionServiceInterface;
 use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
+use App\Contracts\Services\ViewerMetricsServiceInterface;
 use App\Contracts\VideoProcessing\FfmpegTranscoderInterface;
 use App\Events\CommentCreated;
+use App\Events\LiveSessionStarted;
 use App\Events\OrderCancelled;
 use App\Events\OrderCreated;
 use App\Events\OrderPaid;
@@ -65,6 +71,7 @@ use App\Listeners\CreateUserProfile;
 use App\Listeners\DispatchVideoProcessingPipeline;
 use App\Listeners\MergeGuestCartOnLogin;
 use App\Listeners\NotifyOnComment;
+use App\Listeners\NotifyOnLiveStarted;
 use App\Listeners\NotifyOnVideoLiked;
 use App\Listeners\RecordOrderAnalytics;
 use App\Repositories\Eloquent\BookmarkRepository;
@@ -74,6 +81,7 @@ use App\Repositories\Eloquent\CategoryRepository;
 use App\Repositories\Eloquent\CommentRepository;
 use App\Repositories\Eloquent\EngagementEventRepository;
 use App\Repositories\Eloquent\FollowRepository;
+use App\Repositories\Eloquent\LiveSessionRepository;
 use App\Repositories\Eloquent\LiveStreamRepository;
 use App\Repositories\Eloquent\MediaUploadRepository;
 use App\Repositories\Eloquent\NotificationRepository;
@@ -95,6 +103,9 @@ use App\Services\Checkout\CheckoutService;
 use App\Services\Coupon\NoDiscountCouponService;
 use App\Services\Health\HealthService;
 use App\Services\Inventory\ProductInventoryService;
+use App\Services\LiveSession\LiveAnalyticsService;
+use App\Services\LiveSession\LiveSessionService;
+use App\Services\LiveSession\ViewerMetricsService;
 use App\Services\Media\MediaAssetService;
 use App\Services\Media\MediaService;
 use App\Services\Metrics\MetricsService;
@@ -109,6 +120,8 @@ use App\Services\Recommendation\RecommendationService;
 use App\Services\Shipping\FixedShippingCalculator;
 use App\Services\Storage\StorageService;
 use App\Services\Store\StoreService;
+use App\Services\Streaming\AgoraProvider;
+use App\Services\Streaming\FakeStreamingProvider;
 use App\Services\Tax\ZeroTaxService;
 use App\Services\Video\CommentService;
 use App\Services\Video\Ffmpeg\CliFfmpegTranscoder;
@@ -138,6 +151,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CartRepositoryInterface::class => CartRepository::class,
         StoreRepositoryInterface::class => StoreRepository::class,
         LiveStreamRepositoryInterface::class => LiveStreamRepository::class,
+        LiveSessionRepositoryInterface::class => LiveSessionRepository::class,
         NotificationRepositoryInterface::class => NotificationRepository::class,
         UserDeviceRepositoryInterface::class => UserDeviceRepository::class,
         FollowRepositoryInterface::class => FollowRepository::class,
@@ -152,6 +166,9 @@ class RepositoryServiceProvider extends ServiceProvider
         HealthServiceInterface::class => HealthService::class,
         StorageServiceInterface::class => StorageService::class,
         StoreServiceInterface::class => StoreService::class,
+        LiveSessionServiceInterface::class => LiveSessionService::class,
+        ViewerMetricsServiceInterface::class => ViewerMetricsService::class,
+        LiveAnalyticsServiceInterface::class => LiveAnalyticsService::class,
         MediaServiceInterface::class => MediaService::class,
         VideoUploadServiceInterface::class => VideoUploadService::class,
         VideoInteractionServiceInterface::class => VideoInteractionService::class,
@@ -204,6 +221,19 @@ class RepositoryServiceProvider extends ServiceProvider
                 (string) config('video.ffprobe_path', 'ffprobe'),
             );
         });
+
+        $this->app->singleton(StreamingProviderInterface::class, function ($app): StreamingProviderInterface {
+            $provider = (string) config('streaming.provider', 'fake');
+
+            if ($provider === 'agora') {
+                return new AgoraProvider(
+                    (string) config('streaming.agora.app_id', ''),
+                    (string) config('streaming.agora.app_certificate', ''),
+                );
+            }
+
+            return $app->make(FakeStreamingProvider::class);
+        });
     }
 
     public function boot(): void
@@ -213,6 +243,7 @@ class RepositoryServiceProvider extends ServiceProvider
         Event::listen(VideoUploadConfirmed::class, DispatchVideoProcessingPipeline::class);
         Event::listen(VideoLiked::class, NotifyOnVideoLiked::class);
         Event::listen(CommentCreated::class, NotifyOnComment::class);
+        Event::listen(LiveSessionStarted::class, NotifyOnLiveStarted::class);
         Event::listen(OrderCreated::class, [RecordOrderAnalytics::class, 'handleOrderCreated']);
         Event::listen(OrderPaid::class, [RecordOrderAnalytics::class, 'handleOrderPaid']);
         Event::listen(OrderCancelled::class, [RecordOrderAnalytics::class, 'handleOrderCancelled']);

@@ -257,7 +257,7 @@ test('video resource includes is liked for liker in feed and detail', function (
     test()->withToken($user['access_token'])
         ->getJson('/api/v1/feed/for-you')
         ->assertOk()
-        ->assertJsonPath('data.0.is_liked', true);
+        ->assertJsonPath('data.0.payload.is_liked', true);
 
     test()->withToken($user['access_token'])
         ->getJson("/api/v1/videos/{$video->id}")
@@ -276,7 +276,7 @@ test('video resource includes is bookmarked in feed and detail', function () {
     test()->withToken($user['access_token'])
         ->getJson('/api/v1/feed/for-you')
         ->assertOk()
-        ->assertJsonPath('data.0.is_bookmarked', true);
+        ->assertJsonPath('data.0.payload.is_bookmarked', true);
 
     test()->withToken($user['access_token'])
         ->getJson("/api/v1/videos/{$video->id}")

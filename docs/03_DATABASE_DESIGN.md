@@ -189,7 +189,7 @@ erDiagram
 | **Content** | videos, video_likes, comments, bookmarks, video_products |
 | **Catalog** | categories, stores, products, product_images, product_variants |
 | **Commerce** | carts, cart_items, orders, order_items, refund_requests, coupons, coupon_usages |
-| **Live** | live_streams, live_stream_products, live_chat_messages |
+| **Live** | live_sessions, live_session_products, live_chat_messages, live_viewer_metrics, live_viewer_presence, live_analytics_events |
 | **Engagement** | notifications, reviews |
 | **System** | audit_logs, media_uploads |
 
@@ -652,19 +652,19 @@ Buyer-initiated refund requests linked to orders.
 
 ---
 
-### 3.25 live_streams
+### 3.25 live_sessions
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | UUID | PK | |
-| seller_id | UUID | FK → users.id, NOT NULL | Stream host |
+| seller_id | UUID | FK → users.id, NOT NULL | Session host |
 | store_id | UUID | FK → stores.id, NOT NULL | Associated store |
-| title | VARCHAR(255) | NOT NULL | Stream title |
+| title | VARCHAR(255) | NOT NULL | Session title |
 | channel_id | VARCHAR(255) | NOT NULL | Provider channel/room ID |
-| stream_key | VARCHAR(255) | NULLABLE | Provider stream key (encrypted) |
+| stream_key | VARCHAR(255) | NULLABLE | Provider stream key |
 | status | VARCHAR(20) | NOT NULL, DEFAULT 'scheduled' | scheduled, live, ended, cancelled |
-| viewer_count | INTEGER | NOT NULL, DEFAULT 0 | Peak or current viewers |
-| replay_url | VARCHAR(500) | NULLABLE | Recording URL (Phase 1.1) |
+| viewer_count | INTEGER | NOT NULL, DEFAULT 0 | Denormalized current viewers |
+| replay_url | VARCHAR(500) | NULLABLE | Recording URL (Sprint 6.3) |
 | started_at | TIMESTAMP | NULLABLE | Actual start time |
 | ended_at | TIMESTAMP | NULLABLE | Actual end time |
 | created_at | TIMESTAMP | NOT NULL | |
@@ -672,17 +672,19 @@ Buyer-initiated refund requests linked to orders.
 
 ---
 
-### 3.26 live_stream_products
+### 3.26 live_session_products
 
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGSERIAL | PK | |
-| live_stream_id | UUID | FK → live_streams.id, NOT NULL | |
+| live_session_id | UUID | FK → live_sessions.id, NOT NULL | |
 | product_id | UUID | FK → products.id, NOT NULL | |
-| is_pinned | BOOLEAN | NOT NULL, DEFAULT false | Currently pinned |
+| is_pinned | BOOLEAN | NOT NULL, DEFAULT false | Currently pinned (max 3) |
 | pinned_at | TIMESTAMP | NULLABLE | When pinned |
+| offset_seconds | INTEGER | NULLABLE | Seconds from `started_at` (replay seek) |
 | sort_order | INTEGER | NOT NULL, DEFAULT 0 | |
 | created_at | TIMESTAMP | NOT NULL | |
+| updated_at | TIMESTAMP | NOT NULL | |
 
 ---
 
@@ -691,9 +693,45 @@ Buyer-initiated refund requests linked to orders.
 | Column | Type | Constraints | Description |
 |--------|------|-------------|-------------|
 | id | BIGSERIAL | PK | |
-| live_stream_id | UUID | FK → live_streams.id, NOT NULL | |
-| user_id | UUID | FK → users.id, NOT NULL | Message sender |
+| live_session_id | UUID | FK → live_sessions.id, NOT NULL | |
+| user_id | UUID | FK → users.id, NULLABLE | Null for system messages |
+| type | VARCHAR(20) | NOT NULL, DEFAULT 'user' | user, system, commerce |
 | message | VARCHAR(500) | NOT NULL | Chat message text |
+| metadata | JSONB | NULLABLE | Product ids, order refs, etc. |
+| created_at | TIMESTAMP | NOT NULL | |
+
+---
+
+### 3.27a live_viewer_metrics
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| live_session_id | UUID | PK, FK → live_sessions.id | |
+| current_viewers | INTEGER | NOT NULL, DEFAULT 0 | Authoritative current count |
+| peak_viewers | INTEGER | NOT NULL, DEFAULT 0 | Peak concurrent |
+| unique_viewers | INTEGER | NOT NULL, DEFAULT 0 | Distinct joiners |
+| created_at / updated_at | TIMESTAMP | NOT NULL | |
+
+### 3.27b live_viewer_presence
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGSERIAL | PK | |
+| live_session_id | UUID | FK → live_sessions.id | |
+| user_id | UUID | FK → users.id | |
+| joined_at | TIMESTAMP | NOT NULL | |
+| left_at | TIMESTAMP | NULLABLE | Null while present |
+| UNIQUE | (live_session_id, user_id) | | |
+
+### 3.27c live_analytics_events
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | BIGSERIAL | PK | |
+| live_session_id | UUID | FK → live_sessions.id | |
+| user_id | UUID | NULLABLE | |
+| event_type | VARCHAR(64) | NOT NULL | live_started, live_joined, product_pinned, … |
+| payload | JSONB | NULLABLE | |
 | created_at | TIMESTAMP | NOT NULL | |
 
 ---

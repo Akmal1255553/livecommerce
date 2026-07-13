@@ -9,8 +9,10 @@ use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CheckoutController;
 use App\Http\Controllers\Api\V1\DeviceController;
+use App\Http\Controllers\Api\V1\DiscoverController;
 use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\LiveSessionController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
@@ -95,7 +97,16 @@ Route::prefix('v1')->group(function (): void {
             Route::get('seller/orders/{id}', [SellerOrderController::class, 'show']);
             Route::put('seller/orders/{id}/status', [SellerOrderController::class, 'updateStatus']);
             Route::put('seller/refunds/{id}', [SellerOrderController::class, 'resolveRefund']);
+
+            Route::post('live/start', [LiveSessionController::class, 'start']);
+            Route::post('live/{id}/end', [LiveSessionController::class, 'end']);
+            Route::post('live/{id}/pin-product', [LiveSessionController::class, 'pinProduct']);
+            Route::delete('live/{id}/pin-product/{productId}', [LiveSessionController::class, 'unpinProduct']);
         });
+
+        Route::post('live/{id}/chat', [LiveSessionController::class, 'chatStore']);
+        Route::post('live/{id}/join', [LiveSessionController::class, 'join']);
+        Route::post('live/{id}/leave', [LiveSessionController::class, 'leave']);
 
         Route::post('checkout', [CheckoutController::class, 'store']);
 
@@ -107,10 +118,14 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::middleware('auth.api.optional')->group(function (): void {
+        Route::get('discover', [DiscoverController::class, 'index']);
         Route::get('feed/trending', [FeedController::class, 'trending']);
         Route::get('feed/popular', [FeedController::class, 'popular']);
         Route::get('feed/new', [FeedController::class, 'newFeed']);
         Route::get('feed/for-you', [FeedController::class, 'forYou']);
+        Route::get('live', [LiveSessionController::class, 'index']);
+        Route::get('live/{id}', [LiveSessionController::class, 'show']);
+        Route::get('live/{id}/chat', [LiveSessionController::class, 'chatIndex']);
         Route::get('videos/{id}', [VideoController::class, 'show']);
         Route::get('videos/{id}/products', [VideoProductController::class, 'index']);
         Route::post('videos/{id}/view', [VideoInteractionController::class, 'view']);

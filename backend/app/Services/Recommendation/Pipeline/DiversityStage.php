@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Recommendation\Pipeline;
 
 use App\Contracts\Recommendation\RankingPipelineStageInterface;
+use App\Models\LiveSession;
 use App\Models\Video;
 use App\Services\Recommendation\DTOs\RankedCollection;
 use App\Services\Recommendation\DTOs\RankedItem;
@@ -33,9 +34,7 @@ class DiversityStage implements RankingPipelineStageInterface
             $pickedIndex = null;
 
             foreach ($remaining as $index => $item) {
-                /** @var Video|null $video */
-                $video = $context->videos->get($item->videoId);
-                $authorId = $video?->user_id;
+                $authorId = $this->authorId($context, $item);
 
                 $authorOk = $authorId === null
                     || $authorId !== $lastAuthor
@@ -50,10 +49,9 @@ class DiversityStage implements RankingPipelineStageInterface
 
             if ($picked === null) {
                 foreach ($remaining as $index => $item) {
-                    /** @var Video|null $video */
-                    $video = $context->videos->get($item->videoId);
+                    $authorId = $this->authorId($context, $item);
 
-                    if ($video?->user_id !== $lastAuthor) {
+                    if ($authorId !== $lastAuthor) {
                         $picked = $item;
                         $pickedIndex = $index;
                         break;
@@ -67,9 +65,7 @@ class DiversityStage implements RankingPipelineStageInterface
                 array_splice($remaining, $pickedIndex, 1);
             }
 
-            /** @var Video|null $video */
-            $video = $context->videos->get($picked->videoId);
-            $authorId = $video?->user_id;
+            $authorId = $this->authorId($context, $picked);
 
             if ($authorId === $lastAuthor) {
                 $authorStreak++;
@@ -82,5 +78,20 @@ class DiversityStage implements RankingPipelineStageInterface
         }
 
         return new RankedCollection(items: $result, snapshot: $items->snapshot);
+    }
+
+    private function authorId(RankingContext $context, RankedItem $item): ?string
+    {
+        if ($item->isLive()) {
+            /** @var LiveSession|null $session */
+            $session = $context->liveSessions->get($item->videoId);
+
+            return $session?->seller_id;
+        }
+
+        /** @var Video|null $video */
+        $video = $context->videos->get($item->videoId);
+
+        return $video?->user_id;
     }
 }

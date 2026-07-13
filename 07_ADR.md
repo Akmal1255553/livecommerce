@@ -38,6 +38,7 @@ Every major technical decision must be documented here **before implementation**
 | [ADR-016](#adr-016-commerce-core-cart-orders-inventory-payment) | Commerce Core: Cart, Orders, Inventory, Payment | **Accepted** | 2026-06-28 |
 | [ADR-017](#adr-017-order-state-machine-and-order-aggregate) | Order State Machine & Order Aggregate | **Accepted** | 2026-06-28 |
 | [ADR-018](#adr-018-supabase--railway-cloud-runtime) | Supabase + Railway Cloud Runtime | **Accepted** | 2026-07-12 |
+| [ADR-019](#adr-019-live-as-content--livesession) | Live as Content / LiveSession | **Accepted** | 2026-07-13 |
 
 ---
 
@@ -1154,6 +1155,31 @@ Docker Compose (`docker/`) remains **optional** offline fallback — not require
 ### Future Review
 
 Add staging environment on Railway; Cloudflare R2 if Supabase Storage limits bind; CI deploy from GitHub → Railway.
+
+---
+
+## ADR-019: Live as Content / LiveSession
+
+**Status:** Accepted  
+**Date:** 2026-07-13  
+**Related:** ADR-011 (streaming provider)
+
+### Context
+
+Live commerce must appear in discovery alongside short video — not only as a separate Live tab. Domain naming historically used `live_streams`; product language settled on **LiveSession**.
+
+### Decision
+
+1. **Domain:** `LiveSession` (table `live_sessions`) with products, typed chat (`user|system|commerce`), viewer metrics, and append-only `live_analytics_events`.
+2. **Discovery:** Mixed `ContentItem` (`type: video|live`) on `GET /discover` and `GET /feed/for-you` via `LiveCandidateSource` + rule-based live boost. Session control stays under `/live/*`.
+3. **Streaming:** Unchanged ADR-011 — `StreamingProviderInterface` with `fake` default (Render) and `agora` via env.
+4. **Metrics:** `ViewerMetricsService` owns current/peak/unique; provider viewer count is advisory only.
+
+### Consequences
+
+- Positive: One feed surface for mobile 6.1; provider-swappable; timeline columns ready for replay (6.3).
+- Negative: Ranking pipeline must hydrate mixed keys (`video:{id}` / `live:{id}`).
+- Neutral: Legacy `LiveStream` stub model retained for module enum compatibility until cleaned in a later sprint.
 
 ---
 

@@ -17,6 +17,7 @@ use App\Services\Recommendation\Pipeline\ScoringStage;
 use App\Services\Recommendation\Sources\BookmarksCandidateSource;
 use App\Services\Recommendation\Sources\CategoryCandidateSource;
 use App\Services\Recommendation\Sources\ExplorationCandidateSource;
+use App\Services\Recommendation\Sources\LiveCandidateSource;
 use App\Services\Recommendation\Sources\NewCandidateSource;
 use App\Services\Recommendation\Sources\PopularCandidateSource;
 use App\Services\Recommendation\Sources\PreviouslyWatchedCandidateSource;
@@ -44,6 +45,7 @@ class RecommendationServiceProvider extends ServiceProvider
             PreviouslyWatchedCandidateSource::class,
             CategoryCandidateSource::class,
             SellerCandidateSource::class,
+            LiveCandidateSource::class,
         ];
 
         $this->app->tag($sources, 'recommendation.candidate_source');

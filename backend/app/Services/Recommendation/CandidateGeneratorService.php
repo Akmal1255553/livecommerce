@@ -35,10 +35,11 @@ class CandidateGeneratorService
             }
 
             foreach ($source->generate($context)->items as $candidate) {
-                if (isset($merged[$candidate->videoId])) {
-                    $merged[$candidate->videoId] = $merged[$candidate->videoId]->withSources($candidate->sources);
+                $key = $candidate->key();
+                if (isset($merged[$key])) {
+                    $merged[$key] = $merged[$key]->withSources($candidate->sources);
                 } else {
-                    $merged[$candidate->videoId] = $candidate;
+                    $merged[$key] = $candidate;
                 }
             }
         }

@@ -26,7 +26,18 @@ readonly class RankedCollection extends DataTransferObject
      */
     public function videoIds(): array
     {
-        return array_map(static fn (RankedItem $item): string => $item->videoId, $this->items);
+        return array_values(array_map(
+            static fn (RankedItem $item): string => $item->videoId,
+            array_filter($this->items, static fn (RankedItem $item): bool => $item->isVideo()),
+        ));
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function contentKeys(): array
+    {
+        return array_map(static fn (RankedItem $item): string => $item->key(), $this->items);
     }
 
     public function withSnapshot(string $snapshot): self

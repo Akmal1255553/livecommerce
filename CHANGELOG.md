@@ -13,6 +13,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 6.0 — Live Commerce (backend foundation)
+
+- Domain: `LiveSession` (+ pin timeline, typed chat `user|system|commerce`, viewer metrics, analytics events)
+- `StreamingProviderInterface` → `FakeStreamingProvider` (default) / `AgoraProvider`
+- Services: `LiveSessionService`, `ViewerMetricsService`, `LiveAnalyticsService`
+- APIs: `/live/*` session control, join/leave; `GET /discover` + mixed `/feed/for-you` (`ContentItem` video|live)
+- `LiveCandidateSource` + ADR-019 (Live as Content)
+- Feature tests: `tests/Feature/Live/LiveSessionTest.php`
+- Blueprint: [blueprints/sprint-6.0-live-commerce.md](./blueprints/sprint-6.0-live-commerce.md)
+
 #### Sprint 5 — Seller Platform (mobile)
 
 - Feature module `mobile/lib/features/seller/` — apply, dashboard, products, orders, public store

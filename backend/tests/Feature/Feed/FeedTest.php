@@ -7,7 +7,7 @@ use App\Enums\VideoVisibility;
 use App\Models\User;
 use App\Models\Video;
 
-test('for-you feed returns published public videos with cursor meta', function () {
+test('for-you feed returns mixed content items with cursor meta', function () {
     $creator = User::factory()->create(['username' => 'feedcreator']);
     Video::factory()->count(3)->for($creator)->published()->create();
 
@@ -17,9 +17,18 @@ test('for-you feed returns published public videos with cursor meta', function (
         ->assertJsonCount(2, 'data')
         ->assertJsonPath('meta.limit', 2)
         ->assertJsonPath('meta.has_more', true)
+        ->assertJsonPath('data.0.type', 'video')
         ->assertJsonStructure([
             'data' => [
-                ['id', 'user', 'title', 'video_url', 'thumbnail_url', 'duration', 'view_count', 'like_count', 'comment_count', 'is_liked', 'is_bookmarked', 'products', 'status', 'created_at'],
+                [
+                    'type',
+                    'id',
+                    'payload' => [
+                        'id', 'user', 'title', 'video_url', 'thumbnail_url', 'duration',
+                        'view_count', 'like_count', 'comment_count', 'is_liked', 'is_bookmarked',
+                        'products', 'status', 'created_at',
+                    ],
+                ],
             ],
             'meta' => ['next_cursor', 'prev_cursor', 'has_more', 'limit', 'strategy', 'snapshot', 'engine'],
         ]);
@@ -37,7 +46,7 @@ test('for-you feed excludes draft and non-public videos', function () {
     $response = test()->getJson('/api/v1/feed/for-you')
         ->assertOk();
 
-    expect(collect($response->json('data'))->pluck('title')->all())
+    expect(collect($response->json('data'))->pluck('payload.title')->all())
         ->toBe(['Visible']);
 });
 
@@ -102,7 +111,7 @@ test('following feed returns empty list when user follows nobody', function () {
         ->assertJsonPath('meta.next_cursor', null);
 });
 
-test('video resource includes compact user payload', function () {
+test('video content item includes compact user payload', function () {
     $creator = User::factory()->create([
         'username' => 'compactuser',
         'avatar_url' => 'https://cdn.example.com/avatar.jpg',
@@ -112,8 +121,9 @@ test('video resource includes compact user payload', function () {
 
     test()->getJson('/api/v1/feed/for-you')
         ->assertOk()
-        ->assertJsonPath('data.0.user.id', $creator->id)
-        ->assertJsonPath('data.0.user.username', 'compactuser')
-        ->assertJsonPath('data.0.user.avatar_url', 'https://cdn.example.com/avatar.jpg')
-        ->assertJsonPath('data.0.user.is_verified', true);
+        ->assertJsonPath('data.0.type', 'video')
+        ->assertJsonPath('data.0.payload.user.id', $creator->id)
+        ->assertJsonPath('data.0.payload.user.username', 'compactuser')
+        ->assertJsonPath('data.0.payload.user.avatar_url', 'https://cdn.example.com/avatar.jpg')
+        ->assertJsonPath('data.0.payload.user.is_verified', true);
 });

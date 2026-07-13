@@ -13,8 +13,8 @@ class FinalRankingStage implements RankingPipelineStageInterface
 {
     public function handle(RankingContext $context, RankedCollection $items): RankedCollection
     {
-        $ids = array_map(static fn (RankedItem $item): string => $item->videoId, $items->items);
-        $snapshot = sha1(implode(',', $ids));
+        $keys = array_map(static fn (RankedItem $item): string => $item->key(), $items->items);
+        $snapshot = sha1(implode(',', $keys));
 
         return $items->withSnapshot($snapshot);
     }

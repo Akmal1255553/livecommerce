@@ -11,6 +11,7 @@ enum FeedStrategy: string
     case New = 'new';
     case ForYou = 'for_you';
     case Following = 'following';
+    case Discover = 'discover';
 
     /**
      * @return list<string>
@@ -21,8 +22,9 @@ enum FeedStrategy: string
             self::Trending => ['trending'],
             self::Popular => ['popular'],
             self::New => ['new'],
-            self::ForYou => ['trending', 'popular', 'new', 'bookmarks', 'exploration', 'category', 'seller'],
+            self::ForYou => ['trending', 'popular', 'new', 'bookmarks', 'exploration', 'category', 'seller', 'live'],
             self::Following => ['following'],
+            self::Discover => ['trending', 'popular', 'new', 'bookmarks', 'exploration', 'category', 'seller', 'live'],
         };
     }
 

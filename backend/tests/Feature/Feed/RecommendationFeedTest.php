@@ -218,7 +218,7 @@ test('for you diversity limits consecutive same author', function () {
     )->create();
 
     $response = test()->getJson('/api/v1/feed/for-you?limit=20')->assertOk();
-    $authorIds = collect($response->json('data'))->pluck('user.id')->all();
+    $authorIds = collect($response->json('data'))->pluck('payload.user.id')->all();
 
     $streak = 1;
     $maxStreak = 1;
@@ -273,7 +273,7 @@ test('config weight change affects feed order', function () {
 
     $response = test()->getJson('/api/v1/feed/for-you?limit=2')->assertOk();
 
-    expect(collect($response->json('data'))->pluck('title')->first())->toBe('Fresh')
+    expect(collect($response->json('data'))->pluck('payload.title')->first())->toBe('Fresh')
         ->and(collect($response->json('data'))->pluck('id'))->toContain($fresh->id)
         ->and(collect($response->json('data'))->pluck('id'))->toContain($oldPopular->id);
 });

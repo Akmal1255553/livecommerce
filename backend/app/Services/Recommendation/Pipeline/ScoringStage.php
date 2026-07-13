@@ -6,6 +6,7 @@ namespace App\Services\Recommendation\Pipeline;
 
 use App\Contracts\Recommendation\RankingPipelineStageInterface;
 use App\Contracts\Recommendation\VideoEngagementRollupRepositoryInterface;
+use App\Models\LiveSession;
 use App\Models\Video;
 use App\Services\Recommendation\DTOs\RankedCollection;
 use App\Services\Recommendation\DTOs\RankedItem;
@@ -24,14 +25,19 @@ class ScoringStage implements RankingPipelineStageInterface
             return $items;
         }
 
-        $videoIds = $items->videoIds();
+        $videoItems = array_values(array_filter($items->items, static fn (RankedItem $i): bool => $i->isVideo()));
+        $liveItems = array_values(array_filter($items->items, static fn (RankedItem $i): bool => $i->isLive()));
+
+        $videoIds = array_map(static fn (RankedItem $i): string => $i->videoId, $videoItems);
         $windowHours = (int) config('recommendation.rollup.trending_window_hours', 24);
-        $rollupSignals = $this->rollups->aggregateSignalsForVideos($videoIds, $windowHours);
+        $rollupSignals = $videoIds !== []
+            ? $this->rollups->aggregateSignalsForVideos($videoIds, $windowHours)
+            : [];
         $weights = $this->resolveWeights($context);
 
         $rawSignals = [];
 
-        foreach ($items->items as $item) {
+        foreach ($videoItems as $item) {
             /** @var Video|null $video */
             $video = $context->videos->get($item->videoId);
             $rollup = $rollupSignals[$item->videoId] ?? null;
@@ -50,7 +56,7 @@ class ScoringStage implements RankingPipelineStageInterface
             $hoursSincePublish = max(0, $publishedAt->diffInHours(Carbon::now()));
             $freshness = 1 / (1 + ($hoursSincePublish / 24));
 
-            $rawSignals[$item->videoId] = [
+            $rawSignals[$item->key()] = [
                 'completion' => $completions / $views,
                 'watch_time' => log(1 + $watchSeconds),
                 'like' => (float) $likes,
@@ -63,8 +69,8 @@ class ScoringStage implements RankingPipelineStageInterface
         $normalized = $this->normalizeBatch($rawSignals);
         $scored = [];
 
-        foreach ($items->items as $item) {
-            $norm = $normalized[$item->videoId];
+        foreach ($videoItems as $item) {
+            $norm = $normalized[$item->key()];
             $score =
                 $norm['completion'] * $weights['completion']
                 + $norm['watch_time'] * $weights['watch_time']
@@ -78,6 +84,24 @@ class ScoringStage implements RankingPipelineStageInterface
                 score: $score,
                 signals: $norm,
                 sources: $item->sources,
+                type: $item->type,
+            );
+        }
+
+        $liveBoost = (float) config('recommendation.scoring.live_boost', 1.15);
+
+        foreach ($liveItems as $item) {
+            /** @var LiveSession|null $session */
+            $session = $context->liveSessions->get($item->videoId);
+            $viewers = $session?->viewer_count ?? 0;
+            $score = $liveBoost + min(0.5, log(1 + $viewers) / 10);
+
+            $scored[] = new RankedItem(
+                videoId: $item->videoId,
+                score: $score,
+                signals: ['live_boost' => $liveBoost, 'viewers' => $viewers],
+                sources: $item->sources,
+                type: $item->type,
             );
         }
 
@@ -88,10 +112,18 @@ class ScoringStage implements RankingPipelineStageInterface
                 return $scoreCompare;
             }
 
+            if ($a->isLive() && ! $b->isLive()) {
+                return -1;
+            }
+
+            if ($b->isLive() && ! $a->isLive()) {
+                return 1;
+            }
+
             /** @var Video|null $videoA */
-            $videoA = $context->videos->get($a->videoId);
+            $videoA = $a->isVideo() ? $context->videos->get($a->videoId) : null;
             /** @var Video|null $videoB */
-            $videoB = $context->videos->get($b->videoId);
+            $videoB = $b->isVideo() ? $context->videos->get($b->videoId) : null;
 
             $publishedA = $videoA !== null
                 ? ($videoA->published_at ?? $videoA->created_at ?? Carbon::createFromTimestamp(0))
@@ -135,6 +167,10 @@ class ScoringStage implements RankingPipelineStageInterface
      */
     private function normalizeBatch(array $raw): array
     {
+        if ($raw === []) {
+            return [];
+        }
+
         $keys = ['completion', 'watch_time', 'like', 'comment', 'share'];
         $mins = array_fill_keys($keys, PHP_FLOAT_MAX);
         $maxs = array_fill_keys($keys, PHP_FLOAT_MIN);
@@ -148,7 +184,7 @@ class ScoringStage implements RankingPipelineStageInterface
 
         $normalized = [];
 
-        foreach ($raw as $videoId => $signals) {
+        foreach ($raw as $contentKey => $signals) {
             $norm = ['freshness' => $signals['freshness']];
 
             foreach ($keys as $key) {
@@ -158,7 +194,7 @@ class ScoringStage implements RankingPipelineStageInterface
                     : 0.0;
             }
 
-            $normalized[$videoId] = $norm;
+            $normalized[$contentKey] = $norm;
         }
 
         return $normalized;

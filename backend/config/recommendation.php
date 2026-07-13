@@ -14,6 +14,7 @@ return [
             'share' => (float) env('REC_WEIGHT_SHARE', 0.10),
             'freshness' => (float) env('REC_WEIGHT_FRESHNESS', 0.05),
         ],
+        'live_boost' => (float) env('REC_LIVE_BOOST', 1.15),
         'feeds' => [
             'trending' => [],
             'popular' => [],

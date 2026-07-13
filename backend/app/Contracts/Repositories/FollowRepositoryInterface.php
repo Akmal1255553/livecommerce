@@ -25,4 +25,9 @@ interface FollowRepositoryInterface extends RepositoryInterface
      * @return LengthAwarePaginator<int, User>
      */
     public function paginateFollowing(string $userId, int $page, int $perPage): LengthAwarePaginator;
+
+    /**
+     * @return list<string>
+     */
+    public function followerIds(string $userId): array;
 }

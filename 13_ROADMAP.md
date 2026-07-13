@@ -661,7 +661,7 @@ Full funnel spec: [`docs/ANALYTICS_LAYER.md`](./docs/ANALYTICS_LAYER.md). All in
 | 4.6 | Seller Dashboard | ✅ Shipped | [sprint-4.6-seller-dashboard.md](./blueprints/sprint-4.6-seller-dashboard.md) |
 | **5** | **Seller Platform (mobile)** | ✅ Shipped | [sprint-5-seller-platform.md](./blueprints/sprint-5-seller-platform.md) |
 
-**Phase A gate:** complete. **Next:** Sprint 6 Live Commerce.
+**Phase A gate:** complete. **Next:** Sprint 6.1 mobile live UI (after 6.0 backend deploy).
 
 **Gate:** No sub-sprint N+1 until sub-sprint N CI green + released.
 
@@ -813,49 +813,54 @@ Seller Application, Seller Dashboard, Product Management, Order Management, Stor
 **Depends on:** **Phase A complete** (4.5 + 4.5M), Sprint 5  
 **Priority:** P0
 
+### Sub-sprints
+
+| ID | Scope | Status |
+|----|--------|--------|
+| **6.0** | Backend LiveSession + mixed discover | Ready for Render |
+| **6.1** | Mobile Live UI | Next |
+| **6.2** | Commerce inside Live | Planned |
+| **6.3** | Replay | Planned |
+| **6.4** | Live Analytics | Planned |
+| **6.5** | AI Live Assistant | Planned |
+
 ## Modules
 
 Live Streaming, Streaming Provider Integration, Pinned Products, Live Chat, Viewer Count, Stream Discovery
 
-## Backend Deliverables
+## Backend Deliverables (6.0)
 
-- [ ] Migrations: live_streams, live_stream_products, live_chat_messages
-- [ ] LiveStreamService + StreamingProviderInterface
-- [ ] Agora provider implementation (default)
-- [ ] Start/end stream, generate publisher/subscriber tokens
-- [ ] Pin/unpin products during stream
-- [ ] Live chat (REST + polling for MVP)
-- [ ] Active streams listing
-- [ ] Events: LiveStreamStarted, LiveStreamEnded
-- [ ] Push notification to followers when seller goes live
-- [ ] Feature tests: start stream, join stream, chat, pin product
+- [x] Migrations: `live_sessions`, pin timeline, typed chat, viewer metrics, analytics events
+- [x] `LiveSessionService` + `StreamingProviderInterface`
+- [x] Fake provider (default on Render) + Agora (env)
+- [x] Start/end session, publisher/subscriber tokens
+- [x] Pin/unpin products (max 3) with `offset_seconds`
+- [x] Live chat REST (`user` / `system` / `commerce`)
+- [x] Active listing + `GET /discover` + mixed `/feed/for-you`
+- [x] Events: `LiveSessionStarted` / `LiveSessionEnded` + follower push hook
+- [x] Feature tests: `LiveSessionTest`
 
-## Mobile Deliverables
+## Mobile Deliverables (6.1+)
 
-- [ ] "Go Live" screen for sellers (title, select products)
-- [ ] Live broadcaster view (camera + overlay controls)
-- [ ] Live viewer screen (video + chat + pinned products)
-- [ ] Pin product overlay during live stream
-- [ ] Live chat input + message list
-- [ ] Active live streams discovery feed
-- [ ] Tap pinned product → add to cart without leaving stream
-- [ ] Agora SDK integration (Flutter)
+- [ ] "Go Live" screen for sellers
+- [ ] Live broadcaster / viewer screens
+- [ ] Pin overlay + chat polling
+- [ ] Discover feed consumes `/discover`
+- [ ] Pinned product → cart (6.2)
+- [ ] Agora SDK (native; placeholder on web)
 
 ## API Endpoints
 
-`GET /live`, `POST /live/start`, `GET /live/{id}`, `POST /live/{id}/end`, `POST/DELETE /live/{id}/pin-product`, `GET /live/{id}/chat`, `POST /live/{id}/chat`
+`GET /discover`, `GET /live`, `POST /live/start`, `GET /live/{id}`, `POST /live/{id}/end`, `POST/DELETE /live/{id}/pin-product`, `GET/POST /live/{id}/chat`, `POST /live/{id}/join|leave`
 
 ## Acceptance Criteria
 
-- [ ] Sellers can start a live stream from the app
-- [ ] Viewers can join and watch live streams
-- [ ] Live chat works (3–5 second polling)
-- [ ] Sellers can pin up to 3 products during stream
-- [ ] Viewers can add pinned products to cart during stream
-- [ ] Followers receive push notification when seller goes live
-- [ ] Viewer count displayed
-- [ ] Stream ends cleanly with status update
-- [ ] All live streaming endpoints have Feature tests passing
+- [x] Backend session lifecycle + chat + pin + metrics
+- [x] Mixed discover/for-you can return `type=live`
+- [ ] Mobile go-live / watch (6.1)
+- [ ] In-stream add-to-cart (6.2)
+- [x] Follower LIVE_STARTED push hook (stub FCM)
+- [x] Feature tests present for live APIs
 
 ---
 

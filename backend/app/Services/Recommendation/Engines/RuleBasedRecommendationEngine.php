@@ -6,6 +6,7 @@ namespace App\Services\Recommendation\Engines;
 
 use App\Contracts\Recommendation\RankingPipelineStageInterface;
 use App\Contracts\Recommendation\RecommendationEngineInterface;
+use App\Contracts\Repositories\LiveSessionRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
 use App\Services\Recommendation\CandidateGeneratorService;
 use App\Services\Recommendation\DTOs\CandidateCollection;
@@ -22,6 +23,7 @@ class RuleBasedRecommendationEngine implements RecommendationEngineInterface
     public function __construct(
         private readonly CandidateGeneratorService $candidateGenerator,
         private readonly VideoRepositoryInterface $videos,
+        private readonly LiveSessionRepositoryInterface $liveSessions,
         private readonly array $stages,
     ) {}
 
@@ -34,12 +36,18 @@ class RuleBasedRecommendationEngine implements RecommendationEngineInterface
         $exclusionIds = $this->candidateGenerator->exclusionVideoIds($context);
         $explorationCandidates = $this->candidateGenerator->explorationCandidates($context);
         $videoModels = $this->videos->findPublishedByIds($candidates->videoIds())->keyBy('id');
+        $liveIds = $candidates->liveIds();
+        $liveModels = $this->liveSessions
+            ->listLive(max(100, count($liveIds)))
+            ->filter(static fn ($session): bool => in_array((string) $session->id, $liveIds, true))
+            ->keyBy('id');
 
         $rankingContext = new RankingContext(
             feedContext: $context,
             exclusionVideoIds: $exclusionIds,
             videos: $videoModels,
             explorationCandidates: $explorationCandidates,
+            liveSessions: $liveModels,
         );
 
         $items = array_map(
@@ -47,6 +55,7 @@ class RuleBasedRecommendationEngine implements RecommendationEngineInterface
                 videoId: $candidate->videoId,
                 score: 0.0,
                 sources: $candidate->sources,
+                type: $candidate->type,
             ),
             $candidates->items,
         );

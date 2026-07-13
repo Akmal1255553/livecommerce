@@ -6,11 +6,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Contracts\Recommendation\RecommendationServiceInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\ContentItemResource;
 use App\Http\Resources\VideoResource;
 use App\Http\Responses\ApiResponse;
+use App\Services\Recommendation\DTOs\ContentItem;
 use App\Services\Video\VideoService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class FeedController extends Controller
 {
@@ -58,7 +61,7 @@ class FeedController extends Controller
         $page = $this->recommendations->feedForYou($request->query('cursor'), $limit, $request->user());
 
         return ApiResponse::cursorPaginated(
-            VideoResource::collection($page->items),
+            $this->contentItemCollection($page->items),
             $page,
         );
     }
@@ -72,5 +75,20 @@ class FeedController extends Controller
             VideoResource::collection($page->items),
             $page,
         );
+    }
+
+    /**
+     * @param  \Illuminate\Support\Collection<int, ContentItem>  $items
+     */
+    private function contentItemCollection($items): AnonymousResourceCollection
+    {
+        $resources = $items->map(
+            static fn (ContentItem $item): ContentItemResource => new ContentItemResource(
+                $item->type,
+                $item->payload,
+            ),
+        );
+
+        return ContentItemResource::collection($resources);
     }
 }

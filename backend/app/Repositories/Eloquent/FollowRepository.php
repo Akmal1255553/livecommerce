@@ -65,4 +65,13 @@ class FollowRepository extends BaseEloquentRepository implements FollowRepositor
             ->orderByDesc('follows.created_at')
             ->paginate(perPage: $perPage, page: $page);
     }
+
+    public function followerIds(string $userId): array
+    {
+        return $this->model->newQuery()
+            ->where('following_id', $userId)
+            ->pluck('follower_id')
+            ->map(static fn ($id): string => (string) $id)
+            ->all();
+    }
 }
