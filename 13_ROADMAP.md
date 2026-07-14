@@ -818,7 +818,7 @@ Seller Application, Seller Dashboard, Product Management, Order Management, Stor
 | ID | Scope | Status |
 |----|--------|--------|
 | **6.0** | Backend LiveSession + mixed discover | Ready for Render |
-| **6.1** | Mobile Live UI | Next |
+| **6.1** | Mobile Live UI | In progress |
 | **6.2** | Commerce inside Live | Planned |
 | **6.3** | Replay | Planned |
 | **6.4** | Live Analytics | Planned |
@@ -842,11 +842,11 @@ Live Streaming, Streaming Provider Integration, Pinned Products, Live Chat, View
 
 ## Mobile Deliverables (6.1+)
 
-- [ ] "Go Live" screen for sellers
-- [ ] Live broadcaster / viewer screens
-- [ ] Pin overlay + chat polling
-- [ ] Discover feed consumes `/discover`
-- [ ] Pinned product → cart (6.2)
+- [x] "Go Live" screen for sellers
+- [x] Live broadcaster / viewer screens (placeholder video on web)
+- [x] Pin overlay + chat polling
+- [x] Live discovery list (`/live`)
+- [ ] Pinned product → cart without leaving stream (6.2 attribution)
 - [ ] Agora SDK (native; placeholder on web)
 
 ## API Endpoints

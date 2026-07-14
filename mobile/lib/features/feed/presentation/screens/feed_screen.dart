@@ -46,6 +46,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         title: const Text('LiveCommerce'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.live_tv_outlined),
+            tooltip: 'Live now',
+            onPressed: () => context.push('/live'),
+          ),
+          IconButton(
             icon: Badge(
               isLabelVisible: cart.itemCount > 0,
               label: Text('${cart.itemCount}'),

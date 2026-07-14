@@ -15,6 +15,9 @@ import 'package:livecommerce_mobile/features/commerce/presentation/screens/order
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/orders_screen.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/product_screen.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/screens/feed_screen.dart';
+import 'package:livecommerce_mobile/features/live/presentation/screens/go_live_screen.dart';
+import 'package:livecommerce_mobile/features/live/presentation/screens/live_discovery_screen.dart';
+import 'package:livecommerce_mobile/features/live/presentation/screens/live_room_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/public_store_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_apply_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_dashboard_screen.dart';
@@ -153,6 +156,22 @@ class AppRouter {
           builder: (context, state) {
             final slug = state.pathParameters['slug']!;
             return PublicStoreScreen(slug: slug);
+          },
+        ),
+        GoRoute(
+          path: '/live',
+          builder: (context, state) => const LiveDiscoveryScreen(),
+        ),
+        GoRoute(
+          path: '/live/go',
+          builder: (context, state) => const GoLiveScreen(),
+        ),
+        GoRoute(
+          path: '/live/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            final host = state.uri.queryParameters['host'] == '1';
+            return LiveRoomScreen(sessionId: id, asHost: host);
           },
         ),
       ],

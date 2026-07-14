@@ -13,6 +13,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 6.1 — Mobile Live
+
+- Feature module `mobile/lib/features/live/` — discovery, go-live, room (chat poll, pin, join/leave)
+- Routes: `/live`, `/live/go`, `/live/:id`
+- Feed AppBar Live shortcut; Seller dashboard **Go Live**
+- Chrome: LIVE video placeholder (Agora deferred)
+- Blueprint: [blueprints/sprint-6.1-mobile-live.md](./blueprints/sprint-6.1-mobile-live.md)
+
 #### Sprint 6.0 — Live Commerce (backend foundation)
 
 - Domain: `LiveSession` (+ pin timeline, typed chat `user|system|commerce`, viewer metrics, analytics events)
