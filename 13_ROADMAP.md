@@ -877,39 +877,39 @@ Payment Gateway Integration, Transaction Processing, Webhooks, Refunds, Order Pa
 
 ## Backend Deliverables
 
-- [ ] PaymentGatewayInterface + local gateway adapter (Click/Payme/Uzum)
-- [ ] Payment initiation on checkout (real gateway redirect)
-- [ ] Webhook endpoint with signature verification
-- [ ] ProcessPaymentWebhookJob
-- [ ] Order payment status lifecycle (pending → paid → failed)
-- [ ] Idempotent webhook processing
-- [ ] Basic refund request flow
-- [ ] Payment reference storage on orders
-- [ ] Seller payout tracking table (basic, manual payout for MVP)
-- [ ] Feature tests: payment initiation, webhook processing, refund
+- [x] PaymentGatewayInterface + local gateway adapter (Click/Payme/Uzum)
+- [x] Payment initiation on checkout (real gateway redirect)
+- [x] Webhook endpoint with signature verification
+- [x] ProcessPaymentWebhookJob
+- [x] Order payment status lifecycle (pending → paid → failed)
+- [x] Idempotent webhook processing
+- [x] Basic refund request flow
+- [x] Payment reference storage on orders
+- [x] Seller payout tracking table (basic, manual payout for MVP)
+- [x] Feature tests: payment initiation, webhook processing, refund
 
 ## Mobile Deliverables
 
-- [ ] Payment method selection in checkout
-- [ ] Redirect to payment gateway (WebView or deep link)
-- [ ] Payment result handling (success/failure/cancel)
-- [ ] Order payment status display
-- [ ] Refund request screen (from order detail)
+- [x] Payment method selection in checkout
+- [x] Redirect to payment gateway (WebView or deep link)
+- [x] Payment result handling (success/failure/cancel)
+- [x] Order payment status display
+- [x] Refund request screen (from order detail)
 
 ## API Endpoints
 
-`POST /orders` (updated with real payment), `POST /webhooks/payment`, `POST /orders/{id}/cancel`, `POST /orders/{id}/refund`, `GET /refunds/{id}`
+`POST /checkout` (payment_url when async), `POST /webhooks/payment`, `POST /payments/sandbox/{id}/complete`, `POST /orders/{id}/cancel`, `POST /orders/{id}/refund`, `GET /refunds/{id}`
 
 ## Acceptance Criteria
 
-- [ ] Users can pay for orders via local payment gateway
-- [ ] Payment webhooks update order status correctly
-- [ ] Duplicate webhooks handled idempotently
-- [ ] Failed payments show clear error to user
-- [ ] Refund request can be submitted
-- [ ] No card data stored on platform
+- [x] Users can pay for orders via local payment gateway
+- [x] Payment webhooks update order status correctly
+- [x] Duplicate webhooks handled idempotently
+- [x] Failed payments show clear error to user
+- [x] Refund request can be submitted
+- [x] No card data stored on platform
 - [ ] Payment flow tested end-to-end on staging
-- [ ] All payment endpoints have Feature tests passing
+- [x] All payment endpoints have Feature tests passing
 
 ---
 

@@ -13,6 +13,15 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 7 — Payments
+
+- Local payment gateway (`PAYMENT_GATEWAY=local|click|payme|uzum`) with redirect URL; `fake` stays instant-paid for tests
+- `POST /webhooks/payment` (HMAC `X-Signature`) + `ProcessPaymentWebhookJob` + idempotent `payment_webhook_events`
+- Sandbox complete: `POST /payments/sandbox/{id}/complete` for mobile Pay/Cancel
+- `seller_payouts` on successful payment (manual MVP)
+- Mobile: payment method (Click/Payme/Uzum) → `/payment/:id` → success/fail; refund request from order detail
+- Blueprint: [blueprints/sprint-7-payments.md](./blueprints/sprint-7-payments.md)
+
 #### Sprint 6.5 — AI Live Assistant (rule-based)
 
 - Host API: `GET /live/{id}/assistant/suggestions` (pin / FAQ reply / engage tips)

@@ -116,7 +116,11 @@ use App\Services\Order\DateSequenceOrderNumberGenerator;
 use App\Services\Order\OrderService;
 use App\Services\Order\OrderStateMachine;
 use App\Services\Order\ShortCodeOrderNumberGenerator;
+use App\Contracts\Services\PaymentWebhookProcessorInterface;
+use App\Listeners\ReleaseInventoryOnOrderCancelled;
 use App\Services\Payment\FakePaymentGateway;
+use App\Services\Payment\LocalPaymentGateway;
+use App\Services\Payment\PaymentWebhookProcessor;
 use App\Services\Pricing\ProductPricingService;
 use App\Services\Recommendation\RecommendationService;
 use App\Services\Shipping\FixedShippingCalculator;
@@ -182,7 +186,6 @@ class RepositoryServiceProvider extends ServiceProvider
         CouponServiceInterface::class => NoDiscountCouponService::class,
         ShippingCalculatorInterface::class => FixedShippingCalculator::class,
         PricingServiceInterface::class => ProductPricingService::class,
-        PaymentGatewayInterface::class => FakePaymentGateway::class,
         OrderServiceInterface::class => OrderService::class,
         OrderStateMachineInterface::class => OrderStateMachine::class,
         TaxServiceInterface::class => ZeroTaxService::class,
@@ -237,6 +240,20 @@ class RepositoryServiceProvider extends ServiceProvider
 
             return $app->make(FakeStreamingProvider::class);
         });
+
+        $this->app->singleton(PaymentGatewayInterface::class, function ($app): PaymentGatewayInterface {
+            $driver = (string) config('payment.driver', 'fake');
+
+            return match ($driver) {
+                'local', 'click', 'payme', 'uzum' => $app->make(LocalPaymentGateway::class),
+                default => $app->make(FakePaymentGateway::class),
+            };
+        });
+
+        $this->app->singleton(
+            PaymentWebhookProcessorInterface::class,
+            PaymentWebhookProcessor::class,
+        );
     }
 
     public function boot(): void
@@ -250,6 +267,7 @@ class RepositoryServiceProvider extends ServiceProvider
         Event::listen(OrderCreated::class, [RecordOrderAnalytics::class, 'handleOrderCreated']);
         Event::listen(OrderPaid::class, [RecordOrderAnalytics::class, 'handleOrderPaid']);
         Event::listen(OrderCancelled::class, [RecordOrderAnalytics::class, 'handleOrderCancelled']);
+        Event::listen(OrderCancelled::class, ReleaseInventoryOnOrderCancelled::class);
         Event::listen(RefundRequested::class, [RecordOrderAnalytics::class, 'handleRefundRequested']);
         Event::listen(RefundCompleted::class, [RecordOrderAnalytics::class, 'handleRefundCompleted']);
     }

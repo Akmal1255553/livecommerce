@@ -13,7 +13,9 @@ import 'package:livecommerce_mobile/features/commerce/presentation/screens/check
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/order_detail_screen.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/order_success_screen.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/orders_screen.dart';
+import 'package:livecommerce_mobile/features/commerce/presentation/screens/payment_screen.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/product_screen.dart';
+import 'package:livecommerce_mobile/features/commerce/presentation/screens/refund_request_screen.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/screens/feed_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/go_live_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/live_discovery_screen.dart';
@@ -110,6 +112,29 @@ class AppRouter {
           builder: (context, state) => const CheckoutScreen(),
         ),
         GoRoute(
+          path: '/payment/:id',
+          builder: (context, state) {
+            final orderId = state.pathParameters['id']!;
+            final extra = state.extra;
+            Order? order;
+            String? paymentUrl;
+            if (extra is Map) {
+              final rawOrder = extra['order'];
+              if (rawOrder is Order) {
+                order = rawOrder;
+              }
+              paymentUrl = extra['paymentUrl'] as String?;
+            } else if (extra is Order) {
+              order = extra;
+            }
+            return PaymentScreen(
+              orderId: orderId,
+              initialOrder: order,
+              paymentUrl: paymentUrl,
+            );
+          },
+        ),
+        GoRoute(
           path: '/order-success/:id',
           builder: (context, state) {
             final orderId = state.pathParameters['id']!;
@@ -123,6 +148,13 @@ class AppRouter {
         GoRoute(
           path: '/orders',
           builder: (context, state) => const OrdersScreen(),
+        ),
+        GoRoute(
+          path: '/orders/:id/refund',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return RefundRequestScreen(orderId: id);
+          },
         ),
         GoRoute(
           path: '/orders/:id',

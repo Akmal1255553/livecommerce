@@ -8,12 +8,26 @@ use App\Contracts\Services\PaymentGatewayInterface;
 use App\DTOs\Payment\PaymentInitiationResult;
 use App\Models\Order;
 
+/**
+ * Instant success — used in Feature tests and PAYMENT_GATEWAY=fake.
+ * No redirect URL; CheckoutService marks the order paid immediately.
+ */
 class FakePaymentGateway implements PaymentGatewayInterface
 {
+    public function name(): string
+    {
+        return 'fake';
+    }
+
     public function initiate(Order $order): PaymentInitiationResult
     {
         return PaymentInitiationResult::succeeded(
             transactionId: 'fake-'.$order->id,
         );
+    }
+
+    public function verifyWebhookSignature(string $rawPayload, ?string $signatureHeader): bool
+    {
+        return true;
     }
 }

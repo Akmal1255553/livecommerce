@@ -17,6 +17,10 @@ interface InventoryServiceInterface
 
     public function releaseReservation(string $reservationGroupId): void;
 
+    public function confirmReservationForOrder(string $orderId): void;
+
+    public function releaseReservationForOrder(string $orderId): void;
+
     /** Release all active reservations past TTL (scheduled job). */
     public function releaseExpiredReservations(): int;
 }

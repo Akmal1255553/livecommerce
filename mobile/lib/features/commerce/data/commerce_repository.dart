@@ -61,7 +61,7 @@ class CommerceRemoteDataSource {
   Future<CheckoutResult> checkout({
     required int cartVersion,
     required ShippingAddress shippingAddress,
-    String paymentMethod = 'fake',
+    String paymentMethod = 'click',
     String? couponCode,
     String? notes,
   }) async {
@@ -111,6 +111,33 @@ class CommerceRemoteDataSource {
     return Order.fromJson(data);
   }
 
+  Future<Order> completeSandboxPayment({
+    required String orderId,
+    required String result,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/payments/sandbox/$orderId/complete',
+      data: {'result': result},
+    );
+    final data = response.data!['data'] as Map<String, dynamic>;
+    return Order.fromJson(unwrapApiResource(data['order']));
+  }
+
+  Future<Order> requestRefund({
+    required String orderId,
+    required String reason,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/orders/$orderId/refund',
+      data: {'reason': reason},
+      options: Options(
+        headers: {'Idempotency-Key': _newIdempotencyKey()},
+      ),
+    );
+    final data = response.data!['data'] as Map<String, dynamic>;
+    return Order.fromJson(data);
+  }
+
   static String _newIdempotencyKey() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final random = Random.secure();
@@ -142,7 +169,7 @@ class CommerceRepository {
   Future<CheckoutResult> checkout({
     required int cartVersion,
     required ShippingAddress shippingAddress,
-    String paymentMethod = 'fake',
+    String paymentMethod = 'click',
     String? couponCode,
     String? notes,
   }) =>
@@ -157,4 +184,16 @@ class CommerceRepository {
   Future<OrderPage> listOrders({int page = 1}) => _remote.fetchOrders(page: page);
 
   Future<Order> getOrder(String id) => _remote.fetchOrder(id);
+
+  Future<Order> completeSandboxPayment({
+    required String orderId,
+    required String result,
+  }) =>
+      _remote.completeSandboxPayment(orderId: orderId, result: result);
+
+  Future<Order> requestRefund({
+    required String orderId,
+    required String reason,
+  }) =>
+      _remote.requestRefund(orderId: orderId, reason: reason);
 }

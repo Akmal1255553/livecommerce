@@ -110,6 +110,31 @@ class ProductInventoryService implements InventoryServiceInterface
         });
     }
 
+    public function confirmReservationForOrder(string $orderId): void
+    {
+        $groupId = InventoryReservation::query()
+            ->where('order_id', $orderId)
+            ->where('status', InventoryReservationStatus::Active)
+            ->value('reservation_group_id');
+
+        if ($groupId !== null) {
+            $this->confirmReservation((string) $groupId);
+        }
+    }
+
+    public function releaseReservationForOrder(string $orderId): void
+    {
+        $groupIds = InventoryReservation::query()
+            ->where('order_id', $orderId)
+            ->where('status', InventoryReservationStatus::Active)
+            ->distinct()
+            ->pluck('reservation_group_id');
+
+        foreach ($groupIds as $groupId) {
+            $this->releaseReservation((string) $groupId);
+        }
+    }
+
     public function releaseExpiredReservations(): int
     {
         $groupIds = InventoryReservation::query()

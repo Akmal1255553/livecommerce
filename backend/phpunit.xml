@@ -36,5 +36,7 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="PAYMENT_GATEWAY" value="fake"/>
+        <env name="PAYMENT_WEBHOOK_SECRET" value="test-webhook-secret"/>
     </php>
 </phpunit>

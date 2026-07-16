@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/money_amount.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
@@ -59,7 +60,27 @@ class _OrderDetailBody extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text('Status: ${order.status}'),
+        if (order.paymentStatus != null)
+          Text('Payment: ${order.paymentStatus}'),
+        if (order.paymentMethod != null)
+          Text('Method: ${order.paymentMethod}'),
         if (order.createdAt != null) Text('Placed: ${order.createdAt}'),
+        if (order.isAwaitingPayment) ...[
+          const SizedBox(height: 16),
+          FilledButton(
+            onPressed: () => context.push('/payment/${order.id}', extra: {
+              'order': order,
+            }),
+            child: const Text('Continue payment'),
+          ),
+        ],
+        if (order.canRequestRefund) ...[
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: () => context.push('/orders/${order.id}/refund'),
+            child: const Text('Request refund'),
+          ),
+        ],
         const SizedBox(height: 20),
         Text('Items', style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
@@ -120,10 +141,10 @@ class _TotalRow extends StatelessWidget {
         ? Theme.of(context).textTheme.titleMedium?.copyWith(
               fontWeight: FontWeight.w700,
             )
-        : Theme.of(context).textTheme.bodyLarge;
+        : Theme.of(context).textTheme.bodyMedium;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

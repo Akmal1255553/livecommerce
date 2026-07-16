@@ -59,3 +59,7 @@ services:
         value: "15"
       - key: JWT_REFRESH_TTL
         value: "43200"
+      - key: PAYMENT_GATEWAY
+        value: local
+      - key: PAYMENT_WEBHOOK_SECRET
+        generateValue: true

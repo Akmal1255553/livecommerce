@@ -125,6 +125,10 @@ class Order {
     this.items = const [],
     this.shippingAddress,
     this.createdAt,
+    this.paymentStatus,
+    this.paymentMethod,
+    this.paymentProvider,
+    this.paymentReference,
   });
 
   final String id;
@@ -135,11 +139,21 @@ class Order {
   final List<OrderItem> items;
   final ShippingAddress? shippingAddress;
   final String? createdAt;
+  final String? paymentStatus;
+  final String? paymentMethod;
+  final String? paymentProvider;
+  final String? paymentReference;
+
+  bool get isAwaitingPayment => status == 'awaiting_payment';
+
+  bool get canRequestRefund =>
+      status == 'paid' || status == 'delivered' || status == 'completed';
 
   factory Order.fromJson(Map<String, dynamic> json) {
     final itemsJson = json['items'] as List<dynamic>? ?? [];
     final shipment = json['shipment'] as Map<String, dynamic>?;
     final addressJson = shipment?['address'] as Map<String, dynamic>?;
+    final payment = json['payment'] as Map<String, dynamic>?;
 
     return Order(
       id: json['id'] as String,
@@ -153,6 +167,10 @@ class Order {
       shippingAddress:
           addressJson != null ? ShippingAddress.fromJson(addressJson) : null,
       createdAt: json['created_at'] as String?,
+      paymentStatus: payment?['status'] as String?,
+      paymentMethod: payment?['method'] as String?,
+      paymentProvider: payment?['provider'] as String?,
+      paymentReference: payment?['reference'] as String?,
     );
   }
 }

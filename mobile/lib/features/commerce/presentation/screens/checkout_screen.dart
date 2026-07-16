@@ -19,6 +19,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _cityController = TextEditingController();
   final _addressController = TextEditingController();
   final _postalCodeController = TextEditingController();
+  String _paymentMethod = 'click';
 
   @override
   void initState() {
@@ -65,21 +66,34 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       postalCode: _postalCodeController.text.trim(),
     );
 
-    final order = await ref.read(checkoutNotifierProvider.notifier).submit(
+    final result = await ref.read(checkoutNotifierProvider.notifier).submit(
           cartVersion: cart.version,
           address: address,
+          paymentMethod: _paymentMethod,
         );
 
     if (!mounted) {
       return;
     }
 
-    if (order != null) {
+    if (result != null) {
       await ref.read(cartNotifierProvider.notifier).load();
       if (!mounted) {
         return;
       }
-      context.go('/order-success/${order.id}', extra: order);
+
+      final order = result.order;
+      if (order.isAwaitingPayment || result.paymentUrl != null) {
+        context.go(
+          '/payment/${order.id}',
+          extra: {
+            'order': order,
+            'paymentUrl': result.paymentUrl,
+          },
+        );
+      } else {
+        context.go('/order-success/${order.id}', extra: order);
+      }
     } else {
       final error = ref.read(checkoutNotifierProvider).error;
       if (error != null) {
@@ -126,6 +140,23 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     ),
                     const SizedBox(height: 16),
                   ],
+                  Text(
+                    'Payment method',
+                    style: Theme.of(context).textTheme.titleMedium,
+                  ),
+                  const SizedBox(height: 8),
+                  SegmentedButton<String>(
+                    segments: const [
+                      ButtonSegment(value: 'click', label: Text('Click')),
+                      ButtonSegment(value: 'payme', label: Text('Payme')),
+                      ButtonSegment(value: 'uzum', label: Text('Uzum')),
+                    ],
+                    selected: {_paymentMethod},
+                    onSelectionChanged: (value) {
+                      setState(() => _paymentMethod = value.first);
+                    },
+                  ),
+                  const SizedBox(height: 16),
                   Text(
                     'Shipping address',
                     style: Theme.of(context).textTheme.titleMedium,

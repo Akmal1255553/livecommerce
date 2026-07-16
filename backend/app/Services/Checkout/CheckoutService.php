@@ -111,7 +111,7 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
                 lines: $snapshots,
                 totals: $totals,
                 payment: new PaymentSnapshot(
-                    provider: 'fake',
+                    provider: $this->paymentGateway->name(),
                     method: $data->paymentMethod,
                     transactionId: null,
                     amount: $totals->total,
@@ -148,6 +148,22 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
             PaymentFailed::dispatch($order, $payment->failureReason ?? 'Payment failed');
 
             throw new PaymentFailedException($payment->failureReason ?? 'Payment failed');
+        }
+
+        $order->payment_provider = $this->paymentGateway->name();
+        $order->payment_transaction_id = $payment->transactionId;
+        $order->payment_reference = $payment->transactionId;
+        $order->save();
+
+        // Redirect gateways: stay awaiting_payment until webhook / sandbox complete.
+        if ($payment->paymentUrl !== null) {
+            $result = new CheckoutResult(
+                $order->fresh(['items.product', 'transitions', 'store', 'activeRefund']),
+                $payment->paymentUrl,
+            );
+            $this->storeIdempotency($data, $requestHash, $result);
+
+            return $result;
         }
 
         $order = $this->orders->markPaid($order, $payment->transactionId);

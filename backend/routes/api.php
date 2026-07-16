@@ -18,7 +18,8 @@ use App\Http\Controllers\Api\V1\LiveSessionController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
-use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\PaymentWebhookController;
+use App\Http\Controllers\Api\V1\SandboxPaymentController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\SellerOrderController;
 use App\Http\Controllers\Api\V1\SellerStoreController;
@@ -32,6 +33,8 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
     Route::get('health', HealthController::class);
+
+    Route::post('webhooks/payment', PaymentWebhookController::class);
 
     Route::prefix('auth')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
@@ -115,6 +118,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('live/{id}/add-to-cart', [LiveSessionController::class, 'addToCart']);
 
         Route::post('checkout', [CheckoutController::class, 'store']);
+        Route::post('payments/sandbox/{id}/complete', [SandboxPaymentController::class, 'complete']);
 
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{id}', [OrderController::class, 'show']);

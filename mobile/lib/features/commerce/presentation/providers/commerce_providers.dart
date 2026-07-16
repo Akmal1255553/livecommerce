@@ -248,18 +248,20 @@ class CheckoutNotifier extends StateNotifier<CheckoutState> {
 
   final CommerceRepository _repository;
 
-  Future<Order?> submit({
+  Future<CheckoutResult?> submit({
     required int cartVersion,
     required ShippingAddress address,
+    String paymentMethod = 'click',
   }) async {
     state = state.copyWith(isSubmitting: true, clearError: true, clearOrder: true);
     try {
       final result = await _repository.checkout(
         cartVersion: cartVersion,
         shippingAddress: address,
+        paymentMethod: paymentMethod,
       );
       state = state.copyWith(isSubmitting: false, lastOrder: result.order);
-      return result.order;
+      return result;
     } catch (error) {
       state = state.copyWith(isSubmitting: false, error: describeFailure(error));
       return null;
