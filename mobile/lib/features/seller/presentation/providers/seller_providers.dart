@@ -281,3 +281,56 @@ final publicStoreProvider =
   final products = await repo.storeProducts(slug);
   return PublicStorePage(store: store, products: products);
 });
+
+class LiveAnalyticsOverviewState {
+  const LiveAnalyticsOverviewState({
+    this.overview,
+    this.isLoading = false,
+    this.error,
+  });
+
+  final SellerLiveAnalyticsOverview? overview;
+  final bool isLoading;
+  final String? error;
+
+  LiveAnalyticsOverviewState copyWith({
+    SellerLiveAnalyticsOverview? overview,
+    bool? isLoading,
+    String? error,
+    bool clearError = false,
+  }) {
+    return LiveAnalyticsOverviewState(
+      overview: overview ?? this.overview,
+      isLoading: isLoading ?? this.isLoading,
+      error: clearError ? null : (error ?? this.error),
+    );
+  }
+}
+
+class LiveAnalyticsOverviewNotifier
+    extends StateNotifier<LiveAnalyticsOverviewState> {
+  LiveAnalyticsOverviewNotifier(this._repository)
+      : super(const LiveAnalyticsOverviewState());
+
+  final SellerRepository _repository;
+
+  Future<void> load() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final overview = await _repository.liveAnalyticsOverview();
+      state = state.copyWith(overview: overview, isLoading: false);
+    } catch (error) {
+      state = state.copyWith(isLoading: false, error: describeFailure(error));
+    }
+  }
+}
+
+final liveAnalyticsOverviewProvider = StateNotifierProvider<
+    LiveAnalyticsOverviewNotifier, LiveAnalyticsOverviewState>((ref) {
+  return LiveAnalyticsOverviewNotifier(ref.watch(sellerRepositoryProvider));
+});
+
+final liveSessionAnalyticsProvider =
+    FutureProvider.family<LiveSessionAnalytics, String>((ref, sessionId) async {
+  return ref.watch(sellerRepositoryProvider).liveSessionAnalytics(sessionId);
+});

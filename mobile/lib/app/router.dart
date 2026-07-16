@@ -22,6 +22,8 @@ import 'package:livecommerce_mobile/features/live/presentation/screens/live_room
 import 'package:livecommerce_mobile/features/seller/presentation/screens/public_store_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_apply_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_dashboard_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_live_analytics_screen.dart';
+import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_live_session_analytics_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_order_detail_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_orders_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_product_form_screen.dart';
@@ -136,6 +138,17 @@ class AppRouter {
         GoRoute(
           path: '/seller',
           builder: (context, state) => const SellerDashboardScreen(),
+        ),
+        GoRoute(
+          path: '/seller/live/analytics',
+          builder: (context, state) => const SellerLiveAnalyticsScreen(),
+        ),
+        GoRoute(
+          path: '/seller/live/:id/analytics',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return SellerLiveSessionAnalyticsScreen(sessionId: id);
+          },
         ),
         GoRoute(
           path: '/seller/products',

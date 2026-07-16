@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\DiscoverController;
 use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
+use App\Http\Controllers\Api\V1\LiveAnalyticsController;
 use App\Http\Controllers\Api\V1\LiveSessionController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
@@ -88,6 +89,8 @@ Route::prefix('v1')->group(function (): void {
         Route::middleware('seller')->group(function (): void {
             Route::get('seller/dashboard', [SellerStoreController::class, 'dashboard']);
             Route::get('seller/analytics/summary', [SellerStoreController::class, 'analyticsSummary']);
+            Route::get('seller/live/analytics', [LiveAnalyticsController::class, 'overview']);
+            Route::get('seller/live/{id}/analytics', [LiveAnalyticsController::class, 'show']);
 
             Route::post('products', [ProductController::class, 'store']);
             Route::put('products/{id}', [ProductController::class, 'update']);

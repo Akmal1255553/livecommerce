@@ -13,6 +13,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 6.4 — Live Analytics
+
+- Seller APIs: `GET /seller/live/analytics`, `GET /seller/live/{id}/analytics`
+- Aggregates viewers, pins, add-to-cart, conversion, top products from live events
+- Mobile: Seller dashboard → Live analytics overview + session detail
+- Blueprint: [blueprints/sprint-6.4-live-analytics.md](./blueprints/sprint-6.4-live-analytics.md)
+
 #### Sprint 6.3 — Live Replay
 
 - On live end: Fake provider sets `replay_url`; API returns `duration_seconds` + `product_timeline`

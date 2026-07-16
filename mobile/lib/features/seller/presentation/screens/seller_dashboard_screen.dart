@@ -70,6 +70,12 @@ class _SellerDashboardScreenState extends ConsumerState<SellerDashboardScreen> {
                       label: const Text('Go Live'),
                     ),
                     const SizedBox(height: 12),
+                    OutlinedButton.icon(
+                      onPressed: () => context.push('/seller/live/analytics'),
+                      icon: const Icon(Icons.insights_outlined),
+                      label: const Text('Live analytics'),
+                    ),
+                    const SizedBox(height: 12),
                     FilledButton.icon(
                       onPressed: () => context.push('/seller/products'),
                       icon: const Icon(Icons.inventory_2_outlined),

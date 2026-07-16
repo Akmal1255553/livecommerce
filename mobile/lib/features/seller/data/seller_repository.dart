@@ -134,6 +134,25 @@ class SellerRemoteDataSource {
         .toList();
   }
 
+  Future<SellerLiveAnalyticsOverview> fetchLiveAnalyticsOverview({int limit = 20}) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/seller/live/analytics',
+      queryParameters: {'limit': limit},
+    );
+    return SellerLiveAnalyticsOverview.fromJson(
+      response.data!['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<LiveSessionAnalytics> fetchLiveSessionAnalytics(String sessionId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/seller/live/$sessionId/analytics',
+    );
+    return LiveSessionAnalytics.fromJson(
+      response.data!['data'] as Map<String, dynamic>,
+    );
+  }
+
   static String _newIdempotencyKey() {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final random = Random.secure();
@@ -203,4 +222,10 @@ class SellerRepository {
 
   Future<List<SellerProductSummary>> storeProducts(String slug, {int page = 1}) =>
       _remote.fetchStoreProducts(slug, page: page);
+
+  Future<SellerLiveAnalyticsOverview> liveAnalyticsOverview({int limit = 20}) =>
+      _remote.fetchLiveAnalyticsOverview(limit: limit);
+
+  Future<LiveSessionAnalytics> liveSessionAnalytics(String sessionId) =>
+      _remote.fetchLiveSessionAnalytics(sessionId);
 }

@@ -104,6 +104,39 @@ test('seller can start end pin and chat on live session', function () {
         ->assertOk()
         ->assertJsonPath('data.0.id', $sessionId)
         ->assertJsonPath('data.0.product_timeline.0.product_id', $product->id);
+
+    test()->withToken($seller['token'])
+        ->getJson('/api/v1/seller/live/analytics')
+        ->assertOk()
+        ->assertJsonPath('data.total_sessions', 1)
+        ->assertJsonPath('data.total_add_to_cart', 1)
+        ->assertJsonPath('data.sessions.0.session_id', $sessionId);
+
+    test()->withToken($seller['token'])
+        ->getJson("/api/v1/seller/live/{$sessionId}/analytics")
+        ->assertOk()
+        ->assertJsonPath('data.unique_viewers', 1)
+        ->assertJsonPath('data.products_pinned', 1)
+        ->assertJsonPath('data.products_added_to_cart', 1)
+        ->assertJsonPath('data.top_products.0.product_id', $product->id);
+});
+
+test('buyer cannot view seller live analytics', function () {
+    $seller = createSellerWithStore();
+    $sessionId = test()->withToken($seller['token'])
+        ->postJson('/api/v1/live/start', ['title' => 'Private Metrics'])
+        ->assertCreated()
+        ->json('data.id');
+
+    $buyer = registerUser('analyticsbuyer', 'analyticsbuyer@example.com');
+
+    test()->withToken($buyer['access_token'])
+        ->getJson('/api/v1/seller/live/analytics')
+        ->assertForbidden();
+
+    test()->withToken($buyer['access_token'])
+        ->getJson("/api/v1/seller/live/{$sessionId}/analytics")
+        ->assertForbidden();
 });
 
 test('pin product enforces max of three', function () {

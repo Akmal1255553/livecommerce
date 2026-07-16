@@ -820,8 +820,8 @@ Seller Application, Seller Dashboard, Product Management, Order Management, Stor
 | **6.0** | Backend LiveSession + mixed discover | Shipped |
 | **6.1** | Mobile Live UI | Shipped |
 | **6.2** | Commerce inside Live | Shipped |
-| **6.3** | Replay | Ready for Render |
-| **6.4** | Live Analytics | Planned |
+| **6.3** | Replay | Shipped |
+| **6.4** | Live Analytics | Ready for Render |
 | **6.5** | AI Live Assistant | Planned |
 
 ## Modules
@@ -851,7 +851,7 @@ Live Streaming, Streaming Provider Integration, Pinned Products, Live Chat, View
 
 ## API Endpoints
 
-`GET /discover`, `GET /live`, `GET /live/replays`, `POST /live/start`, `GET /live/{id}`, `POST /live/{id}/end`, `POST/DELETE /live/{id}/pin-product`, `GET/POST /live/{id}/chat`, `POST /live/{id}/join|leave`, `POST /live/{id}/add-to-cart`
+`GET /discover`, `GET /live`, `GET /live/replays`, `POST /live/start`, `GET /live/{id}`, `POST /live/{id}/end`, `POST/DELETE /live/{id}/pin-product`, `GET/POST /live/{id}/chat`, `POST /live/{id}/join|leave`, `POST /live/{id}/add-to-cart`, `GET /seller/live/analytics`, `GET /seller/live/{id}/analytics`
 
 ## Acceptance Criteria
 
