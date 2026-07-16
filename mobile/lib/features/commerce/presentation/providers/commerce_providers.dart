@@ -53,7 +53,15 @@ class CartNotifier extends StateNotifier<CartState> {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
       final cart = await _repository.getCart();
-      state = state.copyWith(cart: cart, isLoading: false);
+      final current = state.cart;
+      final shouldKeepLocal = current != null &&
+          !current.isEmpty &&
+          (cart.isEmpty || cart.version < current.version);
+
+      state = state.copyWith(
+        cart: shouldKeepLocal ? current : cart,
+        isLoading: false,
+      );
     } catch (error) {
       state = state.copyWith(isLoading: false, error: describeFailure(error));
     }

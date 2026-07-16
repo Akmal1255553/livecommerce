@@ -50,5 +50,40 @@ void main() {
       expect(cart.summary.itemCount, 1);
       expect(cart.summary.subtotal.amount, 50000);
     });
+
+    test('parses numeric ids from backend cart json', () {
+      final cart = Cart.fromJson({
+        'id': 12,
+        'type': 'user',
+        'version': 2,
+        'items': [
+          {
+            'id': 34,
+            'product': {
+              'id': 'prod-1',
+              'title': 'Test product',
+              'price': 50000,
+              'currency': 'UZS',
+              'status': 'active',
+            },
+            'variant': null,
+            'quantity': 1,
+            'unit_price': {'amount': 50000, 'currency': 'UZS'},
+            'line_total': {'amount': 50000, 'currency': 'UZS'},
+            'discount_amount': {'amount': 0, 'currency': 'UZS'},
+          },
+        ],
+        'summary': {
+          'subtotal': {'amount': 50000, 'currency': 'UZS'},
+          'discount_total': {'amount': 0, 'currency': 'UZS'},
+          'shipping_estimate': {'amount': 0, 'currency': 'UZS'},
+          'currency': 'UZS',
+          'item_count': 1,
+        },
+      });
+
+      expect(cart.id, '12');
+      expect(cart.items.first.id, '34');
+    });
   });
 }

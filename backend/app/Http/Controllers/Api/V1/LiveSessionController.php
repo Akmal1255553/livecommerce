@@ -143,8 +143,8 @@ class LiveSessionController extends Controller
         );
 
         return ApiResponse::success([
-            'cart' => new CartResource($result->cart),
-            'chat_message' => new LiveChatMessageResource($result->message),
+            'cart' => (new CartResource($result->cart))->resolve($request),
+            'chat_message' => (new LiveChatMessageResource($result->message))->resolve($request),
         ]);
     }
 }

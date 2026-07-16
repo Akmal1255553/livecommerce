@@ -43,6 +43,11 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
+    await ref.read(cartNotifierProvider.notifier).load();
+    if (!mounted) {
+      return;
+    }
+
     final cart = ref.read(cartNotifierProvider).cart;
     if (cart == null || cart.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,7 +79,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       if (!mounted) {
         return;
       }
-      context.go('/order-success', extra: order);
+      context.go('/order-success/${order.id}', extra: order);
     } else {
       final error = ref.read(checkoutNotifierProvider).error;
       if (error != null) {

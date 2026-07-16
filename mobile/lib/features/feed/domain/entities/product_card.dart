@@ -26,7 +26,7 @@ class ProductCard {
   factory ProductCard.fromJson(Map<String, dynamic> json) {
     return ProductCard(
       id: json['id'] as String,
-      title: json['title'] as String,
+      title: json['title'] as String? ?? 'Product',
       price: (json['price'] as num).toDouble(),
       compareAtPrice: json['compare_at_price'] != null
           ? (json['compare_at_price'] as num).toDouble()

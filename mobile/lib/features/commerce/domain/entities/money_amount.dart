@@ -10,8 +10,13 @@ class MoneyAmount {
   final String currency;
 
   factory MoneyAmount.fromJson(Map<String, dynamic> json) {
+    final amount = json['amount'];
     return MoneyAmount(
-      amount: json['amount'] as int? ?? 0,
+      amount: amount is int
+          ? amount
+          : amount is num
+              ? amount.toInt()
+              : int.tryParse(amount?.toString() ?? '') ?? 0,
       currency: json['currency'] as String? ?? 'UZS',
     );
   }

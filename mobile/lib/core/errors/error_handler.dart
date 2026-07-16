@@ -35,6 +35,12 @@ Failure mapExceptionToFailure(Object error) {
       return NotFoundFailure(_messageFromBody(data) ?? 'Resource not found.');
     }
 
+    if (statusCode == 409) {
+      return ServerFailure(
+        _messageFromBody(data) ?? 'Cart changed — refresh and try again.',
+      );
+    }
+
     if (statusCode == 422) {
       return ValidationFailure(
         _errorsFromBody(data),
@@ -55,7 +61,11 @@ Failure mapExceptionToFailure(Object error) {
     return ServerFailure(_messageFromBody(data) ?? 'Request failed.');
   }
 
-  return ServerFailure('Unexpected error.');
+  if (error is FormatException) {
+    return ServerFailure(error.message);
+  }
+
+  return ServerFailure(error.toString());
 }
 
 String? _messageFromBody(Object? data) {

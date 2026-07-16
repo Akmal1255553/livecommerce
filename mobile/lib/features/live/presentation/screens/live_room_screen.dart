@@ -27,10 +27,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() {
-      ref.read(liveRoomProvider(widget.sessionId).notifier).enter(asHost: widget.asHost);
-      ref.read(cartNotifierProvider.notifier).load();
-    });
+    Future.microtask(
+      () => ref
+          .read(liveRoomProvider(widget.sessionId).notifier)
+          .enter(asHost: widget.asHost),
+    );
   }
 
   @override
@@ -152,6 +153,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                           fit: StackFit.expand,
                           children: [
                             const _LivePlaceholder(),
+                            Positioned(
+                              left: 12,
+                              right: 12,
+                              bottom: 72,
+                              height: 110,
+                              child: _ChatList(messages: state.messages),
+                            ),
                             if (session != null && session.pinnedProducts.isNotEmpty)
                               Positioned(
                                 left: 12,
@@ -183,13 +191,6 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                   ),
                                 ),
                               ),
-                            Positioned(
-                              left: 12,
-                              right: 12,
-                              bottom: 72,
-                              height: 140,
-                              child: _ChatList(messages: state.messages),
-                            ),
                           ],
                         ),
                       ),
@@ -394,76 +395,84 @@ class _PinnedChip extends StatelessWidget {
     return Material(
       color: Colors.black54,
       borderRadius: BorderRadius.circular(12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(12),
-        onTap: onView,
-        child: Padding(
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (product.thumbnail != null)
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    product.thumbnail!,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
-                  ),
-                )
-              else
-                const Icon(Icons.shopping_bag, color: Colors.white70),
-              const SizedBox(width: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 120),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      product.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
-                    ),
-                    Text(
-                      '$price ${product.currency}',
-                      style: const TextStyle(
-                        color: Color(0xFFFF6B6B),
-                        fontWeight: FontWeight.w700,
-                        fontSize: 13,
+      child: Padding(
+        padding: const EdgeInsets.all(8),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: onView,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (product.thumbnail != null)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        product.thumbnail!,
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) =>
+                            const Icon(Icons.shopping_bag, color: Colors.white70),
                       ),
+                    )
+                  else
+                    const Icon(Icons.shopping_bag, color: Colors.white70),
+                  const SizedBox(width: 8),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 120),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          product.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              const TextStyle(color: Colors.white, fontSize: 12),
+                        ),
+                        Text(
+                          '$price ${product.currency}',
+                          style: const TextStyle(
+                            color: Color(0xFFFF6B6B),
+                            fontWeight: FontWeight.w700,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+            if (onAdd != null) ...[
+              const SizedBox(width: 6),
+              SizedBox(
+                width: 36,
+                height: 36,
+                child: IconButton.filled(
+                  style: IconButton.styleFrom(
+                    backgroundColor: const Color(0xFFFF6B6B),
+                    padding: EdgeInsets.zero,
+                  ),
+                  onPressed: isAdding ? null : onAdd,
+                  icon: isAdding
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : const Icon(Icons.add, size: 20),
                 ),
               ),
-              if (onAdd != null) ...[
-                const SizedBox(width: 6),
-                SizedBox(
-                  width: 36,
-                  height: 36,
-                  child: IconButton.filled(
-                    style: IconButton.styleFrom(
-                      backgroundColor: const Color(0xFFFF6B6B),
-                      padding: EdgeInsets.zero,
-                    ),
-                    onPressed: isAdding ? null : onAdd,
-                    icon: isAdding
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : const Icon(Icons.add, size: 20),
-                  ),
-                ),
-              ],
             ],
-          ),
+          ],
         ),
       ),
     );

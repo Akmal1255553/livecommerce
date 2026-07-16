@@ -1,9 +1,57 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
+import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 
-class OrderSuccessScreen extends StatelessWidget {
-  const OrderSuccessScreen({super.key, required this.order});
+class OrderSuccessScreen extends ConsumerWidget {
+  const OrderSuccessScreen({
+    super.key,
+    required this.orderId,
+    this.initialOrder,
+  });
+
+  final String orderId;
+  final Order? initialOrder;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (initialOrder != null) {
+      return _OrderSuccessBody(order: initialOrder!);
+    }
+
+    final orderAsync = ref.watch(orderDetailProvider(orderId));
+
+    return orderAsync.when(
+      loading: () => const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      ),
+      error: (error, _) => Scaffold(
+        appBar: AppBar(title: const Text('Order placed')),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(error.toString(), textAlign: TextAlign.center),
+                const SizedBox(height: 16),
+                FilledButton(
+                  onPressed: () => context.go('/orders'),
+                  child: const Text('View orders'),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      data: (order) => _OrderSuccessBody(order: order),
+    );
+  }
+}
+
+class _OrderSuccessBody extends StatelessWidget {
+  const _OrderSuccessBody({required this.order});
 
   final Order order;
 

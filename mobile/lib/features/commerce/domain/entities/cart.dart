@@ -1,6 +1,23 @@
 import 'package:livecommerce_mobile/features/commerce/domain/entities/money_amount.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
 
+String? _idToString(Object? value) {
+  if (value == null) {
+    return null;
+  }
+  return value.toString();
+}
+
+int _toInt(Object? value, {int fallback = 0}) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
 class CartVariantRef {
   const CartVariantRef({
     required this.id,
@@ -14,9 +31,9 @@ class CartVariantRef {
 
   factory CartVariantRef.fromJson(Map<String, dynamic> json) {
     return CartVariantRef(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      value: json['value'] as String,
+      id: _idToString(json['id']) ?? '',
+      name: json['name'] as String? ?? '',
+      value: json['value'] as String? ?? '',
     );
   }
 }
@@ -42,12 +59,12 @@ class CartLineItem {
 
   factory CartLineItem.fromJson(Map<String, dynamic> json) {
     return CartLineItem(
-      id: json['id'] as String,
+      id: _idToString(json['id']) ?? '',
       product: ProductCard.fromJson(json['product'] as Map<String, dynamic>),
       variant: json['variant'] != null
           ? CartVariantRef.fromJson(json['variant'] as Map<String, dynamic>)
           : null,
-      quantity: json['quantity'] as int,
+      quantity: _toInt(json['quantity'], fallback: 1),
       unitPrice: MoneyAmount.fromJson(json['unit_price'] as Map<String, dynamic>),
       lineTotal: MoneyAmount.fromJson(json['line_total'] as Map<String, dynamic>),
       discountAmount:
@@ -105,9 +122,9 @@ class Cart {
     final itemsJson = json['items'] as List<dynamic>? ?? [];
 
     return Cart(
-      id: json['id'] as String?,
+      id: _idToString(json['id']),
       type: json['type'] as String? ?? 'anonymous',
-      version: json['version'] as int? ?? 0,
+      version: _toInt(json['version']),
       items: itemsJson
           .map((item) => CartLineItem.fromJson(item as Map<String, dynamic>))
           .toList(),

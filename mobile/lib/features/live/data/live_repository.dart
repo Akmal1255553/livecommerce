@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:livecommerce_mobile/core/network/api_json.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 
@@ -120,11 +121,11 @@ class LiveRemoteDataSource {
       },
     );
     final data = response.data!['data'] as Map<String, dynamic>;
+    final cartJson = unwrapApiResource(data['cart']);
+    final chatJson = unwrapApiResource(data['chat_message']);
     return LiveAddToCartResult(
-      cart: Cart.fromJson(data['cart'] as Map<String, dynamic>),
-      chatMessage: LiveChatMessage.fromJson(
-        data['chat_message'] as Map<String, dynamic>,
-      ),
+      cart: Cart.fromJson(cartJson),
+      chatMessage: LiveChatMessage.fromJson(chatJson),
     );
   }
 }

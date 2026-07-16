@@ -1,6 +1,7 @@
 import 'dart:math';
 
 import 'package:dio/dio.dart';
+import 'package:livecommerce_mobile/core/network/api_json.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/product_detail.dart';
@@ -80,7 +81,7 @@ class CommerceRemoteDataSource {
 
     final data = response.data!['data'] as Map<String, dynamic>;
     return CheckoutResult(
-      order: Order.fromJson(data['order'] as Map<String, dynamic>),
+      order: Order.fromJson(unwrapApiResource(data['order'])),
       paymentUrl: data['payment_url'] as String?,
     );
   }

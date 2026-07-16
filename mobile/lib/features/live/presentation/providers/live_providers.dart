@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
-import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/live/data/live_repository.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
@@ -106,13 +105,13 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
     this._repository,
     this._sessionId,
     this._currentUserId,
-    this._onCartUpdated,
+    this._onCartSynced,
   ) : super(const LiveRoomState());
 
   final LiveRepository _repository;
   final String _sessionId;
   final String? _currentUserId;
-  final void Function(Cart cart)? _onCartUpdated;
+  final Future<void> Function()? _onCartSynced;
   Timer? _pollTimer;
   bool _joined = false;
 
@@ -193,11 +192,13 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
     state = state.copyWith(isAddingToCart: true, clearError: true);
     try {
       final result = await _repository.addToCart(_sessionId, productId);
-      _onCartUpdated?.call(result.cart);
       state = state.copyWith(
         messages: [...state.messages, result.chatMessage],
         isAddingToCart: false,
       );
+      if (_onCartSynced != null) {
+        await _onCartSynced!();
+      }
       return true;
     } catch (error) {
       state = state.copyWith(
@@ -245,7 +246,7 @@ final liveRoomProvider = StateNotifierProvider.autoDispose
     ref.watch(liveRepositoryProvider),
     sessionId,
     userId,
-    (cart) => ref.read(cartNotifierProvider.notifier).applyCart(cart),
+    () => ref.read(cartNotifierProvider.notifier).load(),
   );
   ref.onDispose(() {
     unawaited(notifier.leave());

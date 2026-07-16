@@ -1,5 +1,22 @@
 import 'package:livecommerce_mobile/features/commerce/domain/entities/money_amount.dart';
 
+String? _idToString(Object? value) {
+  if (value == null) {
+    return null;
+  }
+  return value.toString();
+}
+
+int _toInt(Object? value, {int fallback = 0}) {
+  if (value is int) {
+    return value;
+  }
+  if (value is num) {
+    return value.toInt();
+  }
+  return int.tryParse(value?.toString() ?? '') ?? fallback;
+}
+
 class ShippingAddress {
   const ShippingAddress({
     required this.fullName,
@@ -88,10 +105,10 @@ class OrderItem {
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
     return OrderItem(
-      id: json['id'] as String,
-      productTitle: json['product_title'] as String,
+      id: _idToString(json['id']) ?? '',
+      productTitle: json['product_title'] as String? ?? 'Product',
       variantName: json['variant_name'] as String?,
-      quantity: json['quantity'] as int,
+      quantity: _toInt(json['quantity'], fallback: 1),
       unitPrice: MoneyAmount.fromJson(json['unit_price'] as Map<String, dynamic>),
       lineTotal: MoneyAmount.fromJson(json['line_total'] as Map<String, dynamic>),
     );
@@ -126,9 +143,9 @@ class Order {
 
     return Order(
       id: json['id'] as String,
-      orderNumber: json['order_number'] as String,
-      status: json['status'] as String,
-      version: json['version'] as int? ?? 1,
+      orderNumber: json['order_number'] as String? ?? '',
+      status: json['status'] as String? ?? 'pending',
+      version: _toInt(json['version'], fallback: 1),
       totals: OrderTotals.fromJson(json['totals'] as Map<String, dynamic>),
       items: itemsJson
           .map((item) => OrderItem.fromJson(item as Map<String, dynamic>))

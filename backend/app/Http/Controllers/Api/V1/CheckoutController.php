@@ -37,7 +37,7 @@ class CheckoutController extends Controller
         ));
 
         return ApiResponse::success([
-            'order' => new OrderResource($result->order),
+            'order' => (new OrderResource($result->order))->resolve($request),
             'payment_url' => $result->paymentUrl,
         ], 201);
     }

@@ -107,10 +107,14 @@ class AppRouter {
           builder: (context, state) => const CheckoutScreen(),
         ),
         GoRoute(
-          path: '/order-success',
+          path: '/order-success/:id',
           builder: (context, state) {
-            final order = state.extra as Order;
-            return OrderSuccessScreen(order: order);
+            final orderId = state.pathParameters['id']!;
+            final initialOrder = state.extra is Order ? state.extra as Order : null;
+            return OrderSuccessScreen(
+              orderId: orderId,
+              initialOrder: initialOrder,
+            );
           },
         ),
         GoRoute(
