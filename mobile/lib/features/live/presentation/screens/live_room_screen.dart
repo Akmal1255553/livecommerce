@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:livecommerce_mobile/features/live/data/live_repository.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/providers/seller_providers.dart';
@@ -96,6 +97,91 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
   }
 
+  Future<void> _openAssistant() async {
+    final suggestions = await ref
+        .read(liveRoomProvider(widget.sessionId).notifier)
+        .loadAssistantSuggestions();
+    if (!mounted) {
+      return;
+    }
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) {
+        if (suggestions.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(24),
+            child: Text('No suggestions right now'),
+          );
+        }
+
+        return SafeArea(
+          child: ListView(
+            shrinkWrap: true,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+            children: [
+              Text(
+                'Live assistant',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Rule-based tips (ADR-012). OpenAI comes in Sprint 9+.',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
+              const SizedBox(height: 12),
+              ...suggestions.map((s) {
+                return Card(
+                  child: ListTile(
+                    title: Text(s.title),
+                    subtitle: Text(s.body),
+                    trailing: s.action == null
+                        ? null
+                        : TextButton(
+                            onPressed: () async {
+                              Navigator.pop(context);
+                              await _applySuggestion(s);
+                            },
+                            child: Text(
+                              s.action == 'pin_product' ? 'Pin' : 'Use',
+                            ),
+                          ),
+                  ),
+                );
+              }),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _applySuggestion(LiveAssistantSuggestion suggestion) async {
+    if (suggestion.action == 'pin_product' && suggestion.productId != null) {
+      final ok = await ref
+          .read(liveRoomProvider(widget.sessionId).notifier)
+          .pinProduct(suggestion.productId!);
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(ok ? 'Product pinned' : 'Could not pin product')),
+      );
+      return;
+    }
+
+    if (suggestion.action == 'copy_reply' && suggestion.replyText != null) {
+      _chatController.text = suggestion.replyText!;
+      _chatController.selection = TextSelection.fromPosition(
+        TextPosition(offset: _chatController.text.length),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Reply drafted in chat box')),
+      );
+    }
+  }
+
   Future<void> _addPinnedToCart(String productId) async {
     final ok = await ref
         .read(liveRoomProvider(widget.sessionId).notifier)
@@ -147,6 +233,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         },
                         onClose: () => context.pop(),
                         onPin: state.isHost ? _pickPin : null,
+                        onAssistant: state.isHost ? _openAssistant : null,
                       ),
                       Expanded(
                         child: Stack(
@@ -244,6 +331,7 @@ class _LiveHeader extends StatelessWidget {
     required this.onCart,
     this.cartCount = 0,
     this.onPin,
+    this.onAssistant,
   });
 
   final LiveSession? session;
@@ -253,6 +341,7 @@ class _LiveHeader extends StatelessWidget {
   final VoidCallback onCart;
   final int cartCount;
   final VoidCallback? onPin;
+  final VoidCallback? onAssistant;
 
   @override
   Widget build(BuildContext context) {
@@ -324,6 +413,12 @@ class _LiveHeader extends StatelessWidget {
                     ),
                   ),
               ],
+            ),
+          if (isHost && onAssistant != null)
+            IconButton(
+              onPressed: onAssistant,
+              icon: const Icon(Icons.auto_awesome, color: Colors.amberAccent),
+              tooltip: 'Assistant',
             ),
           if (isHost && onPin != null)
             IconButton(

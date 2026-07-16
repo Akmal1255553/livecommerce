@@ -13,6 +13,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 6.5 — AI Live Assistant (rule-based)
+
+- Host API: `GET /live/{id}/assistant/suggestions` (pin / FAQ reply / engage tips)
+- Rule engine only — ADR-012; OpenAI deferred to Sprint 9+
+- Mobile: Live room ✨ assistant sheet for host (Pin / draft reply)
+- Blueprint: [blueprints/sprint-6.5-ai-live-assistant.md](./blueprints/sprint-6.5-ai-live-assistant.md)
+
 #### Sprint 6.4 — Live Analytics
 
 - Seller APIs: `GET /seller/live/analytics`, `GET /seller/live/{id}/analytics`

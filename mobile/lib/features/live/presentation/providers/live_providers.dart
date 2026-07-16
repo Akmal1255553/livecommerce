@@ -214,6 +214,16 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
     }
   }
 
+  Future<List<LiveAssistantSuggestion>> loadAssistantSuggestions() async {
+    try {
+      final result = await _repository.assistantSuggestions(_sessionId);
+      return result.suggestions;
+    } catch (error) {
+      state = state.copyWith(error: describeFailure(error));
+      return const [];
+    }
+  }
+
   Future<bool> addPinnedToCart(String productId) async {
     state = state.copyWith(isAddingToCart: true, clearError: true);
     try {

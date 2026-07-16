@@ -34,6 +34,7 @@ use App\Contracts\Services\CouponServiceInterface;
 use App\Contracts\Services\HealthServiceInterface;
 use App\Contracts\Services\InventoryServiceInterface;
 use App\Contracts\Services\LiveAnalyticsServiceInterface;
+use App\Contracts\Services\LiveAssistantServiceInterface;
 use App\Contracts\Services\LiveSessionServiceInterface;
 use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\MediaServiceInterface;
@@ -104,6 +105,7 @@ use App\Services\Coupon\NoDiscountCouponService;
 use App\Services\Health\HealthService;
 use App\Services\Inventory\ProductInventoryService;
 use App\Services\LiveSession\LiveAnalyticsService;
+use App\Services\LiveSession\LiveAssistantService;
 use App\Services\LiveSession\LiveSessionService;
 use App\Services\LiveSession\ViewerMetricsService;
 use App\Services\Media\MediaAssetService;
@@ -169,6 +171,7 @@ class RepositoryServiceProvider extends ServiceProvider
         LiveSessionServiceInterface::class => LiveSessionService::class,
         ViewerMetricsServiceInterface::class => ViewerMetricsService::class,
         LiveAnalyticsServiceInterface::class => LiveAnalyticsService::class,
+        LiveAssistantServiceInterface::class => LiveAssistantService::class,
         MediaServiceInterface::class => MediaService::class,
         VideoUploadServiceInterface::class => VideoUploadService::class,
         VideoInteractionServiceInterface::class => VideoInteractionService::class,

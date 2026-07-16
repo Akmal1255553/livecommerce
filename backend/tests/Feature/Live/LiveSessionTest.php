@@ -230,3 +230,42 @@ test('buyer cannot add unpinned product to cart from live', function () {
         ])
         ->assertNotFound();
 });
+
+test('seller gets rule-based live assistant suggestions', function () {
+    $seller = createSellerWithStore();
+    $category = Category::factory()->create();
+    $product = Product::factory()->for($seller['store'])->create([
+        'category_id' => $category->id,
+        'status' => ProductStatus::Active,
+        'title' => 'Assistant Demo Bag',
+        'stock_quantity' => 10,
+    ]);
+
+    $sessionId = test()->withToken($seller['token'])
+        ->postJson('/api/v1/live/start', [
+            'title' => 'Assistant Live',
+            'product_ids' => [$product->id],
+        ])
+        ->assertCreated()
+        ->json('data.id');
+
+    $buyer = registerUser('assistantbuyer', 'assistantbuyer@example.com');
+    test()->withToken($buyer['access_token'])
+        ->postJson("/api/v1/live/{$sessionId}/chat", [
+            'message' => 'How much is shipping?',
+        ])
+        ->assertCreated();
+
+    $response = test()->withToken($seller['token'])
+        ->getJson("/api/v1/live/{$sessionId}/assistant/suggestions")
+        ->assertOk()
+        ->assertJsonPath('data.provider', 'rule_based');
+
+    $types = collect($response->json('data.suggestions'))->pluck('type')->all();
+    expect($types)->toContain('pin_product')
+        ->and($types)->toContain('reply_faq');
+
+    test()->withToken($buyer['access_token'])
+        ->getJson("/api/v1/live/{$sessionId}/assistant/suggestions")
+        ->assertForbidden();
+});

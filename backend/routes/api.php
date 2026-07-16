@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\DiscoverController;
 use App\Http\Controllers\Api\V1\FeedController;
 use App\Http\Controllers\Api\V1\HealthController;
 use App\Http\Controllers\Api\V1\LiveAnalyticsController;
+use App\Http\Controllers\Api\V1\LiveAssistantController;
 use App\Http\Controllers\Api\V1\LiveSessionController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
@@ -105,6 +106,7 @@ Route::prefix('v1')->group(function (): void {
             Route::post('live/{id}/end', [LiveSessionController::class, 'end']);
             Route::post('live/{id}/pin-product', [LiveSessionController::class, 'pinProduct']);
             Route::delete('live/{id}/pin-product/{productId}', [LiveSessionController::class, 'unpinProduct']);
+            Route::get('live/{id}/assistant/suggestions', [LiveAssistantController::class, 'suggestions']);
         });
 
         Route::post('live/{id}/chat', [LiveSessionController::class, 'chatStore']);

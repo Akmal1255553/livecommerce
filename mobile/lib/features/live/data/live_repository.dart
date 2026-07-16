@@ -139,6 +139,20 @@ class LiveRemoteDataSource {
       chatMessage: LiveChatMessage.fromJson(chatJson),
     );
   }
+
+  Future<LiveAssistantResult> assistantSuggestions(String sessionId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/live/$sessionId/assistant/suggestions',
+    );
+    final data = response.data!['data'] as Map<String, dynamic>;
+    final list = data['suggestions'] as List<dynamic>? ?? [];
+    return LiveAssistantResult(
+      provider: data['provider'] as String? ?? 'rule_based',
+      suggestions: list
+          .map((e) => LiveAssistantSuggestion.fromJson(e as Map<String, dynamic>))
+          .toList(),
+    );
+  }
 }
 
 class LiveRepository {
@@ -188,6 +202,9 @@ class LiveRepository {
     int quantity = 1,
   }) =>
       _remote.addToCart(sessionId, productId, quantity: quantity);
+
+  Future<LiveAssistantResult> assistantSuggestions(String sessionId) =>
+      _remote.assistantSuggestions(sessionId);
 }
 
 class LiveAddToCartResult {
@@ -198,4 +215,49 @@ class LiveAddToCartResult {
 
   final Cart cart;
   final LiveChatMessage chatMessage;
+}
+
+class LiveAssistantSuggestion {
+  const LiveAssistantSuggestion({
+    required this.id,
+    required this.type,
+    required this.priority,
+    required this.title,
+    required this.body,
+    this.action,
+    this.payload = const {},
+  });
+
+  final String id;
+  final String type;
+  final int priority;
+  final String title;
+  final String body;
+  final String? action;
+  final Map<String, dynamic> payload;
+
+  String? get productId => payload['product_id'] as String?;
+  String? get replyText => payload['reply_text'] as String?;
+
+  factory LiveAssistantSuggestion.fromJson(Map<String, dynamic> json) {
+    return LiveAssistantSuggestion(
+      id: json['id'] as String,
+      type: json['type'] as String? ?? 'tip',
+      priority: json['priority'] as int? ?? 99,
+      title: json['title'] as String? ?? '',
+      body: json['body'] as String? ?? '',
+      action: json['action'] as String?,
+      payload: (json['payload'] as Map<String, dynamic>?) ?? const {},
+    );
+  }
+}
+
+class LiveAssistantResult {
+  const LiveAssistantResult({
+    required this.provider,
+    required this.suggestions,
+  });
+
+  final String provider;
+  final List<LiveAssistantSuggestion> suggestions;
 }
