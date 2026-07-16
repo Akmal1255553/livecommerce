@@ -29,6 +29,11 @@ interface LiveSessionServiceInterface
     /**
      * @return Collection<int, LiveSession>
      */
+    public function listReplays(int $limit = 20): Collection;
+
+    /**
+     * @return Collection<int, LiveSession>
+     */
     public function listLiveCandidates(int $limit = 100): Collection;
 
     public function get(string $sessionId): LiveSession;

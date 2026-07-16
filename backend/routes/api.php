@@ -125,6 +125,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('feed/new', [FeedController::class, 'newFeed']);
         Route::get('feed/for-you', [FeedController::class, 'forYou']);
         Route::get('live', [LiveSessionController::class, 'index']);
+        Route::get('live/replays', [LiveSessionController::class, 'replays']);
         Route::get('live/{id}', [LiveSessionController::class, 'show']);
         Route::get('live/{id}/chat', [LiveSessionController::class, 'chatIndex']);
         Route::get('videos/{id}', [VideoController::class, 'show']);

@@ -33,6 +33,14 @@ class LiveSessionController extends Controller
         return ApiResponse::success(LiveSessionResource::collection($sessions));
     }
 
+    public function replays(Request $request): JsonResponse
+    {
+        $limit = min(max(1, (int) $request->query('limit', 20)), 50);
+        $sessions = $this->liveSessions->listReplays($limit);
+
+        return ApiResponse::success(LiveSessionResource::collection($sessions));
+    }
+
     public function start(StartLiveSessionRequest $request): JsonResponse
     {
         /** @var \App\Models\Store $store */

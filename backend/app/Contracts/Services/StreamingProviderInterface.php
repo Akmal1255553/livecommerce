@@ -18,4 +18,9 @@ interface StreamingProviderInterface
     public function endChannel(string $channelId): void;
 
     public function getViewerCount(string $channelId): int;
+
+    /**
+     * Recording / VOD URL after channel ends. Null when provider has no recording yet.
+     */
+    public function fetchReplayUrl(string $channelId, string $sessionId): ?string;
 }

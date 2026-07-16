@@ -51,6 +51,36 @@ class LivePinnedProduct {
   }
 }
 
+class LiveTimelineProduct {
+  const LiveTimelineProduct({
+    required this.productId,
+    required this.offsetSeconds,
+    required this.title,
+    required this.price,
+    this.currency = 'UZS',
+    this.thumbnail,
+  });
+
+  final String productId;
+  final int offsetSeconds;
+  final String title;
+  final double price;
+  final String currency;
+  final String? thumbnail;
+
+  factory LiveTimelineProduct.fromJson(Map<String, dynamic> json) {
+    final product = json['product'] as Map<String, dynamic>? ?? {};
+    return LiveTimelineProduct(
+      productId: json['product_id'] as String? ?? product['id'] as String? ?? '',
+      offsetSeconds: json['offset_seconds'] as int? ?? 0,
+      title: product['title'] as String? ?? 'Product',
+      price: (product['price'] as num?)?.toDouble() ?? 0,
+      currency: product['currency'] as String? ?? 'UZS',
+      thumbnail: product['thumbnail'] as String?,
+    );
+  }
+}
+
 class LiveChatMessage {
   const LiveChatMessage({
     required this.id,
@@ -89,9 +119,13 @@ class LiveSession {
     this.uniqueViewers,
     this.seller,
     this.pinnedProducts = const [],
+    this.productTimeline = const [],
     this.publisherToken,
     this.subscriberToken,
+    this.replayUrl,
+    this.durationSeconds,
     this.startedAt,
+    this.endedAt,
   });
 
   final String id;
@@ -103,15 +137,21 @@ class LiveSession {
   final int? uniqueViewers;
   final LiveSellerBrief? seller;
   final List<LivePinnedProduct> pinnedProducts;
+  final List<LiveTimelineProduct> productTimeline;
   final String? publisherToken;
   final String? subscriberToken;
+  final String? replayUrl;
+  final int? durationSeconds;
   final String? startedAt;
+  final String? endedAt;
 
   bool get isLive => status == 'live';
+  bool get hasReplay => replayUrl != null && replayUrl!.isNotEmpty;
   bool get isHostToken => publisherToken != null && publisherToken!.isNotEmpty;
 
   factory LiveSession.fromJson(Map<String, dynamic> json) {
     final pinnedJson = json['pinned_products'] as List<dynamic>? ?? [];
+    final timelineJson = json['product_timeline'] as List<dynamic>? ?? [];
     final sellerJson = json['seller'];
 
     return LiveSession(
@@ -128,9 +168,15 @@ class LiveSession {
       pinnedProducts: pinnedJson
           .map((e) => LivePinnedProduct.fromJson(e as Map<String, dynamic>))
           .toList(),
+      productTimeline: timelineJson
+          .map((e) => LiveTimelineProduct.fromJson(e as Map<String, dynamic>))
+          .toList(),
       publisherToken: json['publisher_token'] as String?,
       subscriberToken: json['subscriber_token'] as String?,
+      replayUrl: json['replay_url'] as String?,
+      durationSeconds: json['duration_seconds'] as int?,
       startedAt: json['started_at'] as String?,
+      endedAt: json['ended_at'] as String?,
     );
   }
 }

@@ -17,6 +17,7 @@ import 'package:livecommerce_mobile/features/commerce/presentation/screens/produ
 import 'package:livecommerce_mobile/features/feed/presentation/screens/feed_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/go_live_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/live_discovery_screen.dart';
+import 'package:livecommerce_mobile/features/live/presentation/screens/live_replay_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/live_room_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/public_store_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_apply_screen.dart';
@@ -169,6 +170,13 @@ class AppRouter {
         GoRoute(
           path: '/live/go',
           builder: (context, state) => const GoLiveScreen(),
+        ),
+        GoRoute(
+          path: '/live/replay/:id',
+          builder: (context, state) {
+            final id = state.pathParameters['id']!;
+            return LiveReplayScreen(sessionId: id);
+          },
         ),
         GoRoute(
           path: '/live/:id',

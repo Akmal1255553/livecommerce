@@ -18,6 +18,11 @@ interface LiveSessionRepositoryInterface extends RepositoryInterface
      */
     public function listLive(int $limit = 20): Collection;
 
+    /**
+     * @return Collection<int, LiveSession>
+     */
+    public function listReplays(int $limit = 20): Collection;
+
     public function findLiveBySeller(string $sellerId): ?LiveSession;
 
     public function findWithRelations(string $id): ?LiveSession;

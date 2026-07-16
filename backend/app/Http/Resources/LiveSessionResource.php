@@ -31,6 +31,18 @@ class LiveSessionResource extends JsonResource
                 ? $this->sessionProducts->where('is_pinned', true)->sortBy('sort_order')->values()
                 : collect());
 
+        $timelineRows = $this->relationLoaded('sessionProducts')
+            ? $this->sessionProducts
+                ->filter(fn ($row) => $row->offset_seconds !== null)
+                ->sortBy('offset_seconds')
+                ->values()
+            : collect();
+
+        $durationSeconds = null;
+        if ($this->started_at !== null && $this->ended_at !== null) {
+            $durationSeconds = max(0, (int) $this->started_at->diffInSeconds($this->ended_at));
+        }
+
         return [
             'id' => $this->id,
             'seller' => $this->whenLoaded('seller', fn () => new UserCompactResource($this->seller)),
@@ -54,9 +66,22 @@ class LiveSessionResource extends JsonResource
                         : null,
                 ];
             })->values()->all(),
+            'product_timeline' => $timelineRows->map(function ($row) use ($request) {
+                $product = $row->relationLoaded('product') ? $row->product : null;
+
+                return [
+                    'product_id' => $row->product_id,
+                    'offset_seconds' => (int) $row->offset_seconds,
+                    'product' => $product !== null
+                        ? (new ProductCompactResource($product))->toArray($request)
+                        : null,
+                ];
+            })->values()->all(),
             'publisher_token' => $this->publisherToken,
             'subscriber_token' => $this->subscriberToken,
             'channel_id' => $this->channel_id,
+            'replay_url' => $this->replay_url,
+            'duration_seconds' => $durationSeconds,
             'started_at' => $this->started_at?->toIso8601String(),
             'ended_at' => $this->ended_at?->toIso8601String(),
         ];

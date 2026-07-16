@@ -13,6 +13,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 6.3 — Live Replay
+
+- On live end: Fake provider sets `replay_url`; API returns `duration_seconds` + `product_timeline`
+- `GET /live/replays` — ended sessions with recordings
+- Mobile: Live tab **Replays** + `/live/replay/:id` scrubber with pin markers
+- Blueprint: [blueprints/sprint-6.3-live-replay.md](./blueprints/sprint-6.3-live-replay.md)
+
 #### Sprint 6.2 — Commerce inside Live
 
 - API: `POST /live/{id}/add-to-cart` — pinned products only; returns cart + `commerce` chat message

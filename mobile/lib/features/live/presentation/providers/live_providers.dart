@@ -59,6 +59,32 @@ final liveListProvider =
   return LiveListNotifier(ref.watch(liveRepositoryProvider));
 });
 
+class LiveReplayListNotifier extends StateNotifier<LiveListState> {
+  LiveReplayListNotifier(this._repository) : super(const LiveListState());
+
+  final LiveRepository _repository;
+
+  Future<void> load() async {
+    state = state.copyWith(isLoading: true, clearError: true);
+    try {
+      final sessions = await _repository.listReplays();
+      state = state.copyWith(sessions: sessions, isLoading: false);
+    } catch (error) {
+      state = state.copyWith(isLoading: false, error: describeFailure(error));
+    }
+  }
+}
+
+final liveReplayListProvider =
+    StateNotifierProvider<LiveReplayListNotifier, LiveListState>((ref) {
+  return LiveReplayListNotifier(ref.watch(liveRepositoryProvider));
+});
+
+final liveReplayDetailProvider =
+    FutureProvider.family<LiveSession, String>((ref, id) async {
+  return ref.watch(liveRepositoryProvider).get(id);
+});
+
 class LiveRoomState {
   const LiveRoomState({
     this.session,
@@ -196,8 +222,9 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
         messages: [...state.messages, result.chatMessage],
         isAddingToCart: false,
       );
-      if (_onCartSynced != null) {
-        await _onCartSynced!();
+      final sync = _onCartSynced;
+      if (sync != null) {
+        await sync();
       }
       return true;
     } catch (error) {

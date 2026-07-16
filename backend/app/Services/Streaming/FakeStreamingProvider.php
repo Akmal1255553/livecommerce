@@ -35,4 +35,10 @@ class FakeStreamingProvider implements StreamingProviderInterface
     {
         return 0;
     }
+
+    public function fetchReplayUrl(string $channelId, string $sessionId): ?string
+    {
+        // MVP placeholder VOD — real Agora cloud recording comes later.
+        return 'https://livecommerce.local/replays/'.$sessionId.'.mp4';
+    }
 }

@@ -94,9 +94,16 @@ test('seller can start end pin and chat on live session', function () {
     test()->withToken($seller['token'])
         ->postJson("/api/v1/live/{$sessionId}/end")
         ->assertOk()
-        ->assertJsonPath('data.status', LiveSessionStatus::Ended->value);
+        ->assertJsonPath('data.status', LiveSessionStatus::Ended->value)
+        ->assertJsonPath('data.replay_url', fn ($v) => is_string($v) && str_contains($v, $sessionId));
 
-    expect(LiveSession::query()->findOrFail($sessionId)->status)->toBe(LiveSessionStatus::Ended);
+    expect(LiveSession::query()->findOrFail($sessionId)->status)->toBe(LiveSessionStatus::Ended)
+        ->and(LiveSession::query()->findOrFail($sessionId)->replay_url)->not->toBeNull();
+
+    test()->getJson('/api/v1/live/replays')
+        ->assertOk()
+        ->assertJsonPath('data.0.id', $sessionId)
+        ->assertJsonPath('data.0.product_timeline.0.product_id', $product->id);
 });
 
 test('pin product enforces max of three', function () {

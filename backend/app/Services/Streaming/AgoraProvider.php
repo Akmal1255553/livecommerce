@@ -44,6 +44,12 @@ class AgoraProvider implements StreamingProviderInterface
         return 0;
     }
 
+    public function fetchReplayUrl(string $channelId, string $sessionId): ?string
+    {
+        // Cloud recording fetch is deferred; fake-compatible stub for Agora env.
+        return null;
+    }
+
     private function sign(string $role, string $channelId, string $userId): string
     {
         $payload = [

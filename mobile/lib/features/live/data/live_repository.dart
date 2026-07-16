@@ -19,6 +19,17 @@ class LiveRemoteDataSource {
         .toList();
   }
 
+  Future<List<LiveSession>> listReplays({int limit = 20}) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/live/replays',
+      queryParameters: {'limit': limit},
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data
+        .map((e) => LiveSession.fromJson(e as Map<String, dynamic>))
+        .toList();
+  }
+
   Future<LiveSession> start({
     required String title,
     List<String> productIds = const [],
@@ -137,6 +148,9 @@ class LiveRepository {
 
   Future<List<LiveSession>> listLive({int limit = 20}) =>
       _remote.listLive(limit: limit);
+
+  Future<List<LiveSession>> listReplays({int limit = 20}) =>
+      _remote.listReplays(limit: limit);
 
   Future<LiveSession> start({
     required String title,

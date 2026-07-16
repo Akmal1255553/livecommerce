@@ -118,6 +118,10 @@ class LiveSessionService extends BaseService implements LiveSessionServiceInterf
 
         $session->status = LiveSessionStatus::Ended;
         $session->ended_at = now();
+        $session->replay_url = $this->streaming->fetchReplayUrl(
+            $session->channel_id,
+            (string) $session->id,
+        );
         $this->sessions->save($session);
 
         $this->streaming->endChannel($session->channel_id);
@@ -132,6 +136,11 @@ class LiveSessionService extends BaseService implements LiveSessionServiceInterf
     public function listLive(int $limit = 20): Collection
     {
         return $this->sessions->listLive($limit);
+    }
+
+    public function listReplays(int $limit = 20): Collection
+    {
+        return $this->sessions->listReplays($limit);
     }
 
     public function listLiveCandidates(int $limit = 100): Collection

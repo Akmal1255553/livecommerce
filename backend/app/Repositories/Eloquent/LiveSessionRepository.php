@@ -49,6 +49,25 @@ class LiveSessionRepository extends BaseEloquentRepository implements LiveSessio
             ->get();
     }
 
+    public function listReplays(int $limit = 20): Collection
+    {
+        return $this->model->newQuery()
+            ->with([
+                'seller.profile',
+                'store',
+                'viewerMetrics',
+                'sessionProducts' => fn ($q) => $q
+                    ->whereNotNull('offset_seconds')
+                    ->orderBy('offset_seconds'),
+                'sessionProducts.product.images',
+            ])
+            ->where('status', LiveSessionStatus::Ended)
+            ->whereNotNull('replay_url')
+            ->orderByDesc('ended_at')
+            ->limit($limit)
+            ->get();
+    }
+
     public function findLiveBySeller(string $sellerId): ?LiveSession
     {
         /** @var LiveSession|null $session */
@@ -69,7 +88,12 @@ class LiveSessionRepository extends BaseEloquentRepository implements LiveSessio
                 'store',
                 'viewerMetrics',
                 'pinnedProducts.product.images',
-                'sessionProducts' => fn ($q) => $q->where('is_pinned', true)->orderBy('sort_order'),
+                'sessionProducts' => fn ($q) => $q
+                    ->where(function ($inner): void {
+                        $inner->where('is_pinned', true)
+                            ->orWhereNotNull('offset_seconds');
+                    })
+                    ->orderBy('sort_order'),
                 'sessionProducts.product.images',
             ])
             ->find($id);
