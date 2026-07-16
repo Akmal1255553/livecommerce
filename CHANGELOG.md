@@ -13,6 +13,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Sprint 6.2 — Commerce inside Live
+
+- API: `POST /live/{id}/add-to-cart` — pinned products only; returns cart + `commerce` chat message
+- Attribution: `product_added_to_cart` analytics with `offset_seconds`
+- Mobile: quick-add `+` on pinned chips, cart badge in live room, no navigation required
+- Blueprint: [blueprints/sprint-6.2-live-commerce.md](./blueprints/sprint-6.2-live-commerce.md)
+
 #### Sprint 6.1 — Mobile Live
 
 - Feature module `mobile/lib/features/live/` — discovery, go-live, room (chat poll, pin, join/leave)

@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart';
+import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/live/data/live_repository.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 
@@ -64,6 +66,7 @@ class LiveRoomState {
     this.messages = const [],
     this.isLoading = false,
     this.isSending = false,
+    this.isAddingToCart = false,
     this.isHost = false,
     this.error,
   });
@@ -72,6 +75,7 @@ class LiveRoomState {
   final List<LiveChatMessage> messages;
   final bool isLoading;
   final bool isSending;
+  final bool isAddingToCart;
   final bool isHost;
   final String? error;
 
@@ -80,6 +84,7 @@ class LiveRoomState {
     List<LiveChatMessage>? messages,
     bool? isLoading,
     bool? isSending,
+    bool? isAddingToCart,
     bool? isHost,
     String? error,
     bool clearError = false,
@@ -89,6 +94,7 @@ class LiveRoomState {
       messages: messages ?? this.messages,
       isLoading: isLoading ?? this.isLoading,
       isSending: isSending ?? this.isSending,
+      isAddingToCart: isAddingToCart ?? this.isAddingToCart,
       isHost: isHost ?? this.isHost,
       error: clearError ? null : (error ?? this.error),
     );
@@ -96,12 +102,17 @@ class LiveRoomState {
 }
 
 class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
-  LiveRoomNotifier(this._repository, this._sessionId, this._currentUserId)
-      : super(const LiveRoomState());
+  LiveRoomNotifier(
+    this._repository,
+    this._sessionId,
+    this._currentUserId,
+    this._onCartUpdated,
+  ) : super(const LiveRoomState());
 
   final LiveRepository _repository;
   final String _sessionId;
   final String? _currentUserId;
+  final void Function(Cart cart)? _onCartUpdated;
   Timer? _pollTimer;
   bool _joined = false;
 
@@ -178,6 +189,25 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
     }
   }
 
+  Future<bool> addPinnedToCart(String productId) async {
+    state = state.copyWith(isAddingToCart: true, clearError: true);
+    try {
+      final result = await _repository.addToCart(_sessionId, productId);
+      _onCartUpdated?.call(result.cart);
+      state = state.copyWith(
+        messages: [...state.messages, result.chatMessage],
+        isAddingToCart: false,
+      );
+      return true;
+    } catch (error) {
+      state = state.copyWith(
+        isAddingToCart: false,
+        error: describeFailure(error),
+      );
+      return false;
+    }
+  }
+
   Future<bool> endLive() async {
     try {
       final session = await _repository.end(_sessionId);
@@ -215,6 +245,7 @@ final liveRoomProvider = StateNotifierProvider.autoDispose
     ref.watch(liveRepositoryProvider),
     sessionId,
     userId,
+    (cart) => ref.read(cartNotifierProvider.notifier).applyCart(cart),
   );
   ref.onDispose(() {
     unawaited(notifier.leave());

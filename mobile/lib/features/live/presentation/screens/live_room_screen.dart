@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/providers/seller_providers.dart';
@@ -26,11 +27,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(
-      () => ref
-          .read(liveRoomProvider(widget.sessionId).notifier)
-          .enter(asHost: widget.asHost),
-    );
+    Future.microtask(() {
+      ref.read(liveRoomProvider(widget.sessionId).notifier).enter(asHost: widget.asHost);
+      ref.read(cartNotifierProvider.notifier).load();
+    });
   }
 
   @override
@@ -95,9 +95,29 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
   }
 
+  Future<void> _addPinnedToCart(String productId) async {
+    final ok = await ref
+        .read(liveRoomProvider(widget.sessionId).notifier)
+        .addPinnedToCart(productId);
+    if (!mounted) {
+      return;
+    }
+    if (ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Added to cart')),
+      );
+      return;
+    }
+    final error = ref.read(liveRoomProvider(widget.sessionId)).error;
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(liveRoomProvider(widget.sessionId));
+    final cartCount = ref.watch(cartNotifierProvider).itemCount;
     final session = state.session;
 
     return Scaffold(
@@ -114,6 +134,8 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                       _LiveHeader(
                         session: session,
                         isHost: state.isHost,
+                        cartCount: cartCount,
+                        onCart: () => context.push('/cart'),
                         onEnd: () async {
                           final ok = await ref
                               .read(liveRoomProvider(widget.sessionId).notifier)
@@ -145,7 +167,18 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                     itemBuilder: (context, index) {
                                       final product =
                                           session.pinnedProducts[index];
-                                      return _PinnedChip(product: product);
+                                      return _PinnedChip(
+                                        product: product,
+                                        isAdding: state.isAddingToCart,
+                                        onAdd: state.isHost
+                                            ? null
+                                            : () => _addPinnedToCart(
+                                                  product.productId,
+                                                ),
+                                        onView: () => context.push(
+                                          '/products/${product.productId}',
+                                        ),
+                                      );
                                     },
                                   ),
                                 ),
@@ -207,6 +240,8 @@ class _LiveHeader extends StatelessWidget {
     required this.isHost,
     required this.onClose,
     required this.onEnd,
+    required this.onCart,
+    this.cartCount = 0,
     this.onPin,
   });
 
@@ -214,6 +249,8 @@ class _LiveHeader extends StatelessWidget {
   final bool isHost;
   final VoidCallback onClose;
   final VoidCallback onEnd;
+  final VoidCallback onCart;
+  final int cartCount;
   final VoidCallback? onPin;
 
   @override
@@ -255,6 +292,38 @@ class _LiveHeader extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           const Icon(Icons.remove_red_eye_outlined, color: Colors.white70, size: 18),
+          if (!isHost)
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                IconButton(
+                  onPressed: onCart,
+                  icon: const Icon(Icons.shopping_cart_outlined, color: Colors.white),
+                ),
+                if (cartCount > 0)
+                  Positioned(
+                    right: 6,
+                    top: 6,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFFF6B6B),
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Text(
+                        '$cartCount',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           if (isHost && onPin != null)
             IconButton(
               onPressed: onPin,
@@ -307,9 +376,17 @@ class _LivePlaceholder extends StatelessWidget {
 }
 
 class _PinnedChip extends StatelessWidget {
-  const _PinnedChip({required this.product});
+  const _PinnedChip({
+    required this.product,
+    this.onAdd,
+    this.onView,
+    this.isAdding = false,
+  });
 
   final LivePinnedProduct product;
+  final VoidCallback? onAdd;
+  final VoidCallback? onView;
+  final bool isAdding;
 
   @override
   Widget build(BuildContext context) {
@@ -319,7 +396,7 @@ class _PinnedChip extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
-        onTap: () => context.push('/products/${product.productId}'),
+        onTap: onView,
         child: Padding(
           padding: const EdgeInsets.all(8),
           child: Row(
@@ -339,7 +416,7 @@ class _PinnedChip extends StatelessWidget {
                 const Icon(Icons.shopping_bag, color: Colors.white70),
               const SizedBox(width: 8),
               ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 140),
+                constraints: const BoxConstraints(maxWidth: 120),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -361,6 +438,30 @@ class _PinnedChip extends StatelessWidget {
                   ],
                 ),
               ),
+              if (onAdd != null) ...[
+                const SizedBox(width: 6),
+                SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: IconButton.filled(
+                    style: IconButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF6B6B),
+                      padding: EdgeInsets.zero,
+                    ),
+                    onPressed: isAdding ? null : onAdd,
+                    icon: isAdding
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white,
+                            ),
+                          )
+                        : const Icon(Icons.add, size: 20),
+                  ),
+                ),
+              ],
             ],
           ),
         ),

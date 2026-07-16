@@ -79,6 +79,10 @@ class CartNotifier extends StateNotifier<CartState> {
     }
   }
 
+  void applyCart(Cart cart) {
+    state = state.copyWith(cart: cart, clearError: true);
+  }
+
   Future<bool> updateQuantity(String itemId, int quantity) async {
     state = state.copyWith(isMutating: true, clearError: true);
     try {

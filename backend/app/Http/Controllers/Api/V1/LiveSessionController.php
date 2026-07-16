@@ -7,9 +7,11 @@ namespace App\Http\Controllers\Api\V1;
 use App\Contracts\Services\LiveSessionServiceInterface;
 use App\Contracts\Services\StreamingProviderInterface;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Live\AddLiveCartItemRequest;
 use App\Http\Requests\Live\PinLiveProductRequest;
 use App\Http\Requests\Live\SendLiveChatRequest;
 use App\Http\Requests\Live\StartLiveSessionRequest;
+use App\Http\Resources\CartResource;
 use App\Http\Resources\LiveChatMessageResource;
 use App\Http\Resources\LiveSessionResource;
 use App\Http\Responses\ApiResponse;
@@ -128,6 +130,21 @@ class LiveSessionController extends Controller
             'current_viewers' => $metrics->current_viewers,
             'peak_viewers' => $metrics->peak_viewers,
             'unique_viewers' => $metrics->unique_viewers,
+        ]);
+    }
+
+    public function addToCart(AddLiveCartItemRequest $request, string $id): JsonResponse
+    {
+        $result = $this->liveSessions->addToCart(
+            $request->user(),
+            $id,
+            $request->validated('product_id'),
+            (int) $request->validated('quantity', 1),
+        );
+
+        return ApiResponse::success([
+            'cart' => new CartResource($result->cart),
+            'chat_message' => new LiveChatMessageResource($result->message),
         ]);
     }
 }

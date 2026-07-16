@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 
 class LiveRemoteDataSource {
@@ -105,6 +106,27 @@ class LiveRemoteDataSource {
       'unique_viewers': data['unique_viewers'] as int? ?? 0,
     };
   }
+
+  Future<LiveAddToCartResult> addToCart(
+    String sessionId,
+    String productId, {
+    int quantity = 1,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/live/$sessionId/add-to-cart',
+      data: {
+        'product_id': productId,
+        'quantity': quantity,
+      },
+    );
+    final data = response.data!['data'] as Map<String, dynamic>;
+    return LiveAddToCartResult(
+      cart: Cart.fromJson(data['cart'] as Map<String, dynamic>),
+      chatMessage: LiveChatMessage.fromJson(
+        data['chat_message'] as Map<String, dynamic>,
+      ),
+    );
+  }
 }
 
 class LiveRepository {
@@ -144,4 +166,21 @@ class LiveRepository {
   Future<Map<String, int>> join(String sessionId) => _remote.join(sessionId);
 
   Future<Map<String, int>> leave(String sessionId) => _remote.leave(sessionId);
+
+  Future<LiveAddToCartResult> addToCart(
+    String sessionId,
+    String productId, {
+    int quantity = 1,
+  }) =>
+      _remote.addToCart(sessionId, productId, quantity: quantity);
+}
+
+class LiveAddToCartResult {
+  const LiveAddToCartResult({
+    required this.cart,
+    required this.chatMessage,
+  });
+
+  final Cart cart;
+  final LiveChatMessage chatMessage;
 }

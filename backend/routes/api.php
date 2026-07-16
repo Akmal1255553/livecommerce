@@ -107,6 +107,7 @@ Route::prefix('v1')->group(function (): void {
         Route::post('live/{id}/chat', [LiveSessionController::class, 'chatStore']);
         Route::post('live/{id}/join', [LiveSessionController::class, 'join']);
         Route::post('live/{id}/leave', [LiveSessionController::class, 'leave']);
+        Route::post('live/{id}/add-to-cart', [LiveSessionController::class, 'addToCart']);
 
         Route::post('checkout', [CheckoutController::class, 'store']);
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Contracts\Services;
 
+use App\DTOs\Live\LiveAddToCartResult;
 use App\Models\LiveChatMessage;
 use App\Models\LiveSession;
 use App\Models\LiveViewerMetric;
@@ -46,6 +47,8 @@ interface LiveSessionServiceInterface
     public function join(User $user, string $sessionId): LiveViewerMetric;
 
     public function leave(User $user, string $sessionId): LiveViewerMetric;
+
+    public function addToCart(User $user, string $sessionId, string $productId, int $quantity = 1): LiveAddToCartResult;
 
     public function publisherToken(LiveSession $session, User $user): ?string;
 

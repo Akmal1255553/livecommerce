@@ -817,9 +817,9 @@ Seller Application, Seller Dashboard, Product Management, Order Management, Stor
 
 | ID | Scope | Status |
 |----|--------|--------|
-| **6.0** | Backend LiveSession + mixed discover | Ready for Render |
-| **6.1** | Mobile Live UI | In progress |
-| **6.2** | Commerce inside Live | Planned |
+| **6.0** | Backend LiveSession + mixed discover | Shipped |
+| **6.1** | Mobile Live UI | Shipped |
+| **6.2** | Commerce inside Live | Ready for Render |
 | **6.3** | Replay | Planned |
 | **6.4** | Live Analytics | Planned |
 | **6.5** | AI Live Assistant | Planned |
@@ -846,19 +846,19 @@ Live Streaming, Streaming Provider Integration, Pinned Products, Live Chat, View
 - [x] Live broadcaster / viewer screens (placeholder video on web)
 - [x] Pin overlay + chat polling
 - [x] Live discovery list (`/live`)
-- [ ] Pinned product → cart without leaving stream (6.2 attribution)
+- [x] Pinned product → cart without leaving stream (6.2 attribution)
 - [ ] Agora SDK (native; placeholder on web)
 
 ## API Endpoints
 
-`GET /discover`, `GET /live`, `POST /live/start`, `GET /live/{id}`, `POST /live/{id}/end`, `POST/DELETE /live/{id}/pin-product`, `GET/POST /live/{id}/chat`, `POST /live/{id}/join|leave`
+`GET /discover`, `GET /live`, `POST /live/start`, `GET /live/{id}`, `POST /live/{id}/end`, `POST/DELETE /live/{id}/pin-product`, `GET/POST /live/{id}/chat`, `POST /live/{id}/join|leave`, `POST /live/{id}/add-to-cart`
 
 ## Acceptance Criteria
 
 - [x] Backend session lifecycle + chat + pin + metrics
 - [x] Mixed discover/for-you can return `type=live`
-- [ ] Mobile go-live / watch (6.1)
-- [ ] In-stream add-to-cart (6.2)
+- [x] Mobile go-live / watch (6.1)
+- [x] In-stream add-to-cart (6.2)
 - [x] Follower LIVE_STARTED push hook (stub FCM)
 - [x] Feature tests present for live APIs
 

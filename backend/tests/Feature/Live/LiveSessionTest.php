@@ -68,9 +68,28 @@ test('seller can start end pin and chat on live session', function () {
         ->assertJsonPath('data.type', 'user')
         ->assertJsonPath('data.message', 'How much is shipping?');
 
+    test()->withToken($buyer['access_token'])
+        ->postJson("/api/v1/live/{$sessionId}/add-to-cart", [
+            'product_id' => $product->id,
+        ])
+        ->assertOk()
+        ->assertJsonPath('data.cart.summary.item_count', 1)
+        ->assertJsonPath('data.chat_message.type', 'commerce')
+        ->assertJsonPath('data.chat_message.metadata.product_id', $product->id);
+
+    expect(LiveAnalyticsEvent::query()
+        ->where('live_session_id', $sessionId)
+        ->where('event_type', LiveAnalyticsEventType::ProductAddedToCart)
+        ->exists())->toBeTrue();
+
+    expect(LiveChatMessage::query()
+        ->where('live_session_id', $sessionId)
+        ->where('type', LiveChatMessageType::Commerce)
+        ->exists())->toBeTrue();
+
     test()->getJson("/api/v1/live/{$sessionId}/chat")
         ->assertOk()
-        ->assertJsonCount(2, 'data');
+        ->assertJsonCount(3, 'data');
 
     test()->withToken($seller['token'])
         ->postJson("/api/v1/live/{$sessionId}/end")
@@ -144,4 +163,30 @@ test('seller cannot start two concurrent live sessions', function () {
     test()->withToken($seller['token'])
         ->postJson('/api/v1/live/start', ['title' => 'Second'])
         ->assertStatus(409);
+});
+
+test('buyer cannot add unpinned product to cart from live', function () {
+    $seller = createSellerWithStore();
+    $category = Category::factory()->create();
+    $product = Product::factory()->for($seller['store'])->create([
+        'category_id' => $category->id,
+        'status' => ProductStatus::Active,
+        'stock_quantity' => 5,
+    ]);
+
+    $sessionId = test()->withToken($seller['token'])
+        ->postJson('/api/v1/live/start', [
+            'title' => 'Unpinned Only',
+            'product_ids' => [$product->id],
+        ])
+        ->assertCreated()
+        ->json('data.id');
+
+    $buyer = registerUser('unpinnedbuyer', 'unpinnedbuyer@example.com');
+
+    test()->withToken($buyer['access_token'])
+        ->postJson("/api/v1/live/{$sessionId}/add-to-cart", [
+            'product_id' => $product->id,
+        ])
+        ->assertNotFound();
 });

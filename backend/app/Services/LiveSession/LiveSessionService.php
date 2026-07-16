@@ -6,10 +6,13 @@ namespace App\Services\LiveSession;
 
 use App\Contracts\Repositories\LiveSessionRepositoryInterface;
 use App\Contracts\Repositories\ProductRepositoryInterface;
+use App\Contracts\Services\CartServiceInterface;
 use App\Contracts\Services\LiveAnalyticsServiceInterface;
 use App\Contracts\Services\LiveSessionServiceInterface;
 use App\Contracts\Services\StreamingProviderInterface;
 use App\Contracts\Services\ViewerMetricsServiceInterface;
+use App\DTOs\Cart\CartContext;
+use App\DTOs\Live\LiveAddToCartResult;
 use App\Enums\LiveAnalyticsEventType;
 use App\Enums\LiveChatMessageType;
 use App\Enums\LiveSessionStatus;
@@ -41,6 +44,7 @@ class LiveSessionService extends BaseService implements LiveSessionServiceInterf
         private readonly StreamingProviderInterface $streaming,
         private readonly ViewerMetricsServiceInterface $viewerMetrics,
         private readonly LiveAnalyticsServiceInterface $analytics,
+        private readonly CartServiceInterface $cart,
     ) {
         parent::__construct($logger);
     }
@@ -291,6 +295,60 @@ class LiveSessionService extends BaseService implements LiveSessionServiceInterf
         $this->analytics->record($sessionId, LiveAnalyticsEventType::LiveLeft, $user);
 
         return $metrics;
+    }
+
+    public function addToCart(User $user, string $sessionId, string $productId, int $quantity = 1): LiveAddToCartResult
+    {
+        $session = $this->get($sessionId);
+        $this->assertLive($session);
+
+        $row = LiveSessionProduct::query()
+            ->where('live_session_id', $session->id)
+            ->where('product_id', $productId)
+            ->where('is_pinned', true)
+            ->first();
+
+        if ($row === null) {
+            throw new ResourceNotFoundException('Pinned product not found on this live session.');
+        }
+
+        $product = $this->products->findByIdOrFail($productId);
+        $offset = max(0, (int) now()->diffInSeconds($session->started_at ?? now()));
+
+        $cart = $this->cart->addItem(
+            CartContext::forUser((string) $user->id),
+            $productId,
+            null,
+            $quantity,
+        );
+
+        $displayName = $user->profile?->display_name ?? $user->username;
+
+        $message = LiveChatMessage::query()->create([
+            'live_session_id' => $session->id,
+            'user_id' => $user->id,
+            'type' => LiveChatMessageType::Commerce,
+            'message' => $displayName.' added '.$product->title.' to cart',
+            'metadata' => [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'offset_seconds' => $offset,
+            ],
+            'created_at' => now(),
+        ]);
+
+        $this->analytics->record(
+            $sessionId,
+            LiveAnalyticsEventType::ProductAddedToCart,
+            $user,
+            [
+                'product_id' => $productId,
+                'quantity' => $quantity,
+                'offset_seconds' => $offset,
+            ],
+        );
+
+        return new LiveAddToCartResult($cart, $message->load('user.profile'));
     }
 
     public function publisherToken(LiveSession $session, User $user): ?string
