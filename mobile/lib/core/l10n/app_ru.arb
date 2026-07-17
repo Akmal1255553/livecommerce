@@ -33,5 +33,217 @@
   "homeTab": "Главная",
   "profileTab": "Профиль",
   "settingsTab": "Настройки",
-  "authRequired": "Войдите, чтобы продолжить"
+  "authRequired": "Войдите, чтобы продолжить",
+
+  "retry": "Повторить",
+  "refresh": "Обновить",
+  "browseFeed": "К ленте",
+  "requiredField": "Обязательно",
+  "offlineBanner": "Нет сети. Некоторые действия могут не сработать.",
+  "myOrders": "Мои заказы",
+  "sellerCenter": "Кабинет продавца",
+  "becomeSeller": "Стать продавцом",
+
+  "feedForYou": "Для вас",
+  "feedFollowing": "Подписки",
+  "liveNowTooltip": "Прямой эфир",
+  "feedEmptyTitle": "Пока нет видео",
+  "feedEmptySubtitle": "Скоро появятся новые ролики.",
+  "feedFollowingEmptyTitle": "Подпишитесь на авторов, чтобы видеть их видео",
+  "feedFollowingEmptySubtitle": "Посты тех, на кого вы подписаны, появятся здесь.",
+  "saveAction": "Сохранить",
+  "bookmarkSaved": "Добавлено в закладки",
+  "bookmarkRemoved": "Удалено из закладок",
+  "commentsTitle": "Комментарии",
+  "commentsHint": "Написать комментарий…",
+  "commentsLoading": "Загрузка комментариев…",
+  "commentsEmptyTitle": "Пока нет комментариев",
+  "commentsEmptySubtitle": "Будьте первым.",
+
+  "cartTitle": "Корзина",
+  "cartEmptyTitle": "Корзина пуста",
+  "cartEmptySubtitle": "Выберите товар в ленте и добавьте сюда.",
+  "remove": "Удалить",
+  "subtotal": "Подытог",
+  "checkout": "Оформить",
+  "cartIsEmpty": "Корзина пуста",
+
+  "checkoutTitle": "Оформление",
+  "orderSummary": "Сводка заказа",
+  "itemCountLabel": "{count} товар(ов)",
+  "@itemCountLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "subtotalWithAmount": "Подытог: {amount}",
+  "@subtotalWithAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "shippingEstimate": "Доставка (оценка): {amount}",
+  "@shippingEstimate": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "paymentMethod": "Способ оплаты",
+  "shippingAddress": "Адрес доставки",
+  "fullNameLabel": "ФИО",
+  "regionLabel": "Регион",
+  "cityLabel": "Город",
+  "addressLabel": "Адрес",
+  "postalCodeLabel": "Индекс",
+  "placeOrder": "Подтвердить заказ",
+
+  "ordersTitle": "Мои заказы",
+  "ordersEmptyTitle": "Заказов пока нет",
+  "ordersEmptySubtitle": "После оформления заказы появятся здесь.",
+  "orderDetailsTitle": "Детали заказа",
+  "orderStatusLabel": "Статус: {status}",
+  "@orderStatusLabel": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "orderPaymentLabel": "Оплата: {status}",
+  "@orderPaymentLabel": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "orderMethodLabel": "Метод: {method}",
+  "@orderMethodLabel": {
+    "placeholders": {
+      "method": {"type": "String"}
+    }
+  },
+  "orderPlacedLabel": "Оформлен: {date}",
+  "@orderPlacedLabel": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "continuePayment": "Продолжить оплату",
+  "requestRefund": "Запросить возврат",
+  "orderItems": "Товары",
+  "shipping": "Доставка",
+  "discount": "Скидка",
+  "tax": "Налог",
+  "total": "Итого",
+
+  "orderPlacedTitle": "Заказ оформлен",
+  "thankYou": "Спасибо!",
+  "orderNumberLabel": "Заказ #{number}",
+  "@orderNumberLabel": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "totalWithAmount": "Итого: {amount}",
+  "@totalWithAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "viewOrder": "Открыть заказ",
+  "viewOrders": "К заказам",
+  "backToFeed": "К ленте",
+
+  "paymentTitle": "Оплата",
+  "payForOrder": "Оплата заказа #{number}",
+  "@payForOrder": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "amountLabel": "Сумма: {amount}",
+  "@amountLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "methodWithValue": "Метод: {method}",
+  "@methodWithValue": {
+    "placeholders": {
+      "method": {"type": "String"}
+    }
+  },
+  "paymentSandboxHint": "Локальный sandbox оплаты. Подтвердите, чтобы симулировать успешный webhook Click/Payme.",
+  "paymentRedirectLabel": "Редирект шлюза (sandbox):\n{url}",
+  "@paymentRedirectLabel": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "payNow": "Оплатить",
+  "cancelPayment": "Отменить оплату",
+
+  "refundTitle": "Запрос возврата",
+  "refundIntro": "Опишите продавцу, почему нужен возврат.",
+  "refundReasonLabel": "Причина",
+  "submitRefund": "Отправить запрос",
+  "refundReasonTooShort": "Опишите причину (минимум 5 символов)",
+  "refundRequested": "Запрос на возврат отправлен",
+
+  "productTitle": "Товар",
+  "variants": "Варианты",
+  "quantity": "Количество",
+  "addToCart": "В корзину",
+  "outOfStock": "Нет в наличии",
+  "selectVariant": "Выберите вариант",
+  "addedToCart": "Добавлено в корзину",
+  "viewCart": "Открыть корзину",
+
+  "liveTitle": "Эфир",
+  "liveNowTab": "Сейчас в эфире",
+  "replaysTab": "Повторы",
+  "liveEmpty": "Сейчас нет прямых эфиров",
+  "replaysEmpty": "Повторов пока нет — появятся после окончания эфира",
+  "liveBadge": "LIVE",
+  "watchingCount": "@{username} · {count} смотрят",
+  "@watchingCount": {
+    "placeholders": {
+      "username": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "replayDuration": "@{username} · {mins} мин повтор",
+  "@replayDuration": {
+    "placeholders": {
+      "username": {"type": "String"},
+      "mins": {"type": "int"}
+    }
+  },
+
+  "goLiveTitle": "Начать эфир",
+  "goLiveChromeHint": "В Chrome MVP используется LIVE-заглушка (камера Agora пока нет).",
+  "streamTitleLabel": "Название эфира",
+  "attachProducts": "Прикрепить товары (необязательно)",
+  "noProductsYet": "Товаров пока нет — эфир всё равно можно начать.",
+  "startLive": "Начать эфир",
+  "enterTitle": "Введите название",
+  "defaultLiveTitle": "Прямая продажа",
+
+  "liveRoomTitle": "Прямой эфир",
+  "livePlaceholderTitle": "Заглушка эфира",
+  "livePlaceholderBody": "Камера Agora появится позже",
+  "chatHint": "Напишите что-нибудь…",
+  "endLive": "Завершить",
+  "assistantTooltip": "Ассистент",
+  "noProductsToPin": "Нет товаров для закрепа",
+  "pinProductTitle": "Закрепить товар",
+  "liveAssistantTitle": "Ассистент эфира",
+  "liveAssistantBody": "Подсказки по правилам (ADR-012). OpenAI — в Sprint 9+.",
+  "noSuggestions": "Пока нет подсказок",
+  "pinAction": "Закрепить",
+  "useAction": "Применить",
+  "productPinned": "Товар закреплён",
+  "productPinFailed": "Не удалось закрепить товар",
+  "replyDrafted": "Ответ добавлен в поле чата",
+
+  "replayTitle": "Повтор",
+  "replayPlaceholder": "Заглушка повтора",
+  "noReplayUrl": "Нет URL повтора"
 }

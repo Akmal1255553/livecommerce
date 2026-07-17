@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
@@ -26,15 +27,15 @@ class _CartScreenState extends ConsumerState<CartScreen> {
     final cartState = ref.watch(cartNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Cart')),
-      body: _buildBody(cartState),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.cartTitle)),
+      body: _buildBody(context, cartState),
       bottomNavigationBar: cartState.cart != null && !cartState.cart!.isEmpty
           ? _CartSummaryBar(cart: cartState.cart!)
           : null,
     );
   }
 
-  Widget _buildBody(CartState cartState) {
+  Widget _buildBody(BuildContext context, CartState cartState) {
     if (cartState.isLoading && cartState.cart == null) {
       return const CartSkeleton();
     }
@@ -48,11 +49,12 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
     final cart = cartState.cart;
     if (cart == null || cart.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       return EmptyState(
-        title: 'Your cart is empty',
-        subtitle: 'Browse the feed and tap a product to add it here.',
+        title: l10n.cartEmptyTitle,
+        subtitle: l10n.cartEmptySubtitle,
         icon: Icons.shopping_cart_outlined,
-        actionLabel: 'Browse feed',
+        actionLabel: l10n.browseFeed,
         onAction: () => context.go('/home'),
       );
     }
@@ -164,7 +166,7 @@ class _CartLineTile extends StatelessWidget {
                   const Spacer(),
                   TextButton(
                     onPressed: isMutating ? null : onRemove,
-                    child: const Text('Remove'),
+                    child: Text(AppLocalizations.of(context)!.remove),
                   ),
                 ],
               ),
@@ -183,6 +185,7 @@ class _CartSummaryBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -193,7 +196,7 @@ class _CartSummaryBar extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text('Subtotal'),
+                Text(l10n.subtotal),
                 Text(
                   cart.summary.subtotal.format(),
                   style: const TextStyle(fontWeight: FontWeight.w700),
@@ -203,7 +206,7 @@ class _CartSummaryBar extends StatelessWidget {
             const SizedBox(height: 12),
             FilledButton(
               onPressed: () => context.push('/checkout'),
-              child: const Text('Checkout'),
+              child: Text(l10n.checkout),
             ),
           ],
         ),

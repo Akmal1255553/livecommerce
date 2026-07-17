@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 
@@ -27,7 +28,7 @@ class OrderSuccessScreen extends ConsumerWidget {
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => Scaffold(
-        appBar: AppBar(title: const Text('Order placed')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.orderPlacedTitle)),
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
@@ -38,7 +39,7 @@ class OrderSuccessScreen extends ConsumerWidget {
                 const SizedBox(height: 16),
                 FilledButton(
                   onPressed: () => context.go('/orders'),
-                  child: const Text('View orders'),
+                  child: Text(AppLocalizations.of(context)!.viewOrders),
                 ),
               ],
             ),
@@ -58,9 +59,10 @@ class _OrderSuccessBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Order placed')),
+      appBar: AppBar(title: Text(l10n.orderPlacedTitle)),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -73,35 +75,35 @@ class _OrderSuccessBody extends StatelessWidget {
             ),
             const SizedBox(height: 24),
             Text(
-              'Thank you!',
+              l10n.thankYou,
               style: theme.textTheme.headlineMedium?.copyWith(
                 fontWeight: FontWeight.w700,
               ),
             ),
             const SizedBox(height: 12),
             Text(
-              'Order #${order.orderNumber}',
+              l10n.orderNumberLabel(order.orderNumber),
               style: theme.textTheme.titleLarge,
             ),
             const SizedBox(height: 8),
             Text(
-              'Total: ${order.totals.total.format()}',
+              l10n.totalWithAmount(order.totals.total.format()),
               style: theme.textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
             Text(
-              'Status: ${order.status}',
+              l10n.orderStatusLabel(order.status),
               style: theme.textTheme.bodyLarge,
             ),
             const SizedBox(height: 32),
             FilledButton(
               onPressed: () => context.go('/orders/${order.id}'),
-              child: const Text('View order'),
+              child: Text(l10n.viewOrder),
             ),
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: () => context.go('/home'),
-              child: const Text('Back to feed'),
+              child: Text(l10n.backToFeed),
             ),
           ],
         ),

@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
 
@@ -78,7 +79,7 @@ class _LiveReplayScreenState extends ConsumerState<LiveReplayScreen> {
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (error, _) => Scaffold(
-        appBar: AppBar(title: const Text('Replay')),
+        appBar: AppBar(title: Text(AppLocalizations.of(context)!.replayTitle)),
         body: Center(child: Text('$error')),
       ),
       data: (session) {
@@ -124,13 +125,13 @@ class _LiveReplayScreenState extends ConsumerState<LiveReplayScreen> {
                                 size: 72,
                               ),
                               const SizedBox(height: 12),
-                              const Text(
-                                'Replay placeholder',
-                                style: TextStyle(color: Colors.white70),
+                              Text(
+                                AppLocalizations.of(context)!.replayPlaceholder,
+                                style: const TextStyle(color: Colors.white70),
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                session.replayUrl ?? 'No replay URL',
+                                session.replayUrl ?? AppLocalizations.of(context)!.noReplayUrl,
                                 style: const TextStyle(
                                   color: Colors.white38,
                                   fontSize: 11,

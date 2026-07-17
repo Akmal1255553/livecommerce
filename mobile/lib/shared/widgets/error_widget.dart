@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 
 class ErrorDisplay extends StatelessWidget {
   const ErrorDisplay({
@@ -28,7 +29,7 @@ class ErrorDisplay extends StatelessWidget {
             Text(message, textAlign: TextAlign.center, style: TextStyle(color: fg)),
             if (onRetry != null) ...[
               const SizedBox(height: 16),
-              FilledButton(onPressed: onRetry, child: const Text('Retry')),
+              FilledButton(onPressed: onRetry, child: Text(AppLocalizations.of(context)!.retry)),
             ],
           ],
         ),

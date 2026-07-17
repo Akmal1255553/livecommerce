@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/widgets/product_overlay_chip.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
@@ -41,17 +42,18 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   Widget build(BuildContext context) {
     final feed = ref.watch(feedNotifierProvider);
     final cart = ref.watch(cartNotifierProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
-        title: const Text('LiveCommerce'),
+        title: Text(l10n.appTitle),
         actions: [
           IconButton(
             icon: const Icon(Icons.live_tv_outlined),
-            tooltip: 'Live now',
+            tooltip: l10n.liveNowTooltip,
             onPressed: () => context.push('/live'),
           ),
           IconButton(
@@ -77,14 +79,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               _FeedTabButton(
-                label: 'For You',
+                label: l10n.feedForYou,
                 selected: feed.tab == FeedTab.forYou,
                 onTap: () =>
                     ref.read(feedNotifierProvider.notifier).switchTab(FeedTab.forYou),
               ),
               const SizedBox(width: 24),
               _FeedTabButton(
-                label: 'Following',
+                label: l10n.feedFollowing,
                 selected: feed.tab == FeedTab.following,
                 onTap: () => ref
                     .read(feedNotifierProvider.notifier)
@@ -94,11 +96,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           ),
         ),
       ),
-      body: _buildBody(feed),
+      body: _buildBody(context, feed, l10n),
     );
   }
 
-  Widget _buildBody(FeedState feed) {
+  Widget _buildBody(BuildContext context, FeedState feed, AppLocalizations l10n) {
     if (feed.isLoading && feed.videos.isEmpty) {
       return const FeedSkeleton();
     }
@@ -114,14 +116,14 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     if (feed.videos.isEmpty) {
       return EmptyState(
         title: feed.tab == FeedTab.following
-            ? 'Follow creators to see their videos'
-            : 'No videos yet',
+            ? l10n.feedFollowingEmptyTitle
+            : l10n.feedEmptyTitle,
         subtitle: feed.tab == FeedTab.following
-            ? 'When people you follow post, they show up here.'
-            : 'Check back soon for new drops.',
+            ? l10n.feedFollowingEmptySubtitle
+            : l10n.feedEmptySubtitle,
         icon: Icons.video_library_outlined,
         foregroundColor: Colors.white,
-        actionLabel: 'Refresh',
+        actionLabel: l10n.refresh,
         onAction: () => ref.read(feedNotifierProvider.notifier).load(),
       );
     }
@@ -226,7 +228,9 @@ class _FeedVideoPage extends ConsumerWidget {
       final bookmarked = updated?.isBookmarked ?? false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(bookmarked ? 'Saved to bookmarks' : 'Removed bookmark'),
+          content: Text(bookmarked
+              ? AppLocalizations.of(context)!.bookmarkSaved
+              : AppLocalizations.of(context)!.bookmarkRemoved),
           duration: const Duration(milliseconds: 900),
         ),
       );
@@ -343,7 +347,7 @@ class _FeedVideoPage extends ConsumerWidget {
                 icon: latest.isBookmarked
                     ? Icons.bookmark
                     : Icons.bookmark_border,
-                label: 'Save',
+                label: AppLocalizations.of(context)!.saveAction,
                 activeColor: latest.isBookmarked ? Colors.amber : null,
                 onTap: () => _toggleBookmark(context, ref),
               ),

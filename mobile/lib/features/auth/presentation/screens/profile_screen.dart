@@ -93,14 +93,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () => context.push('/orders'),
-                child: const Text('My orders'),
+                child: Text(l10n.myOrders),
               ),
               const SizedBox(height: 12),
               OutlinedButton(
                 onPressed: () => context.push(
                   user.isSeller ? '/seller' : '/seller/apply',
                 ),
-                child: Text(user.isSeller ? 'Seller center' : 'Become a seller'),
+                child: Text(user.isSeller ? l10n.sellerCenter : l10n.becomeSeller),
               ),
               const SizedBox(height: 12),
               OutlinedButton(

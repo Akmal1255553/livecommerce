@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/providers/seller_providers.dart';
 
@@ -13,7 +14,7 @@ class GoLiveScreen extends ConsumerStatefulWidget {
 }
 
 class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
-  final _titleController = TextEditingController(text: 'Live sale');
+  final _titleController = TextEditingController();
   final Set<String> _selectedProductIds = {};
   bool _submitting = false;
 
@@ -30,10 +31,12 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   }
 
   Future<void> _start() async {
-    final title = _titleController.text.trim();
+    final l10n = AppLocalizations.of(context)!;
+    final rawTitle = _titleController.text.trim();
+    final title = rawTitle.isEmpty ? l10n.defaultLiveTitle : rawTitle;
     if (title.length < 2) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Enter a title')),
+        SnackBar(content: Text(l10n.enterTitle)),
       );
       return;
     }
@@ -65,28 +68,32 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
   @override
   Widget build(BuildContext context) {
     final productsState = ref.watch(sellerProductsProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Go Live')),
+      appBar: AppBar(title: Text(l10n.goLiveTitle)),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           Text(
-            'Chrome MVP uses a LIVE placeholder (no Agora camera yet).',
+            l10n.goLiveChromeHint,
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 16),
           TextField(
             controller: _titleController,
-            decoration: const InputDecoration(labelText: 'Stream title'),
+            decoration: InputDecoration(
+              labelText: l10n.streamTitleLabel,
+              hintText: l10n.streamTitleLabel,
+            ),
           ),
           const SizedBox(height: 24),
-          Text('Attach products (optional)', style: Theme.of(context).textTheme.titleMedium),
+          Text(l10n.attachProducts, style: Theme.of(context).textTheme.titleMedium),
           const SizedBox(height: 8),
           if (productsState.isLoading && productsState.products.isEmpty)
             const LinearProgressIndicator()
           else if (productsState.products.isEmpty)
-            const Text('No products yet — you can still go live.')
+            Text(l10n.noProductsYet)
           else
             ...productsState.products.map((product) {
               final selected = _selectedProductIds.contains(product.id);
@@ -116,7 +123,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
                     height: 18,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
-                : const Text('Start live'),
+                : Text(l10n.startLive),
           ),
         ],
       ),

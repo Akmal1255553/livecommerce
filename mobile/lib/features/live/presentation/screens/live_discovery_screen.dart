@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
@@ -38,15 +39,16 @@ class _LiveDiscoveryScreenState extends ConsumerState<LiveDiscoveryScreen>
   Widget build(BuildContext context) {
     final live = ref.watch(liveListProvider);
     final replays = ref.watch(liveReplayListProvider);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Live'),
+        title: Text(l10n.liveTitle),
         bottom: TabBar(
           controller: _tabs,
-          tabs: const [
-            Tab(text: 'Live now'),
-            Tab(text: 'Replays'),
+          tabs: [
+            Tab(text: l10n.liveNowTab),
+            Tab(text: l10n.replaysTab),
           ],
         ),
         actions: [
@@ -64,27 +66,34 @@ class _LiveDiscoveryScreenState extends ConsumerState<LiveDiscoveryScreen>
         children: [
           _SessionList(
             state: live,
-            emptyLabel: 'No live sessions right now',
+            emptyLabel: l10n.liveEmpty,
+            refreshLabel: l10n.refresh,
             onRetry: () => ref.read(liveListProvider.notifier).load(),
             onRefresh: () => ref.read(liveListProvider.notifier).load(),
             onTap: (id) => context.push('/live/$id'),
-            leading: const CircleAvatar(
+            leading: CircleAvatar(
               backgroundColor: Colors.red,
               child: Text(
-                'LIVE',
-                style: TextStyle(
+                l10n.liveBadge,
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
                 ),
               ),
             ),
-            subtitleBuilder: (session) =>
-                '@${session.seller?.username ?? 'seller'} · ${session.viewerCount} watching',
+            subtitleBuilder: (context, session) {
+              final l = AppLocalizations.of(context)!;
+              return l.watchingCount(
+                session.seller?.username ?? 'seller',
+                session.viewerCount,
+              );
+            },
           ),
           _SessionList(
             state: replays,
-            emptyLabel: 'No replays yet — end a live to generate one',
+            emptyLabel: l10n.replaysEmpty,
+            refreshLabel: l10n.refresh,
             onRetry: () => ref.read(liveReplayListProvider.notifier).load(),
             onRefresh: () => ref.read(liveReplayListProvider.notifier).load(),
             onTap: (id) => context.push('/live/replay/$id'),
@@ -92,9 +101,13 @@ class _LiveDiscoveryScreenState extends ConsumerState<LiveDiscoveryScreen>
               backgroundColor: Color(0xFF0F3460),
               child: Icon(Icons.replay, color: Colors.white, size: 18),
             ),
-            subtitleBuilder: (session) {
+            subtitleBuilder: (context, session) {
+              final l = AppLocalizations.of(context)!;
               final mins = ((session.durationSeconds ?? 0) / 60).ceil();
-              return '@${session.seller?.username ?? 'seller'} · ${mins}m replay';
+              return l.replayDuration(
+                session.seller?.username ?? 'seller',
+                mins,
+              );
             },
           ),
         ],
@@ -107,6 +120,7 @@ class _SessionList extends StatelessWidget {
   const _SessionList({
     required this.state,
     required this.emptyLabel,
+    required this.refreshLabel,
     required this.onRetry,
     required this.onRefresh,
     required this.onTap,
@@ -116,11 +130,12 @@ class _SessionList extends StatelessWidget {
 
   final LiveListState state;
   final String emptyLabel;
+  final String refreshLabel;
   final VoidCallback onRetry;
   final Future<void> Function() onRefresh;
   final void Function(String id) onTap;
   final Widget leading;
-  final String Function(LiveSession session) subtitleBuilder;
+  final String Function(BuildContext context, LiveSession session) subtitleBuilder;
 
   @override
   Widget build(BuildContext context) {
@@ -143,7 +158,7 @@ class _SessionList extends StatelessWidget {
               child: EmptyState(
                 title: emptyLabel,
                 icon: Icons.live_tv_outlined,
-                actionLabel: 'Refresh',
+                actionLabel: refreshLabel,
                 onAction: onRetry,
               ),
             ),
@@ -164,7 +179,7 @@ class _SessionList extends StatelessWidget {
           return ListTile(
             leading: leading,
             title: Text(session.title),
-            subtitle: Text(subtitleBuilder(session)),
+            subtitle: Text(subtitleBuilder(context, session)),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => onTap(session.id),
           );

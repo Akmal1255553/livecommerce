@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 
@@ -89,9 +90,10 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   Widget build(BuildContext context) {
     final order = _order;
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Payment')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.paymentTitle)),
       body: order == null
           ? Center(
               child: _error != null
@@ -107,36 +109,38 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   Text(
-                    'Pay for order #${order.orderNumber}',
+                    l10n.payForOrder(order.orderNumber),
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Amount: ${order.totals.total.format()}',
+                    l10n.amountLabel(order.totals.total.format()),
                     style: theme.textTheme.titleLarge,
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Method: ${order.paymentMethod ?? 'click'}'
-                    '${order.paymentProvider != null ? ' · ${order.paymentProvider}' : ''}',
+                    order.paymentProvider != null
+                        ? '${l10n.methodWithValue(order.paymentMethod ?? 'click')} · ${order.paymentProvider}'
+                        : l10n.methodWithValue(order.paymentMethod ?? 'click'),
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Status: ${order.status}'
-                    '${order.paymentStatus != null ? ' · payment ${order.paymentStatus}' : ''}',
+                    order.paymentStatus != null
+                        ? '${l10n.orderStatusLabel(order.status)} · ${l10n.orderPaymentLabel(order.paymentStatus!)}'
+                        : l10n.orderStatusLabel(order.status),
                   ),
                   if (widget.paymentUrl != null) ...[
                     const SizedBox(height: 16),
                     Text(
-                      'Gateway redirect (sandbox):\n${widget.paymentUrl}',
+                      l10n.paymentRedirectLabel(widget.paymentUrl!),
                       style: theme.textTheme.bodySmall,
                     ),
                   ],
                   const SizedBox(height: 24),
                   Text(
-                    'This is the local payment sandbox. Confirm to simulate a successful Click/Payme webhook.',
+                    l10n.paymentSandboxHint,
                     style: theme.textTheme.bodyMedium,
                   ),
                   if (_error != null) ...[
@@ -155,12 +159,12 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Pay now'),
+                        : Text(l10n.payNow),
                   ),
                   const SizedBox(height: 12),
                   OutlinedButton(
                     onPressed: _busy ? null : () => _complete('failed'),
-                    child: const Text('Cancel payment'),
+                    child: Text(l10n.cancelPayment),
                   ),
                 ],
               ),

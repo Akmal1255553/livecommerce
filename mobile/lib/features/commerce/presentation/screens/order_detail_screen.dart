@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/money_amount.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
@@ -17,7 +18,7 @@ class OrderDetailScreen extends ConsumerWidget {
     final orderAsync = ref.watch(orderDetailProvider(orderId));
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Order details')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.orderDetailsTitle)),
       body: orderAsync.when(
         loading: () => const ListSkeleton(itemCount: 4),
         error: (error, _) => ErrorDisplay(
@@ -38,6 +39,7 @@ class _OrderDetailBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -49,30 +51,30 @@ class _OrderDetailBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text('Status: ${order.status}'),
+        Text(l10n.orderStatusLabel(order.status)),
         if (order.paymentStatus != null)
-          Text('Payment: ${order.paymentStatus}'),
+          Text(l10n.orderPaymentLabel(order.paymentStatus!)),
         if (order.paymentMethod != null)
-          Text('Method: ${order.paymentMethod}'),
-        if (order.createdAt != null) Text('Placed: ${order.createdAt}'),
+          Text(l10n.orderMethodLabel(order.paymentMethod!)),
+        if (order.createdAt != null) Text(l10n.orderPlacedLabel(order.createdAt!.toString())),
         if (order.isAwaitingPayment) ...[
           const SizedBox(height: 16),
           FilledButton(
             onPressed: () => context.push('/payment/${order.id}', extra: {
               'order': order,
             }),
-            child: const Text('Continue payment'),
+            child: Text(l10n.continuePayment),
           ),
         ],
         if (order.canRequestRefund) ...[
           const SizedBox(height: 12),
           OutlinedButton(
             onPressed: () => context.push('/orders/${order.id}/refund'),
-            child: const Text('Request refund'),
+            child: Text(l10n.requestRefund),
           ),
         ],
         const SizedBox(height: 20),
-        Text('Items', style: theme.textTheme.titleMedium),
+        Text(l10n.orderItems, style: theme.textTheme.titleMedium),
         const SizedBox(height: 8),
         ...order.items.map(
           (item) => ListTile(
@@ -86,19 +88,19 @@ class _OrderDetailBody extends StatelessWidget {
           ),
         ),
         const Divider(height: 32),
-        _TotalRow(label: 'Subtotal', amount: order.totals.subtotal),
-        _TotalRow(label: 'Shipping', amount: order.totals.shipping),
-        _TotalRow(label: 'Discount', amount: order.totals.discount),
-        _TotalRow(label: 'Tax', amount: order.totals.tax),
+        _TotalRow(label: l10n.subtotal, amount: order.totals.subtotal),
+        _TotalRow(label: l10n.shipping, amount: order.totals.shipping),
+        _TotalRow(label: l10n.discount, amount: order.totals.discount),
+        _TotalRow(label: l10n.tax, amount: order.totals.tax),
         const SizedBox(height: 8),
         _TotalRow(
-          label: 'Total',
+          label: l10n.total,
           amount: order.totals.total,
           emphasized: true,
         ),
         if (order.shippingAddress != null) ...[
           const Divider(height: 32),
-          Text('Shipping address', style: theme.textTheme.titleMedium),
+          Text(l10n.shippingAddress, style: theme.textTheme.titleMedium),
           const SizedBox(height: 8),
           Text(order.shippingAddress!.fullName),
           Text(order.shippingAddress!.phone),

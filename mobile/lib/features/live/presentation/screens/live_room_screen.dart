@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/live/data/live_repository.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
@@ -58,26 +59,29 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final products = ref.read(sellerProductsProvider).products;
     if (products.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No products to pin')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.noProductsToPin)),
       );
       return;
     }
 
     final productId = await showModalBottomSheet<String>(
       context: context,
-      builder: (context) => ListView(
-        shrinkWrap: true,
-        children: [
-          const ListTile(title: Text('Pin a product')),
-          ...products.map(
-            (p) => ListTile(
-              title: Text(p.title),
-              subtitle: Text('${p.price.toInt()} UZS'),
-              onTap: () => Navigator.pop(context, p.id),
+      builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
+        return ListView(
+          shrinkWrap: true,
+          children: [
+            ListTile(title: Text(l10n.pinProductTitle)),
+            ...products.map(
+              (p) => ListTile(
+                title: Text(p.title),
+                subtitle: Text('${p.price.toInt()} UZS'),
+                onTap: () => Navigator.pop(context, p.id),
+              ),
             ),
-          ),
-        ],
-      ),
+          ],
+        );
+      },
     );
 
     if (productId == null) {
@@ -109,10 +113,11 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
       context: context,
       isScrollControlled: true,
       builder: (context) {
+        final l10n = AppLocalizations.of(context)!;
         if (suggestions.isEmpty) {
-          return const Padding(
-            padding: EdgeInsets.all(24),
-            child: Text('No suggestions right now'),
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(l10n.noSuggestions),
           );
         }
 
@@ -122,12 +127,12 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
             children: [
               Text(
-                'Live assistant',
+                l10n.liveAssistantTitle,
                 style: Theme.of(context).textTheme.titleMedium,
               ),
               const SizedBox(height: 4),
               Text(
-                'Rule-based tips (ADR-012). OpenAI comes in Sprint 9+.',
+                l10n.liveAssistantBody,
                 style: Theme.of(context).textTheme.bodySmall,
               ),
               const SizedBox(height: 12),
@@ -144,7 +149,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               await _applySuggestion(s);
                             },
                             child: Text(
-                              s.action == 'pin_product' ? 'Pin' : 'Use',
+                              s.action == 'pin_product' ? l10n.pinAction : l10n.useAction,
                             ),
                           ),
                   ),
@@ -166,7 +171,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         return;
       }
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(ok ? 'Product pinned' : 'Could not pin product')),
+        SnackBar(content: Text(ok ? AppLocalizations.of(context)!.productPinned : AppLocalizations.of(context)!.productPinFailed)),
       );
       return;
     }
@@ -177,7 +182,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
         TextPosition(offset: _chatController.text.length),
       );
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Reply drafted in chat box')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.replyDrafted)),
       );
     }
   }
@@ -191,7 +196,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     }
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Added to cart')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.addedToCart)),
       );
       return;
     }
@@ -290,7 +295,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                                 controller: _chatController,
                                 style: const TextStyle(color: Colors.white),
                                 decoration: InputDecoration(
-                                  hintText: 'Say something…',
+                                  hintText: AppLocalizations.of(context)!.chatHint,
                                   hintStyle:
                                       const TextStyle(color: Colors.white54),
                                   filled: true,
@@ -345,6 +350,7 @@ class _LiveHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       child: Row(
@@ -359,9 +365,9 @@ class _LiveHeader extends StatelessWidget {
               color: Colors.red,
               borderRadius: BorderRadius.circular(4),
             ),
-            child: const Text(
-              'LIVE',
-              style: TextStyle(
+            child: Text(
+              l10n.liveBadge,
+              style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w800,
                 fontSize: 12,
@@ -371,7 +377,7 @@ class _LiveHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              session?.title ?? 'Live',
+              session?.title ?? l10n.liveRoomTitle,
               style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
               overflow: TextOverflow.ellipsis,
             ),
@@ -418,7 +424,7 @@ class _LiveHeader extends StatelessWidget {
             IconButton(
               onPressed: onAssistant,
               icon: const Icon(Icons.auto_awesome, color: Colors.amberAccent),
-              tooltip: 'Assistant',
+              tooltip: l10n.assistantTooltip,
             ),
           if (isHost && onPin != null)
             IconButton(
@@ -428,7 +434,7 @@ class _LiveHeader extends StatelessWidget {
           if (isHost)
             TextButton(
               onPressed: onEnd,
-              child: const Text('End', style: TextStyle(color: Colors.redAccent)),
+              child: Text(l10n.endLive, style: const TextStyle(color: Colors.redAccent)),
             ),
         ],
       ),
@@ -441,6 +447,7 @@ class _LivePlaceholder extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -449,20 +456,20 @@ class _LivePlaceholder extends StatelessWidget {
           colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
         ),
       ),
-      child: const Center(
+      child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.videocam, color: Colors.white54, size: 64),
-            SizedBox(height: 12),
+            const Icon(Icons.videocam, color: Colors.white54, size: 64),
+            const SizedBox(height: 12),
             Text(
-              'Live placeholder',
-              style: TextStyle(color: Colors.white70, fontSize: 16),
+              l10n.livePlaceholderTitle,
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
-            SizedBox(height: 4),
+            const SizedBox(height: 4),
             Text(
-              'Agora camera comes in a later pass',
-              style: TextStyle(color: Colors.white38, fontSize: 12),
+              l10n.livePlaceholderBody,
+              style: const TextStyle(color: Colors.white38, fontSize: 12),
             ),
           ],
         ),

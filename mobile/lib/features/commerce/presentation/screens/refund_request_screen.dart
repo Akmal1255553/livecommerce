@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 
 class RefundRequestScreen extends ConsumerStatefulWidget {
@@ -27,7 +28,7 @@ class _RefundRequestScreenState extends ConsumerState<RefundRequestScreen> {
     final reason = _reasonController.text.trim();
     if (reason.length < 5) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please describe the reason (min 5 characters)')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.refundReasonTooShort)),
       );
       return;
     }
@@ -44,7 +45,7 @@ class _RefundRequestScreenState extends ConsumerState<RefundRequestScreen> {
       ref.invalidate(orderDetailProvider(widget.orderId));
       context.go('/orders/${order.id}');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Refund requested')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.refundRequested)),
       );
     } catch (error) {
       if (!mounted) {
@@ -60,23 +61,23 @@ class _RefundRequestScreenState extends ConsumerState<RefundRequestScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Request refund')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.refundTitle)),
       body: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Tell the seller why you need a refund.',
+              AppLocalizations.of(context)!.refundIntro,
               style: Theme.of(context).textTheme.bodyLarge,
             ),
             const SizedBox(height: 16),
             TextField(
               controller: _reasonController,
               maxLines: 5,
-              decoration: const InputDecoration(
-                labelText: 'Reason',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: AppLocalizations.of(context)!.refundReasonLabel,
+                border: const OutlineInputBorder(),
                 alignLabelWithHint: true,
               ),
             ),
@@ -89,7 +90,7 @@ class _RefundRequestScreenState extends ConsumerState<RefundRequestScreen> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2),
                     )
-                  : const Text('Submit refund request'),
+                  : Text(AppLocalizations.of(context)!.submitRefund),
             ),
           ],
         ),

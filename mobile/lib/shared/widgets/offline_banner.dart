@@ -1,6 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/core/network/network_info.dart';
 
 final networkInfoProvider = Provider<NetworkInfo>((ref) {
@@ -52,7 +53,7 @@ class OfflineBanner extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'You are offline. Some actions may fail.',
+                      AppLocalizations.of(context)!.offlineBanner,
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                             color: Theme.of(context).colorScheme.onErrorContainer,
                           ),

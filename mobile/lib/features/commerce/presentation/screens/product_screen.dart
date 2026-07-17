@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/product_detail.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
@@ -27,7 +28,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Product'),
+        title: Text(AppLocalizations.of(context)!.productTitle),
         actions: [
           IconButton(
             icon: Badge(
@@ -76,7 +77,7 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
   Future<void> _addToCart(ProductDetail product) async {
     if (product.variants.isNotEmpty && _selectedVariantId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select a variant')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.selectVariant)),
       );
       return;
     }
@@ -94,9 +95,9 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Added to cart'),
+          content: Text(AppLocalizations.of(context)!.addedToCart),
           action: SnackBarAction(
-            label: 'View cart',
+            label: AppLocalizations.of(context)!.viewCart,
             onPressed: () => context.push('/cart'),
           ),
         ),
@@ -133,6 +134,7 @@ class _ProductBody extends StatelessWidget {
   Widget build(BuildContext context) {
     final priceText = NumberFormat('#,###').format(product.price.toInt());
     final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       children: [
@@ -197,7 +199,7 @@ class _ProductBody extends StatelessWidget {
                       ],
                       if (product.variants.isNotEmpty) ...[
                         const SizedBox(height: 20),
-                        Text('Variants', style: theme.textTheme.titleMedium),
+                        Text(l10n.variants, style: theme.textTheme.titleMedium),
                         const SizedBox(height: 8),
                         Wrap(
                           spacing: 8,
@@ -215,7 +217,7 @@ class _ProductBody extends StatelessWidget {
                       const SizedBox(height: 20),
                       Row(
                         children: [
-                          Text('Quantity', style: theme.textTheme.titleMedium),
+                          Text(l10n.quantity, style: theme.textTheme.titleMedium),
                           const Spacer(),
                           IconButton(
                             onPressed: quantity > 1
@@ -250,7 +252,7 @@ class _ProductBody extends StatelessWidget {
                         width: 20,
                         child: CircularProgressIndicator(strokeWidth: 2),
                       )
-                    : Text(product.isPurchasable ? 'Add to cart' : 'Out of stock'),
+                    : Text(product.isPurchasable ? l10n.addToCart : l10n.outOfStock),
               ),
             ),
           ),

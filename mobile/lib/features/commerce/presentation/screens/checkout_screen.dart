@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 
@@ -52,7 +53,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cart = ref.read(cartNotifierProvider).cart;
     if (cart == null || cart.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Cart is empty')),
+        SnackBar(content: Text(AppLocalizations.of(context)!.cartIsEmpty)),
       );
       return;
     }
@@ -109,7 +110,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
     final cart = cartState.cart;
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Checkout')),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.checkoutTitle)),
       body: cartState.isLoading && cart == null
           ? const Center(child: CircularProgressIndicator())
           : Form(
@@ -125,14 +126,14 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Order summary',
+                              AppLocalizations.of(context)!.orderSummary,
                               style: Theme.of(context).textTheme.titleMedium,
                             ),
                             const SizedBox(height: 8),
-                            Text('${cart.summary.itemCount} items'),
-                            Text('Subtotal: ${cart.summary.subtotal.format()}'),
+                            Text(AppLocalizations.of(context)!.itemCountLabel(cart.summary.itemCount)),
+                            Text(AppLocalizations.of(context)!.subtotalWithAmount(cart.summary.subtotal.format())),
                             Text(
-                              'Shipping est.: ${cart.summary.shippingEstimate.format()}',
+                              AppLocalizations.of(context)!.shippingEstimate(cart.summary.shippingEstimate.format()),
                             ),
                           ],
                         ),
@@ -141,7 +142,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     const SizedBox(height: 16),
                   ],
                   Text(
-                    'Payment method',
+                    AppLocalizations.of(context)!.paymentMethod,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
@@ -158,57 +159,57 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Shipping address',
+                    AppLocalizations.of(context)!.shippingAddress,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _fullNameController,
-                    decoration: const InputDecoration(labelText: 'Full name'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.fullNameLabel),
                     textInputAction: TextInputAction.next,
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
+                        v == null || v.trim().isEmpty ? AppLocalizations.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _phoneController,
-                    decoration: const InputDecoration(labelText: 'Phone'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.phoneLabel),
                     keyboardType: TextInputType.phone,
                     textInputAction: TextInputAction.next,
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
+                        v == null || v.trim().isEmpty ? AppLocalizations.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _regionController,
-                    decoration: const InputDecoration(labelText: 'Region'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.regionLabel),
                     textInputAction: TextInputAction.next,
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
+                        v == null || v.trim().isEmpty ? AppLocalizations.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _cityController,
-                    decoration: const InputDecoration(labelText: 'City'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.cityLabel),
                     textInputAction: TextInputAction.next,
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
+                        v == null || v.trim().isEmpty ? AppLocalizations.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _addressController,
-                    decoration: const InputDecoration(labelText: 'Address'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.addressLabel),
                     textInputAction: TextInputAction.next,
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
+                        v == null || v.trim().isEmpty ? AppLocalizations.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 12),
                   TextFormField(
                     controller: _postalCodeController,
-                    decoration: const InputDecoration(labelText: 'Postal code'),
+                    decoration: InputDecoration(labelText: AppLocalizations.of(context)!.postalCodeLabel),
                     textInputAction: TextInputAction.done,
                     validator: (v) =>
-                        v == null || v.trim().isEmpty ? 'Required' : null,
+                        v == null || v.trim().isEmpty ? AppLocalizations.of(context)!.requiredField : null,
                   ),
                   const SizedBox(height: 24),
                   FilledButton(
@@ -219,7 +220,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                             width: 20,
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
-                        : const Text('Place order'),
+                        : Text(AppLocalizations.of(context)!.placeOrder),
                   ),
                 ],
               ),

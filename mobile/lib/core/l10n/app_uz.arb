@@ -33,5 +33,217 @@
   "homeTab": "Bosh sahifa",
   "profileTab": "Profil",
   "settingsTab": "Sozlamalar",
-  "authRequired": "Davom etish uchun tizimga kiring"
+  "authRequired": "Davom etish uchun tizimga kiring",
+
+  "retry": "Qayta urinish",
+  "refresh": "Yangilash",
+  "browseFeed": "Lentuaga o'tish",
+  "requiredField": "Majburiy",
+  "offlineBanner": "Internet yo'q. Ba'zi amallar ishlamasligi mumkin.",
+  "myOrders": "Buyurtmalarim",
+  "sellerCenter": "Sotuvchi paneli",
+  "becomeSeller": "Sotuvchi bo'lish",
+
+  "feedForYou": "Siz uchun",
+  "feedFollowing": "Obunalar",
+  "liveNowTooltip": "Jonli efir",
+  "feedEmptyTitle": "Hali video yo'q",
+  "feedEmptySubtitle": "Tez orada yangi kontent chiqadi.",
+  "feedFollowingEmptyTitle": "Videolarni ko'rish uchun ijodkorlarga obuna bo'ling",
+  "feedFollowingEmptySubtitle": "Obuna bo'lganlaringizning postlari shu yerda chiqadi.",
+  "saveAction": "Saqlash",
+  "bookmarkSaved": "Saqlanganlarga qo'shildi",
+  "bookmarkRemoved": "Saqlanganlardan olib tashlandi",
+  "commentsTitle": "Izohlar",
+  "commentsHint": "Izoh yozing…",
+  "commentsLoading": "Izohlar yuklanmoqda…",
+  "commentsEmptyTitle": "Hali izohlar yo'q",
+  "commentsEmptySubtitle": "Birinchi bo'lib yozing.",
+
+  "cartTitle": "Savat",
+  "cartEmptyTitle": "Savat bo'sh",
+  "cartEmptySubtitle": "Lentadan mahsulot tanlab shu yerga qo'shing.",
+  "remove": "O'chirish",
+  "subtotal": "Oraliq summa",
+  "checkout": "Buyurtma berish",
+  "cartIsEmpty": "Savat bo'sh",
+
+  "checkoutTitle": "Buyurtma",
+  "orderSummary": "Buyurtma xulosasi",
+  "itemCountLabel": "{count} ta mahsulot",
+  "@itemCountLabel": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "subtotalWithAmount": "Oraliq: {amount}",
+  "@subtotalWithAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "shippingEstimate": "Yetkazib berish (taxminiy): {amount}",
+  "@shippingEstimate": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "paymentMethod": "To'lov usuli",
+  "shippingAddress": "Yetkazib berish manzili",
+  "fullNameLabel": "To'liq ism",
+  "regionLabel": "Viloyat",
+  "cityLabel": "Shahar",
+  "addressLabel": "Manzil",
+  "postalCodeLabel": "Pochta indeksi",
+  "placeOrder": "Buyurtmani tasdiqlash",
+
+  "ordersTitle": "Buyurtmalarim",
+  "ordersEmptyTitle": "Buyurtmalar yo'q",
+  "ordersEmptySubtitle": "Checkout qilganingizdan keyin buyurtmalar shu yerda chiqadi.",
+  "orderDetailsTitle": "Buyurtma tafsilotlari",
+  "orderStatusLabel": "Holat: {status}",
+  "@orderStatusLabel": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "orderPaymentLabel": "To'lov: {status}",
+  "@orderPaymentLabel": {
+    "placeholders": {
+      "status": {"type": "String"}
+    }
+  },
+  "orderMethodLabel": "Usul: {method}",
+  "@orderMethodLabel": {
+    "placeholders": {
+      "method": {"type": "String"}
+    }
+  },
+  "orderPlacedLabel": "Berilgan: {date}",
+  "@orderPlacedLabel": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "continuePayment": "To'lovni davom ettirish",
+  "requestRefund": "Qaytarish so'rash",
+  "orderItems": "Mahsulotlar",
+  "shipping": "Yetkazib berish",
+  "discount": "Chegirma",
+  "tax": "Soliq",
+  "total": "Jami",
+
+  "orderPlacedTitle": "Buyurtma qabul qilindi",
+  "thankYou": "Rahmat!",
+  "orderNumberLabel": "Buyurtma #{number}",
+  "@orderNumberLabel": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "totalWithAmount": "Jami: {amount}",
+  "@totalWithAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "viewOrder": "Buyurtmani ko'rish",
+  "viewOrders": "Buyurtmalarni ko'rish",
+  "backToFeed": "Lentuaga qaytish",
+
+  "paymentTitle": "To'lov",
+  "payForOrder": "Buyurtma #{number} uchun to'lov",
+  "@payForOrder": {
+    "placeholders": {
+      "number": {"type": "String"}
+    }
+  },
+  "amountLabel": "Summa: {amount}",
+  "@amountLabel": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "methodWithValue": "Usul: {method}",
+  "@methodWithValue": {
+    "placeholders": {
+      "method": {"type": "String"}
+    }
+  },
+  "paymentSandboxHint": "Bu lokal to'lov sandbox. Muvaffaqiyatli Click/Payme webhookni simulyatsiya qilish uchun tasdiqlang.",
+  "paymentRedirectLabel": "Gateway redirect (sandbox):\n{url}",
+  "@paymentRedirectLabel": {
+    "placeholders": {
+      "url": {"type": "String"}
+    }
+  },
+  "payNow": "To'lash",
+  "cancelPayment": "To'lovni bekor qilish",
+
+  "refundTitle": "Qaytarish so'rovi",
+  "refundIntro": "Nima uchun qaytarish kerakligini sotuvchiga yozing.",
+  "refundReasonLabel": "Sabab",
+  "submitRefund": "So'rovni yuborish",
+  "refundReasonTooShort": "Sababni yozing (kamida 5 belgi)",
+  "refundRequested": "Qaytarish so'rovi yuborildi",
+
+  "productTitle": "Mahsulot",
+  "variants": "Variantlar",
+  "quantity": "Miqdor",
+  "addToCart": "Savatga qo'shish",
+  "outOfStock": "Mavjud emas",
+  "selectVariant": "Variantni tanlang",
+  "addedToCart": "Savatga qo'shildi",
+  "viewCart": "Savatni ko'rish",
+
+  "liveTitle": "Jonli",
+  "liveNowTab": "Hozir jonli",
+  "replaysTab": "Takrorlar",
+  "liveEmpty": "Hozir jonli efir yo'q",
+  "replaysEmpty": "Hali takrorlar yo'q — efir tugagach paydo bo'ladi",
+  "liveBadge": "LIVE",
+  "watchingCount": "@{username} · {count} tomosha qilmoqda",
+  "@watchingCount": {
+    "placeholders": {
+      "username": {"type": "String"},
+      "count": {"type": "int"}
+    }
+  },
+  "replayDuration": "@{username} · {mins} daqiqa takror",
+  "@replayDuration": {
+    "placeholders": {
+      "username": {"type": "String"},
+      "mins": {"type": "int"}
+    }
+  },
+
+  "goLiveTitle": "Efirga chiqish",
+  "goLiveChromeHint": "Chrome MVP da LIVE placeholder ishlatiladi (Agora kamera hali yo'q).",
+  "streamTitleLabel": "Efir nomi",
+  "attachProducts": "Mahsulotlarni biriktirish (ixtiyoriy)",
+  "noProductsYet": "Hali mahsulot yo'q — baribir efirga chiqishingiz mumkin.",
+  "startLive": "Efirni boshlash",
+  "enterTitle": "Sarlavha kiriting",
+  "defaultLiveTitle": "Jonli sotuv",
+
+  "liveRoomTitle": "Jonli efir",
+  "livePlaceholderTitle": "Jonli placeholder",
+  "livePlaceholderBody": "Agora kamera keyingi bosqichda qo'shiladi",
+  "chatHint": "Biror narsa yozing…",
+  "endLive": "Tugatish",
+  "assistantTooltip": "Yordamchi",
+  "noProductsToPin": "Pin qilish uchun mahsulot yo'q",
+  "pinProductTitle": "Mahsulotni pin qilish",
+  "liveAssistantTitle": "Jonli yordamchi",
+  "liveAssistantBody": "Qoida asosidagi maslahatlar (ADR-012). OpenAI Sprint 9+ da.",
+  "noSuggestions": "Hozircha taklif yo'q",
+  "pinAction": "Pin",
+  "useAction": "Ishlatish",
+  "productPinned": "Mahsulot pin qilindi",
+  "productPinFailed": "Mahsulotni pin qilib bo'lmadi",
+  "replyDrafted": "Javob chat maydoniga yozildi",
+
+  "replayTitle": "Takror",
+  "replayPlaceholder": "Takror placeholder",
+  "noReplayUrl": "Takror URL yo'q"
 }

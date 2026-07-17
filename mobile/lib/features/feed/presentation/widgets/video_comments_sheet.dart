@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
@@ -122,6 +123,7 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         Padding(
@@ -129,14 +131,14 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Comments',
+              l10n.commentsTitle,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
             ),
           ),
         ),
-        Expanded(child: _buildList()),
+        Expanded(child: _buildList(context, l10n)),
         const Divider(height: 1),
         SafeArea(
           top: false,
@@ -152,9 +154,9 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
                     maxLines: 3,
                     textInputAction: TextInputAction.send,
                     onSubmitted: (_) => _submit(),
-                    decoration: const InputDecoration(
-                      hintText: 'Add a comment…',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      hintText: l10n.commentsHint,
+                      border: const OutlineInputBorder(),
                       isDense: true,
                     ),
                   ),
@@ -178,17 +180,17 @@ class _CommentsSheetState extends ConsumerState<_CommentsSheet> {
     );
   }
 
-  Widget _buildList() {
+  Widget _buildList(BuildContext context, AppLocalizations l10n) {
     if (_loading) {
-      return const LoadingIndicator(message: 'Loading comments…');
+      return LoadingIndicator(message: l10n.commentsLoading);
     }
     if (_error != null) {
       return ErrorDisplay(message: _error!, onRetry: _load);
     }
     if (_comments.isEmpty) {
-      return const EmptyState(
-        title: 'No comments yet',
-        subtitle: 'Be the first to say something.',
+      return EmptyState(
+        title: l10n.commentsEmptyTitle,
+        subtitle: l10n.commentsEmptySubtitle,
         icon: Icons.chat_bubble_outline,
       );
     }

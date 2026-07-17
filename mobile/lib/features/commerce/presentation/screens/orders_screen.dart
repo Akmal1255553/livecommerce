@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
@@ -43,12 +44,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     final ordersState = ref.watch(ordersNotifierProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('My orders')),
-      body: _buildBody(ordersState),
+      appBar: AppBar(title: Text(AppLocalizations.of(context)!.ordersTitle)),
+      body: _buildBody(context, ordersState),
     );
   }
 
-  Widget _buildBody(OrdersState state) {
+  Widget _buildBody(BuildContext context, OrdersState state) {
     if (state.isLoading && state.orders.isEmpty) {
       return const ListSkeleton();
     }
@@ -61,11 +62,12 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
     }
 
     if (state.orders.isEmpty) {
+      final l10n = AppLocalizations.of(context)!;
       return EmptyState(
-        title: 'No orders yet',
-        subtitle: 'When you check out, your orders will appear here.',
+        title: l10n.ordersEmptyTitle,
+        subtitle: l10n.ordersEmptySubtitle,
         icon: Icons.receipt_long_outlined,
-        actionLabel: 'Browse feed',
+        actionLabel: l10n.browseFeed,
         onAction: () => context.go('/home'),
       );
     }
