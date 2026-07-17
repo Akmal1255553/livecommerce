@@ -14,7 +14,7 @@ services:
     runtime: docker
     plan: free
     region: oregon
-    branch: feature/rc1-hardening
+    branch: feature/ux-polish-rc1
     rootDir: backend
     dockerfilePath: ./Dockerfile
     dockerContext: .

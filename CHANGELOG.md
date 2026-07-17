@@ -22,6 +22,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - GoRouter `fadeSlide` / `slideUp` page transitions
 - Pull-to-refresh on cart, orders, and live discovery
 - i18n coverage for feed, commerce, live, shared widgets (uz/ru ARBs); theme polish (buttons, inputs, snackbars)
+- Fix live room 429: split `live-poll` vs `live-chat` throttles, raise auth API limit, slower client poll
 
 ## [0.7.0-rc1] — 2026-07-17
 

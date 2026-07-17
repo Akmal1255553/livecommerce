@@ -140,6 +140,8 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
   final Future<void> Function()? _onCartSynced;
   Timer? _pollTimer;
   bool _joined = false;
+  bool _pollInFlight = false;
+  int _pollTick = 0;
 
   Future<void> enter({bool asHost = false}) async {
     state = state.copyWith(isLoading: true, clearError: true, isHost: asHost);
@@ -170,16 +172,30 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
 
   void _startPolling() {
     _pollTimer?.cancel();
-    _pollTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+    _pollTick = 0;
+    // 5s chat poll; session refresh every other tick (~10s) to stay under API limits.
+    _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) async {
+      if (_pollInFlight) {
+        return;
+      }
+      _pollInFlight = true;
+      _pollTick += 1;
       try {
-        final session = await _repository.get(_sessionId);
         final afterId =
             state.messages.isEmpty ? null : state.messages.last.id;
         final newer = await _repository.chat(_sessionId, afterId: afterId);
         final merged = [...state.messages, ...newer];
-        state = state.copyWith(session: session, messages: merged);
+
+        if (_pollTick.isOdd) {
+          final session = await _repository.get(_sessionId);
+          state = state.copyWith(session: session, messages: merged);
+        } else {
+          state = state.copyWith(messages: merged);
+        }
       } catch (_) {
-        // Keep room open on transient poll errors.
+        // Keep room open on transient poll errors (incl. brief 429s).
+      } finally {
+        _pollInFlight = false;
       }
     });
   }
