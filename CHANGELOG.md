@@ -21,6 +21,7 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Feed interactions: like / bookmark / comments sheet / view tracking
 - GoRouter `fadeSlide` / `slideUp` page transitions
 - Pull-to-refresh on cart, orders, and live discovery
+- i18n coverage for feed, commerce, live, shared widgets (uz/ru ARBs); theme polish (buttons, inputs, snackbars)
 
 ## [0.7.0-rc1] — 2026-07-17
 
