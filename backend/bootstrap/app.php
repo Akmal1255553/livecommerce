@@ -50,6 +50,8 @@ return Application::configure(basePath: dirname(__DIR__))
             LogApiRequest::class,
             SetLocale::class,
         ]);
+
+        $middleware->throttleApi('api');
     })
     ->withSchedule(function (Schedule $schedule): void {
         $schedule->job(new FlushVideoViewsJob)->everyMinute();

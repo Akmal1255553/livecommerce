@@ -13,6 +13,16 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### RC1 hardening (pre-v0.7-rc1)
+
+- Fix missing `OrderController` import on buyer order routes
+- API rate limits: guest/auth/checkout/live-chat/search (`AppServiceProvider` + route middleware)
+- OTP verify lockout after 5 failed attempts
+- Atomic checkout idempotency claim (unique key before payment)
+- Payment webhook binds `transaction_id` to order payment reference
+- `PAYMENT_GATEWAY=fake` blocked in production; sandbox gated by `PAYMENT_SANDBOX_ENABLED`
+- API spec v1.2: `/checkout`, Sprint 6–7 surfaces, rate limits aligned with code
+
 #### Sprint 7 — Payments
 
 - Local payment gateway (`PAYMENT_GATEWAY=local|click|payme|uzum`) with redirect URL; `fake` stays instant-paid for tests

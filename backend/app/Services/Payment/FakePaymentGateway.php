@@ -28,6 +28,11 @@ class FakePaymentGateway implements PaymentGatewayInterface
 
     public function verifyWebhookSignature(string $rawPayload, ?string $signatureHeader): bool
     {
+        // Fake driver must never accept unsigned production webhooks.
+        if (app()->environment('production')) {
+            return false;
+        }
+
         return true;
     }
 }

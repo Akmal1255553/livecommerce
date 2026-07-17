@@ -8,12 +8,17 @@ use App\Contracts\Services\SmsProviderInterface;
 use App\Exceptions\Domain\ConflictException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
+use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 class OtpService
 {
     private const OTP_TTL_SECONDS = 300;
 
     private const RESEND_COOLDOWN_SECONDS = 60;
+
+    private const MAX_VERIFY_ATTEMPTS = 5;
+
+    private const LOCKOUT_SECONDS = 900;
 
     public function __construct(private readonly SmsProviderInterface $smsProvider) {}
 
@@ -31,6 +36,7 @@ class OtpService
 
         Cache::put($this->otpKey($phone), $otp, self::OTP_TTL_SECONDS);
         Cache::put($cooldownKey, self::RESEND_COOLDOWN_SECONDS, self::RESEND_COOLDOWN_SECONDS);
+        Cache::forget($this->attemptsKey($phone));
 
         $this->smsProvider->sendOtp($phone, $otp);
 
@@ -39,13 +45,26 @@ class OtpService
 
     public function verify(string $phone, string $otp): bool
     {
+        $attemptsKey = $this->attemptsKey($phone);
+        $attempts = (int) Cache::get($attemptsKey, 0);
+
+        if ($attempts >= self::MAX_VERIFY_ATTEMPTS) {
+            throw new TooManyRequestsHttpException(
+                self::LOCKOUT_SECONDS,
+                'Too many OTP attempts. Try again later.',
+            );
+        }
+
         $stored = Cache::get($this->otpKey($phone));
 
         if (! is_string($stored) || ! hash_equals($stored, $otp)) {
+            Cache::put($attemptsKey, $attempts + 1, self::LOCKOUT_SECONDS);
+
             return false;
         }
 
         Cache::forget($this->otpKey($phone));
+        Cache::forget($attemptsKey);
 
         return true;
     }
@@ -58,5 +77,10 @@ class OtpService
     private function cooldownKey(string $phone): string
     {
         return 'otp_sent:'.Str::slug($phone, '');
+    }
+
+    private function attemptsKey(string $phone): string
+    {
+        return 'otp_attempts:'.Str::slug($phone, '');
     }
 }

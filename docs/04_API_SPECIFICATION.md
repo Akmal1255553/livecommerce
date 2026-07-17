@@ -1000,20 +1000,22 @@ Guest carts use `type: "guest"` and string item IDs (`{productId}:{variantId|nul
 
 ---
 
-### 7.9 Orders
+### 7.9 Checkout & Orders
 
 | Method | Path | Auth | Description |
 |--------|------|------|-------------|
-| POST | `/orders` | Yes | Create order (checkout) |
+| POST | `/checkout` | Yes | Create order from cart (`Idempotency-Key` required) |
 | GET | `/orders` | Yes | List own orders (offset) |
 | GET | `/orders/{id}` | Yes | Get order detail |
-| POST | `/orders/{id}/cancel` | Yes | Cancel order (if pending) |
-| POST | `/orders/{id}/refund` | Yes | Request refund (paid/delivered orders) |
+| POST | `/orders/{id}/cancel` | Yes | Cancel order (`pending` / `awaiting_payment`) |
+| POST | `/orders/{id}/refund` | Yes | Request refund (paid/delivered/completed) |
 | GET | `/refunds/{id}` | Yes | Get refund request detail |
+| POST | `/payments/sandbox/{id}/complete` | Yes | Sandbox Pay/Cancel (disabled when `PAYMENT_SANDBOX_ENABLED=false`) |
 
-**POST /orders Request:**
+**POST /checkout Request:**
 ```json
 {
+  "cart_version": 2,
   "shipping_address": {
     "full_name": "John Doe",
     "phone": "+998901234567",
@@ -1028,16 +1030,21 @@ Guest carts use `type: "guest"` and string item IDs (`{productId}:{variantId|nul
 }
 ```
 
+**Headers:** `Idempotency-Key: {uuid}` (required). Same key + same body returns the cached order; same key + different body → 422.
+
 **Response: 201 Created**
 ```json
 {
   "success": true,
   "data": {
     "order": { OrderResource },
-    "payment_url": "https://payment-gateway.com/pay/..."
+    "payment_url": "https://…/api/v1/payments/sandbox/{order_id}?txn=…"
   }
 }
 ```
+
+When `PAYMENT_GATEWAY=fake`, order is `paid` immediately and `payment_url` is null.  
+When `local|click|payme|uzum`, order stays `awaiting_payment` until webhook / sandbox complete.
 
 **POST /orders/{id}/refund Request:**
 ```json
@@ -1046,17 +1053,44 @@ Guest carts use `type: "guest"` and string item IDs (`{productId}:{variantId|nul
 }
 ```
 
-**Response: 201 Created**
-```json
-{
-  "success": true,
-  "data": {
-    "refund": { RefundResource }
-  }
-}
-```
+**Response: 200 OK** — order with `status: refund_requested`.
 
 **GET /refunds/{id} Response:** Returns `{ RefundResource }` (see §6.9).
+
+> **Note:** Older drafts used `POST /orders` for checkout. Runtime truth is `POST /checkout` (Sprint 4.5+).
+
+---
+
+### 7.9a Live Commerce (Sprint 6)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/discover` | Optional | Mixed discover feed |
+| GET | `/live` | Optional | Live now |
+| GET | `/live/replays` | Optional | Ended sessions with replay |
+| POST | `/live/start` | Seller | Start live |
+| GET | `/live/{id}` | Optional | Live session detail |
+| POST | `/live/{id}/end` | Seller | End live |
+| POST | `/live/{id}/pin-product` | Seller | Pin product |
+| DELETE | `/live/{id}/pin-product/{productId}` | Seller | Unpin |
+| GET | `/live/{id}/chat` | Optional | Chat history |
+| POST | `/live/{id}/chat` | Yes | Send chat |
+| POST | `/live/{id}/join` | Yes | Join session |
+| POST | `/live/{id}/leave` | Yes | Leave session |
+| POST | `/live/{id}/add-to-cart` | Yes | Add pinned product to cart |
+| GET | `/live/{id}/assistant/suggestions` | Seller | Host assistant tips |
+| GET | `/seller/live/analytics` | Seller | Live analytics overview |
+| GET | `/seller/live/{id}/analytics` | Seller | Session analytics |
+
+### 7.9b Feed extras
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/feed/for-you` | Optional | Personalized feed |
+| GET | `/feed/trending` | Optional | Trending |
+| GET | `/feed/popular` | Optional | Popular |
+| GET | `/feed/new` | Optional | Newest |
+| GET | `/feed/following` | Yes | Following feed |
 
 ---
 
@@ -1317,14 +1351,17 @@ All admin endpoints require `role: admin` or `role: moderator` unless noted. Bas
 
 ## 8. Rate Limiting
 
-| Scope | Limit | Window |
-|-------|-------|--------|
-| Guest (unauthenticated) | 20 requests | 1 minute |
-| Authenticated user | 60 requests | 1 minute |
-| Auth endpoints (login, register) | 5 requests | 1 minute |
-| OTP resend | 1 request | 60 seconds |
-| Video upload | 10 requests | 1 hour |
-| Search | 30 requests | 1 minute |
+| Scope | Limit | Window | Implementation |
+|-------|-------|--------|----------------|
+| Guest (unauthenticated) | 20 requests | 1 minute | `throttle:api` |
+| Authenticated user | 60 requests | 1 minute | `throttle:api` |
+| Auth endpoints (login, register, OTP, refresh) | 5 requests | 1 minute | `throttle:auth` |
+| OTP resend | 1 request | 60 seconds | App-level cooldown |
+| OTP verify attempts | 5 failures | 15 minute lockout | `OtpService` |
+| Checkout | 10 requests | 1 minute | `throttle:checkout` |
+| Live chat GET/POST | 30 requests | 1 minute | `throttle:live-chat` |
+| Video upload | 10 requests | 1 hour | `VideoUploadService` |
+| Search | 30 requests | 1 minute | `throttle:search` |
 
 Rate limit headers on every response:
 
@@ -1352,15 +1389,18 @@ POST /api/v1/webhooks/payment
   "event": "payment.success",
   "transaction_id": "gateway-txn-id",
   "order_id": "uuid",
-  "amount": 275000.00,
+  "amount": 275000,
   "currency": "UZS",
   "timestamp": "2026-06-27T10:05:00Z"
 }
 ```
 
+`amount` is integer minor/major units matching `orders.total`.  
+`transaction_id` must match the order’s stored `payment_transaction_id` / `payment_reference`.
+
 **Response: 200 OK** — Always return 200 to prevent retries on processed events.
 
-Idempotency: Duplicate webhook events for the same transaction are ignored.
+Idempotency: Duplicate webhook events for the same `event:transaction_id` are ignored.
 
 ---
 
@@ -1370,6 +1410,7 @@ Idempotency: Duplicate webhook events for the same transaction are ignored.
 |---------|------|--------|---------|
 | 1.0 | 2026-06-27 | Founder & CTO | Initial API specification for MVP |
 | 1.1 | 2026-06-27 | Architecture Review | P0 patches: refunds, blocks, admin §7.17, RefundResource |
+| 1.2 | 2026-07-17 | RC1 hardening | `/checkout` replaces `/orders` for checkout; Sprint 6–7 surfaces; rate limits match code; webhook txn bind |
 
 ---
 
@@ -1379,4 +1420,4 @@ Idempotency: Duplicate webhook events for the same transaction are ignored.
 - [Project Structure](./05_PROJECT_STRUCTURE.md)
 - [Engineering Rules](./06_ENGINEERING_RULES.md)
 
-**Status:** Architecture Phase — Pending Review
+**Status:** Living spec — keep aligned with `backend/routes/api.php`

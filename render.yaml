@@ -63,3 +63,5 @@ services:
         value: local
       - key: PAYMENT_WEBHOOK_SECRET
         generateValue: true
+      - key: PAYMENT_SANDBOX_ENABLED
+        value: "true"

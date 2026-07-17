@@ -22,6 +22,7 @@ use App\Events\CartCheckedOut;
 use App\Events\PaymentFailed;
 use App\Events\PaymentSucceeded;
 use App\Exceptions\Domain\CartStaleException;
+use App\Exceptions\Domain\ConflictException;
 use App\Exceptions\Domain\IdempotencyConflictException;
 use App\Exceptions\PaymentFailedException;
 use App\Logging\StructuredLogger;
@@ -29,6 +30,7 @@ use App\Models\Cart;
 use App\Models\CheckoutIdempotencyKey;
 use App\Models\Order;
 use App\Services\BaseService;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -50,20 +52,16 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
     public function checkout(CheckoutData $data): CheckoutResult
     {
         $requestHash = $this->hashRequest($data);
-        $cached = $this->findIdempotencyRecord($data->userId, $data->idempotencyKey);
+        $claim = $this->claimIdempotency($data, $requestHash);
 
-        if ($cached !== null) {
-            if ($cached->request_hash !== $requestHash) {
-                throw new IdempotencyConflictException;
-            }
-
+        if ($claim->order_id !== null) {
             $order = Order::query()
                 ->with(['items.product', 'transitions', 'store', 'activeRefund'])
-                ->findOrFail($cached->order_id);
+                ->findOrFail($claim->order_id);
 
             return new CheckoutResult(
                 $order,
-                $cached->response_json['payment_url'] ?? null,
+                $claim->response_json['payment_url'] ?? null,
             );
         }
 
@@ -71,65 +69,78 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
         $cart = $this->carts->loadWithProducts($cart);
 
         if ($cart->items->isEmpty()) {
+            $this->releaseIdempotencyClaim($claim);
             throw ValidationException::withMessages([
                 'cart' => ['Cart is empty.'],
             ]);
         }
 
         if ($cart->version !== $data->cartVersion) {
+            $this->releaseIdempotencyClaim($claim);
             throw new CartStaleException;
         }
 
-        $storeId = $this->resolveSingleStoreId($cart);
+        try {
+            $storeId = $this->resolveSingleStoreId($cart);
+        } catch (\Throwable $e) {
+            $this->releaseIdempotencyClaim($claim);
+            throw $e;
+        }
+
         $pricing = $this->pricing->priceCart($cart);
 
-        /** @var array{0: Order, 1: string} $checkout */
-        $checkout = DB::transaction(function () use ($data, $cart, $storeId, $pricing): array {
-            $coupon = $this->coupons->resolve($data->couponCode, $pricing);
-            $shipping = $this->shipping->calculate($pricing);
-            $snapshots = $this->pricing->buildOrderLineSnapshots($cart);
-            $totals = $this->pricing->calculateOrderTotals($snapshots, $coupon, $shipping);
+        try {
+            /** @var array{0: Order, 1: string} $checkout */
+            $checkout = DB::transaction(function () use ($data, $cart, $storeId, $pricing): array {
+                $coupon = $this->coupons->resolve($data->couponCode, $pricing);
+                $shipping = $this->shipping->calculate($pricing);
+                $snapshots = $this->pricing->buildOrderLineSnapshots($cart);
+                $totals = $this->pricing->calculateOrderTotals($snapshots, $coupon, $shipping);
 
-            if ($totals->total->amount <= 0) {
-                throw ValidationException::withMessages([
-                    'cart' => ['Order total must be positive.'],
-                ]);
-            }
+                if ($totals->total->amount <= 0) {
+                    throw ValidationException::withMessages([
+                        'cart' => ['Order total must be positive.'],
+                    ]);
+                }
 
-            $reservationLines = array_map(
-                static fn ($snapshot) => [
-                    'product_id' => $snapshot->productId,
-                    'variant_id' => $snapshot->variantId,
-                    'quantity' => $snapshot->quantity,
-                ],
-                $snapshots,
-            );
+                $reservationLines = array_map(
+                    static fn ($snapshot) => [
+                        'product_id' => $snapshot->productId,
+                        'variant_id' => $snapshot->variantId,
+                        'quantity' => $snapshot->quantity,
+                    ],
+                    $snapshots,
+                );
 
-            $order = $this->orders->createFromCheckout(new CreateOrderData(
-                userId: $data->userId,
-                storeId: $storeId,
-                lines: $snapshots,
-                totals: $totals,
-                payment: new PaymentSnapshot(
-                    provider: $this->paymentGateway->name(),
-                    method: $data->paymentMethod,
-                    transactionId: null,
-                    amount: $totals->total,
-                    status: PaymentStatus::Pending->value,
-                ),
-                shipment: new ShipmentSnapshot(address: $data->shippingAddress),
-                notes: $data->notes,
-            ));
+                $order = $this->orders->createFromCheckout(new CreateOrderData(
+                    userId: $data->userId,
+                    storeId: $storeId,
+                    lines: $snapshots,
+                    totals: $totals,
+                    payment: new PaymentSnapshot(
+                        provider: $this->paymentGateway->name(),
+                        method: $data->paymentMethod,
+                        transactionId: null,
+                        amount: $totals->total,
+                        status: PaymentStatus::Pending->value,
+                    ),
+                    shipment: new ShipmentSnapshot(address: $data->shippingAddress),
+                    notes: $data->notes,
+                ));
 
-            $reservationGroupId = $this->inventory->reserveForOrder($order->id, $reservationLines);
+                $reservationGroupId = $this->inventory->reserveForOrder($order->id, $reservationLines);
 
-            $this->carts->clear($cart);
-            $cart = $this->carts->incrementVersion($cart);
+                $this->carts->clear($cart);
+                $cart = $this->carts->incrementVersion($cart);
 
-            CartCheckedOut::dispatch($cart, $order);
+                CartCheckedOut::dispatch($cart, $order);
 
-            return [$order, $reservationGroupId];
-        });
+                return [$order, $reservationGroupId];
+            });
+        } catch (\Throwable $e) {
+            $this->releaseIdempotencyClaim($claim);
+            throw $e;
+        }
 
         [$order, $reservationGroupId] = $checkout;
 
@@ -146,6 +157,7 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
                 $payment->failureReason ?? 'Payment failed',
             );
             PaymentFailed::dispatch($order, $payment->failureReason ?? 'Payment failed');
+            $this->releaseIdempotencyClaim($claim);
 
             throw new PaymentFailedException($payment->failureReason ?? 'Payment failed');
         }
@@ -161,7 +173,7 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
                 $order->fresh(['items.product', 'transitions', 'store', 'activeRefund']),
                 $payment->paymentUrl,
             );
-            $this->storeIdempotency($data, $requestHash, $result);
+            $this->completeIdempotency($claim, $result);
 
             return $result;
         }
@@ -172,9 +184,77 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
 
         $result = new CheckoutResult($order->fresh(['items.product', 'transitions', 'store', 'activeRefund']), $payment->paymentUrl);
 
-        $this->storeIdempotency($data, $requestHash, $result);
+        $this->completeIdempotency($claim, $result);
 
         return $result;
+    }
+
+    private function claimIdempotency(CheckoutData $data, string $requestHash): CheckoutIdempotencyKey
+    {
+        $existing = $this->findIdempotencyRecord($data->userId, $data->idempotencyKey);
+
+        if ($existing !== null) {
+            if ($existing->request_hash !== $requestHash) {
+                throw new IdempotencyConflictException;
+            }
+
+            if ($existing->order_id === null) {
+                throw new ConflictException('Checkout already in progress for this idempotency key.');
+            }
+
+            return $existing;
+        }
+
+        $ttlHours = (int) config('commerce.checkout_idempotency_ttl_hours', 24);
+
+        try {
+            return CheckoutIdempotencyKey::query()->create([
+                'user_id' => $data->userId,
+                'idempotency_key' => $data->idempotencyKey,
+                'request_hash' => $requestHash,
+                'order_id' => null,
+                'response_json' => ['status' => 'processing'],
+                'expires_at' => now()->addHours($ttlHours),
+            ]);
+        } catch (QueryException $e) {
+            if (! $this->isUniqueViolation($e)) {
+                throw $e;
+            }
+
+            $existing = $this->findIdempotencyRecord($data->userId, $data->idempotencyKey);
+
+            if ($existing === null) {
+                throw new ConflictException('Checkout idempotency conflict. Retry shortly.');
+            }
+
+            if ($existing->request_hash !== $requestHash) {
+                throw new IdempotencyConflictException;
+            }
+
+            if ($existing->order_id === null) {
+                throw new ConflictException('Checkout already in progress for this idempotency key.');
+            }
+
+            return $existing;
+        }
+    }
+
+    private function completeIdempotency(CheckoutIdempotencyKey $claim, CheckoutResult $result): void
+    {
+        $claim->order_id = $result->order->id;
+        $claim->response_json = [
+            'order_id' => $result->order->id,
+            'order_number' => $result->order->order_number,
+            'payment_url' => $result->paymentUrl,
+        ];
+        $claim->save();
+    }
+
+    private function releaseIdempotencyClaim(CheckoutIdempotencyKey $claim): void
+    {
+        if ($claim->order_id === null) {
+            $claim->delete();
+        }
     }
 
     private function findIdempotencyRecord(string $userId, string $key): ?CheckoutIdempotencyKey
@@ -186,22 +266,11 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
             ->first();
     }
 
-    private function storeIdempotency(CheckoutData $data, string $requestHash, CheckoutResult $result): void
+    private function isUniqueViolation(QueryException $e): bool
     {
-        $ttlHours = (int) config('commerce.checkout_idempotency_ttl_hours', 24);
+        $sqlState = $e->errorInfo[0] ?? '';
 
-        CheckoutIdempotencyKey::query()->create([
-            'user_id' => $data->userId,
-            'idempotency_key' => $data->idempotencyKey,
-            'request_hash' => $requestHash,
-            'order_id' => $result->order->id,
-            'response_json' => [
-                'order_id' => $result->order->id,
-                'order_number' => $result->order->order_number,
-                'payment_url' => $result->paymentUrl,
-            ],
-            'expires_at' => now()->addHours($ttlHours),
-        ]);
+        return $sqlState === '23000' || str_contains($e->getMessage(), 'UNIQUE');
     }
 
     private function hashRequest(CheckoutData $data): string

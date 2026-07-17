@@ -179,3 +179,24 @@ test('password reset flow works', function () {
         'password' => 'NewSecure123!',
     ])->assertOk();
 });
+
+test('otp verify locks after too many failed attempts', function () {
+    $this->postJson('/api/v1/auth/register', [
+        'username' => 'otplockuser',
+        'phone' => '+998901119999',
+        'password' => 'SecurePass123!',
+        'password_confirmation' => 'SecurePass123!',
+    ])->assertCreated();
+
+    for ($i = 0; $i < 5; $i++) {
+        $this->postJson('/api/v1/auth/verify-otp', [
+            'phone' => '+998901119999',
+            'otp' => '000000',
+        ])->assertUnauthorized();
+    }
+
+    $this->postJson('/api/v1/auth/verify-otp', [
+        'phone' => '+998901119999',
+        'otp' => '123456',
+    ])->assertStatus(429);
+});

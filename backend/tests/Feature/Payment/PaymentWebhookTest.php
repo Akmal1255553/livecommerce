@@ -196,3 +196,29 @@ test('sandbox complete pays awaiting order', function () {
         ->assertOk()
         ->assertJsonPath('data.order.status', 'paid');
 });
+
+test('webhook with mismatched transaction id does not pay order', function () {
+    $checkout = checkoutAwaitingPayment();
+
+    postSignedPaymentWebhook([
+        'event' => 'payment.success',
+        'transaction_id' => 'attacker-txn-id',
+        'order_id' => $checkout['order_id'],
+        'amount' => $checkout['amount'],
+        'currency' => 'UZS',
+    ])->assertOk();
+
+    expect(Order::query()->findOrFail($checkout['order_id'])->status->value)
+        ->toBe('awaiting_payment');
+});
+
+test('sandbox complete returns 404 when disabled', function () {
+    config(['payment.sandbox_enabled' => false]);
+    $checkout = checkoutAwaitingPayment();
+
+    test()->withToken($checkout['buyer']['access_token'])
+        ->postJson('/api/v1/payments/sandbox/'.$checkout['order_id'].'/complete', [
+            'result' => 'success',
+        ])
+        ->assertNotFound();
+});

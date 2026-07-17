@@ -244,6 +244,12 @@ class RepositoryServiceProvider extends ServiceProvider
         $this->app->singleton(PaymentGatewayInterface::class, function ($app): PaymentGatewayInterface {
             $driver = (string) config('payment.driver', 'fake');
 
+            if ($app->environment('production') && $driver === 'fake') {
+                throw new \RuntimeException(
+                    'PAYMENT_GATEWAY=fake is not allowed in production. Use local|click|payme|uzum.',
+                );
+            }
+
             return match ($driver) {
                 'local', 'click', 'payme', 'uzum' => $app->make(LocalPaymentGateway::class),
                 default => $app->make(FakePaymentGateway::class),

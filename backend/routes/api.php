@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\LiveSessionController;
 use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
+use App\Http\Controllers\Api\V1\OrderController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\SandboxPaymentController;
 use App\Http\Controllers\Api\V1\ProductController;
@@ -34,9 +35,10 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->group(function (): void {
     Route::get('health', HealthController::class);
 
-    Route::post('webhooks/payment', PaymentWebhookController::class);
+    Route::post('webhooks/payment', PaymentWebhookController::class)
+        ->middleware('throttle:60,1');
 
-    Route::prefix('auth')->group(function (): void {
+    Route::prefix('auth')->middleware('throttle:auth')->group(function (): void {
         Route::post('register', [AuthController::class, 'register']);
         Route::post('login', [AuthController::class, 'login']);
         Route::post('verify-otp', [AuthController::class, 'verifyOtp']);
@@ -112,12 +114,14 @@ Route::prefix('v1')->group(function (): void {
             Route::get('live/{id}/assistant/suggestions', [LiveAssistantController::class, 'suggestions']);
         });
 
-        Route::post('live/{id}/chat', [LiveSessionController::class, 'chatStore']);
+        Route::post('live/{id}/chat', [LiveSessionController::class, 'chatStore'])
+            ->middleware('throttle:live-chat');
         Route::post('live/{id}/join', [LiveSessionController::class, 'join']);
         Route::post('live/{id}/leave', [LiveSessionController::class, 'leave']);
         Route::post('live/{id}/add-to-cart', [LiveSessionController::class, 'addToCart']);
 
-        Route::post('checkout', [CheckoutController::class, 'store']);
+        Route::post('checkout', [CheckoutController::class, 'store'])
+            ->middleware('throttle:checkout');
         Route::post('payments/sandbox/{id}/complete', [SandboxPaymentController::class, 'complete']);
 
         Route::get('orders', [OrderController::class, 'index']);
@@ -136,7 +140,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('live', [LiveSessionController::class, 'index']);
         Route::get('live/replays', [LiveSessionController::class, 'replays']);
         Route::get('live/{id}', [LiveSessionController::class, 'show']);
-        Route::get('live/{id}/chat', [LiveSessionController::class, 'chatIndex']);
+        Route::get('live/{id}/chat', [LiveSessionController::class, 'chatIndex'])
+            ->middleware('throttle:live-chat');
         Route::get('videos/{id}', [VideoController::class, 'show']);
         Route::get('videos/{id}/products', [VideoProductController::class, 'index']);
         Route::post('videos/{id}/view', [VideoInteractionController::class, 'view']);
@@ -147,7 +152,8 @@ Route::prefix('v1')->group(function (): void {
         Route::get('users/{id}/following', [UserController::class, 'following']);
 
         Route::get('products', [ProductController::class, 'index']);
-        Route::get('products/search', [ProductController::class, 'search']);
+        Route::get('products/search', [ProductController::class, 'search'])
+            ->middleware('throttle:search');
         Route::get('products/{id}', [ProductController::class, 'show']);
         Route::get('categories', [CategoryController::class, 'index']);
         Route::get('categories/{id}/products', [CategoryController::class, 'products']);

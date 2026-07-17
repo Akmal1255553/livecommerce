@@ -38,5 +38,6 @@
         <env name="NIGHTWATCH_ENABLED" value="false"/>
         <env name="PAYMENT_GATEWAY" value="fake"/>
         <env name="PAYMENT_WEBHOOK_SECRET" value="test-webhook-secret"/>
+        <env name="PAYMENT_SANDBOX_ENABLED" value="true"/>
     </php>
 </phpunit>

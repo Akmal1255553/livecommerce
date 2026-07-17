@@ -25,6 +25,10 @@ class SandboxPaymentController extends Controller
 
     public function complete(Request $request, string $id): JsonResponse
     {
+        if (! config('payment.sandbox_enabled')) {
+            abort(404);
+        }
+
         $validated = $request->validate([
             'result' => ['required', 'in:success,failed'],
         ]);
