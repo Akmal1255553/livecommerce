@@ -81,6 +81,7 @@ Phase 10 — Scaling & Launch           Sprint 15, 16
 | **Commerce MVP (Phase A)** | Sprint 4.5 + 4.5M + E2E Audit | Month 3–4 | End-to-end purchase on mobile; Release Audit signed off |
 | **Commerce Alpha** | Sprint 4.6 + 5 | Month 4–5 | Seller dashboard, store management |
 | **MVP Feature Complete** | Sprint 6–7 | Month 5–6 | Live streaming + payment infrastructure |
+| **v0.7 RC1 (closed beta)** | 5–7 + hardening | 2026-07-17 | [V0.7_RC1_RELEASE_AUDIT.md](./docs/V0.7_RC1_RELEASE_AUDIT.md) — tag `v0.7-rc1` |
 | **Private Beta** | Sprint 8 + 14 (core) | Month 6 | Messaging, admin moderation, invite-only users |
 | **Public Beta** | Sprint 12–13 | Month 7 | Analytics, growth tools, wider user base |
 | **v1.0 Launch** | Sprint 15–16 | Month 8–9 | Production hardened, publicly launched in Uzbekistan |

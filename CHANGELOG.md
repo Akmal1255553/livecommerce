@@ -11,12 +11,18 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **ADR-018 / Render:** free-tier API path via Render Blueprint (`render.yaml`) + optional Supabase; Railway when paid. See [docs/24_RENDER_DEPLOY.md](./docs/24_RENDER_DEPLOY.md).
 - Preferred infra is **Supabase (Postgres)** + **Render/Railway (API)**; Docker optional. See [docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md](./docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md).
 
+## [0.7.0-rc1] — 2026-07-17
+
+First release candidate for closed beta. Includes Sprint 5–7 (seller, live commerce, payments) + RC1 security hardening.
+
+**Tag:** `v0.7-rc1` · **Branch:** `feature/rc1-hardening` · **Audit:** [docs/V0.7_RC1_RELEASE_AUDIT.md](./docs/V0.7_RC1_RELEASE_AUDIT.md)
+
 ### Added
 
-#### RC1 hardening (pre-v0.7-rc1)
+#### RC1 hardening
 
 - Fix missing `OrderController` import on buyer order routes
-- API rate limits: guest/auth/checkout/live-chat/search (`AppServiceProvider` + route middleware)
+- API rate limits: guest/auth/checkout/live-chat/search
 - OTP verify lockout after 5 failed attempts
 - Atomic checkout idempotency claim (unique key before payment)
 - Payment webhook binds `transaction_id` to order payment reference
