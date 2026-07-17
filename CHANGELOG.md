@@ -11,6 +11,14 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - **ADR-018 / Render:** free-tier API path via Render Blueprint (`render.yaml`) + optional Supabase; Railway when paid. See [docs/24_RENDER_DEPLOY.md](./docs/24_RENDER_DEPLOY.md).
 - Preferred infra is **Supabase (Postgres)** + **Render/Railway (API)**; Docker optional. See [docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md](./docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md).
 
+### Added
+
+#### UX polish (post-RC1)
+
+- Wired shared `EmptyState` / `ErrorDisplay` / skeletons on feed, cart, orders, live, product, order detail
+- Offline banner via `connectivity_plus` (`OfflineBanner` in app shell)
+- Lightweight pulse skeletons (no shimmer package)
+
 ## [0.7.0-rc1] — 2026-07-17
 
 First release candidate for closed beta. Includes Sprint 5–7 (seller, live commerce, payments) + RC1 security hardening.

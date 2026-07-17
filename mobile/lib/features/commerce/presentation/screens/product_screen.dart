@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/product_detail.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
   const ProductScreen({super.key, required this.productId});
@@ -38,22 +40,25 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
         ],
       ),
       body: productAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(error.toString(), textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => ref.invalidate(productDetailProvider(widget.productId)),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
+        loading: () => const Padding(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SkeletonBox(width: double.infinity, height: 220, borderRadius: 16),
+              SizedBox(height: 20),
+              SkeletonBox(width: 240, height: 20),
+              SizedBox(height: 12),
+              SkeletonBox(width: 120, height: 16),
+              SizedBox(height: 12),
+              SkeletonBox(width: double.infinity, height: 60),
+            ],
           ),
+        ),
+        error: (error, _) => ErrorDisplay(
+          message: error.toString(),
+          onRetry: () =>
+              ref.invalidate(productDetailProvider(widget.productId)),
         ),
         data: (product) => _ProductBody(
           product: product,

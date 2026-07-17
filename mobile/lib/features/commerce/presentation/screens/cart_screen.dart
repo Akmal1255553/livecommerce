@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
+import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
   const CartScreen({super.key});
@@ -33,44 +36,24 @@ class _CartScreenState extends ConsumerState<CartScreen> {
 
   Widget _buildBody(CartState cartState) {
     if (cartState.isLoading && cartState.cart == null) {
-      return const Center(child: CircularProgressIndicator());
+      return const CartSkeleton();
     }
 
     if (cartState.error != null && (cartState.cart == null || cartState.cart!.isEmpty)) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(cartState.error!, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => ref.read(cartNotifierProvider.notifier).load(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+      return ErrorDisplay(
+        message: cartState.error!,
+        onRetry: () => ref.read(cartNotifierProvider.notifier).load(),
       );
     }
 
     final cart = cartState.cart;
     if (cart == null || cart.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
-            const SizedBox(height: 16),
-            const Text('Your cart is empty'),
-            const SizedBox(height: 16),
-            FilledButton(
-              onPressed: () => context.go('/home'),
-              child: const Text('Browse feed'),
-            ),
-          ],
-        ),
+      return EmptyState(
+        title: 'Your cart is empty',
+        subtitle: 'Browse the feed and tap a product to add it here.',
+        icon: Icons.shopping_cart_outlined,
+        actionLabel: 'Browse feed',
+        onAction: () => context.go('/home'),
       );
     }
 

@@ -3,6 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
+import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class LiveDiscoveryScreen extends ConsumerStatefulWidget {
   const LiveDiscoveryScreen({super.key});
@@ -118,24 +121,20 @@ class _SessionList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (state.isLoading && state.sessions.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const ListSkeleton(itemCount: 5);
     }
 
     if (state.error != null && state.sessions.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(state.error!),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: onRetry, child: const Text('Retry')),
-          ],
-        ),
-      );
+      return ErrorDisplay(message: state.error!, onRetry: onRetry);
     }
 
     if (state.sessions.isEmpty) {
-      return Center(child: Text(emptyLabel));
+      return EmptyState(
+        title: emptyLabel,
+        icon: Icons.live_tv_outlined,
+        actionLabel: 'Refresh',
+        onAction: onRetry,
+      );
     }
 
     return ListView.separated(

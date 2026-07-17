@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
+import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/loading_indicator.dart';
+import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class OrdersScreen extends ConsumerStatefulWidget {
   const OrdersScreen({super.key});
@@ -46,30 +50,24 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
 
   Widget _buildBody(OrdersState state) {
     if (state.isLoading && state.orders.isEmpty) {
-      return const Center(child: CircularProgressIndicator());
+      return const ListSkeleton();
     }
 
     if (state.error != null && state.orders.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(state.error!, textAlign: TextAlign.center),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => ref.read(ordersNotifierProvider.notifier).load(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+      return ErrorDisplay(
+        message: state.error!,
+        onRetry: () => ref.read(ordersNotifierProvider.notifier).load(),
       );
     }
 
     if (state.orders.isEmpty) {
-      return const Center(child: Text('No orders yet'));
+      return EmptyState(
+        title: 'No orders yet',
+        subtitle: 'When you check out, your orders will appear here.',
+        icon: Icons.receipt_long_outlined,
+        actionLabel: 'Browse feed',
+        onAction: () => context.go('/home'),
+      );
     }
 
     return ListView.separated(
@@ -81,7 +79,7 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
         if (index >= state.orders.length) {
           return const Padding(
             padding: EdgeInsets.all(16),
-            child: Center(child: CircularProgressIndicator()),
+            child: LoadingIndicator(),
           );
         }
 

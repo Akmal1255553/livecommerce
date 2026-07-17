@@ -6,6 +6,9 @@ import 'package:livecommerce_mobile/features/commerce/presentation/widgets/produ
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
+import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -96,41 +99,29 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
 
   Widget _buildBody(FeedState feed) {
     if (feed.isLoading && feed.videos.isEmpty) {
-      return const Center(child: CircularProgressIndicator(color: Colors.white));
+      return const FeedSkeleton();
     }
 
     if (feed.error != null && feed.videos.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                feed.error!,
-                style: const TextStyle(color: Colors.white70),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 16),
-              FilledButton(
-                onPressed: () => ref.read(feedNotifierProvider.notifier).load(),
-                child: const Text('Retry'),
-              ),
-            ],
-          ),
-        ),
+      return ErrorDisplay(
+        message: feed.error!,
+        foregroundColor: Colors.white70,
+        onRetry: () => ref.read(feedNotifierProvider.notifier).load(),
       );
     }
 
     if (feed.videos.isEmpty) {
-      return Center(
-        child: Text(
-          feed.tab == FeedTab.following
-              ? 'Follow creators to see their videos here.'
-              : 'No videos yet.',
-          style: const TextStyle(color: Colors.white70),
-          textAlign: TextAlign.center,
-        ),
+      return EmptyState(
+        title: feed.tab == FeedTab.following
+            ? 'Follow creators to see their videos'
+            : 'No videos yet',
+        subtitle: feed.tab == FeedTab.following
+            ? 'When people you follow post, they show up here.'
+            : 'Check back soon for new drops.',
+        icon: Icons.video_library_outlined,
+        foregroundColor: Colors.white,
+        actionLabel: 'Refresh',
+        onAction: () => ref.read(feedNotifierProvider.notifier).load(),
       );
     }
 

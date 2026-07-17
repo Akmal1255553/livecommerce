@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/money_amount.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class OrderDetailScreen extends ConsumerWidget {
   const OrderDetailScreen({super.key, required this.orderId});
@@ -17,22 +19,10 @@ class OrderDetailScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Order details')),
       body: orderAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (error, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(error.toString(), textAlign: TextAlign.center),
-                const SizedBox(height: 16),
-                FilledButton(
-                  onPressed: () => ref.invalidate(orderDetailProvider(orderId)),
-                  child: const Text('Retry'),
-                ),
-              ],
-            ),
-          ),
+        loading: () => const ListSkeleton(itemCount: 4),
+        error: (error, _) => ErrorDisplay(
+          message: error.toString(),
+          onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
         ),
         data: (order) => _OrderDetailBody(order: order),
       ),
