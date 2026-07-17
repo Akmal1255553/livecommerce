@@ -18,6 +18,9 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Wired shared `EmptyState` / `ErrorDisplay` / skeletons on feed, cart, orders, live, product, order detail
 - Offline banner via `connectivity_plus` (`OfflineBanner` in app shell)
 - Lightweight pulse skeletons (no shimmer package)
+- Feed interactions: like / bookmark / comments sheet / view tracking
+- GoRouter `fadeSlide` / `slideUp` page transitions
+- Pull-to-refresh on cart, orders, and live discovery
 
 ## [0.7.0-rc1] — 2026-07-17
 

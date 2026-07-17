@@ -14,6 +14,48 @@ class FeedRemoteDataSource {
     return _fetchFeed('/feed/following', cursor: cursor, limit: limit);
   }
 
+  Future<void> likeVideo(String videoId) async {
+    await _dio.post<Map<String, dynamic>>('/videos/$videoId/like');
+  }
+
+  Future<void> unlikeVideo(String videoId) async {
+    await _dio.delete<Map<String, dynamic>>('/videos/$videoId/like');
+  }
+
+  Future<void> bookmarkVideo(String videoId) async {
+    await _dio.post<Map<String, dynamic>>('/videos/$videoId/bookmark');
+  }
+
+  Future<void> unbookmarkVideo(String videoId) async {
+    await _dio.delete<Map<String, dynamic>>('/videos/$videoId/bookmark');
+  }
+
+  Future<void> recordView(String videoId) async {
+    await _dio.post<Map<String, dynamic>>('/videos/$videoId/view');
+  }
+
+  Future<List<VideoComment>> fetchComments(String videoId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/videos/$videoId/comments',
+    );
+    final data = response.data!['data'] as List<dynamic>? ?? [];
+    return data
+        .map((item) => VideoComment.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<VideoComment> postComment({
+    required String videoId,
+    required String body,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/videos/$videoId/comments',
+      data: {'body': body},
+    );
+    final data = response.data!['data'] as Map<String, dynamic>;
+    return VideoComment.fromJson(data);
+  }
+
   Future<FeedPage> _fetchFeed(
     String path, {
     String? cursor,
@@ -73,4 +115,24 @@ class FeedRepository {
 
   Future<FeedPage> following({String? cursor, int limit = 20}) =>
       _remote.fetchFollowing(cursor: cursor, limit: limit);
+
+  Future<void> likeVideo(String videoId) => _remote.likeVideo(videoId);
+
+  Future<void> unlikeVideo(String videoId) => _remote.unlikeVideo(videoId);
+
+  Future<void> bookmarkVideo(String videoId) => _remote.bookmarkVideo(videoId);
+
+  Future<void> unbookmarkVideo(String videoId) =>
+      _remote.unbookmarkVideo(videoId);
+
+  Future<void> recordView(String videoId) => _remote.recordView(videoId);
+
+  Future<List<VideoComment>> fetchComments(String videoId) =>
+      _remote.fetchComments(videoId);
+
+  Future<VideoComment> postComment({
+    required String videoId,
+    required String body,
+  }) =>
+      _remote.postComment(videoId: videoId, body: body);
 }

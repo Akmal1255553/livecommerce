@@ -30,6 +30,7 @@ import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_orders_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_product_form_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_products_screen.dart';
+import 'package:livecommerce_mobile/shared/navigation/page_transitions.dart';
 
 class AppRouter {
   AppRouter._();
@@ -71,49 +72,76 @@ class AppRouter {
         ),
         GoRoute(
           path: '/login',
-          builder: (context, state) => const LoginScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const LoginScreen(),
+          ),
         ),
         GoRoute(
           path: '/register',
-          builder: (context, state) => const RegisterScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const RegisterScreen(),
+          ),
         ),
         GoRoute(
           path: '/otp',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final phone = state.extra as String? ?? '';
-            return OtpScreen(phone: phone);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: OtpScreen(phone: phone),
+            );
           },
         ),
         GoRoute(
           path: '/home',
-          builder: (context, state) => const FeedScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const FeedScreen(),
+          ),
         ),
         GoRoute(
           path: '/profile',
-          builder: (context, state) => const ProfileScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const ProfileScreen(),
+          ),
         ),
         GoRoute(
           path: '/settings',
-          builder: (context, state) => const SettingsScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const SettingsScreen(),
+          ),
         ),
         GoRoute(
           path: '/products/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            return ProductScreen(productId: id);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: ProductScreen(productId: id),
+            );
           },
         ),
         GoRoute(
           path: '/cart',
-          builder: (context, state) => const CartScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const CartScreen(),
+          ),
         ),
         GoRoute(
           path: '/checkout',
-          builder: (context, state) => const CheckoutScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.slideUp(
+            key: state.pageKey,
+            child: const CheckoutScreen(),
+          ),
         ),
         GoRoute(
           path: '/payment/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final orderId = state.pathParameters['id']!;
             final extra = state.extra;
             Order? order;
@@ -127,108 +155,163 @@ class AppRouter {
             } else if (extra is Order) {
               order = extra;
             }
-            return PaymentScreen(
-              orderId: orderId,
-              initialOrder: order,
-              paymentUrl: paymentUrl,
+            return AppPageTransitions.slideUp(
+              key: state.pageKey,
+              child: PaymentScreen(
+                orderId: orderId,
+                initialOrder: order,
+                paymentUrl: paymentUrl,
+              ),
             );
           },
         ),
         GoRoute(
           path: '/order-success/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final orderId = state.pathParameters['id']!;
-            final initialOrder = state.extra is Order ? state.extra as Order : null;
-            return OrderSuccessScreen(
-              orderId: orderId,
-              initialOrder: initialOrder,
+            final initialOrder =
+                state.extra is Order ? state.extra as Order : null;
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: OrderSuccessScreen(
+                orderId: orderId,
+                initialOrder: initialOrder,
+              ),
             );
           },
         ),
         GoRoute(
           path: '/orders',
-          builder: (context, state) => const OrdersScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const OrdersScreen(),
+          ),
         ),
         GoRoute(
           path: '/orders/:id/refund',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            return RefundRequestScreen(orderId: id);
+            return AppPageTransitions.slideUp(
+              key: state.pageKey,
+              child: RefundRequestScreen(orderId: id),
+            );
           },
         ),
         GoRoute(
           path: '/orders/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            return OrderDetailScreen(orderId: id);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: OrderDetailScreen(orderId: id),
+            );
           },
         ),
         GoRoute(
           path: '/seller/apply',
-          builder: (context, state) => const SellerApplyScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const SellerApplyScreen(),
+          ),
         ),
         GoRoute(
           path: '/seller',
-          builder: (context, state) => const SellerDashboardScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const SellerDashboardScreen(),
+          ),
         ),
         GoRoute(
           path: '/seller/live/analytics',
-          builder: (context, state) => const SellerLiveAnalyticsScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const SellerLiveAnalyticsScreen(),
+          ),
         ),
         GoRoute(
           path: '/seller/live/:id/analytics',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            return SellerLiveSessionAnalyticsScreen(sessionId: id);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: SellerLiveSessionAnalyticsScreen(sessionId: id),
+            );
           },
         ),
         GoRoute(
           path: '/seller/products',
-          builder: (context, state) => const SellerProductsScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const SellerProductsScreen(),
+          ),
         ),
         GoRoute(
           path: '/seller/products/new',
-          builder: (context, state) => const SellerProductFormScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.slideUp(
+            key: state.pageKey,
+            child: const SellerProductFormScreen(),
+          ),
         ),
         GoRoute(
           path: '/seller/orders',
-          builder: (context, state) => const SellerOrdersScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const SellerOrdersScreen(),
+          ),
         ),
         GoRoute(
           path: '/seller/orders/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            return SellerOrderDetailScreen(orderId: id);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: SellerOrderDetailScreen(orderId: id),
+            );
           },
         ),
         GoRoute(
           path: '/stores/:slug',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final slug = state.pathParameters['slug']!;
-            return PublicStoreScreen(slug: slug);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: PublicStoreScreen(slug: slug),
+            );
           },
         ),
         GoRoute(
           path: '/live',
-          builder: (context, state) => const LiveDiscoveryScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const LiveDiscoveryScreen(),
+          ),
         ),
         GoRoute(
           path: '/live/go',
-          builder: (context, state) => const GoLiveScreen(),
+          pageBuilder: (context, state) => AppPageTransitions.slideUp(
+            key: state.pageKey,
+            child: const GoLiveScreen(),
+          ),
         ),
         GoRoute(
           path: '/live/replay/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            return LiveReplayScreen(sessionId: id);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: LiveReplayScreen(sessionId: id),
+            );
           },
         ),
         GoRoute(
           path: '/live/:id',
-          builder: (context, state) {
+          pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
             final host = state.uri.queryParameters['host'] == '1';
-            return LiveRoomScreen(sessionId: id, asHost: host);
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: LiveRoomScreen(sessionId: id, asHost: host),
+            );
           },
         ),
       ],

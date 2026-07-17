@@ -57,25 +57,29 @@ class _CartScreenState extends ConsumerState<CartScreen> {
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: cart.items.length,
-      separatorBuilder: (_, __) => const Divider(),
-      itemBuilder: (context, index) {
-        final item = cart.items[index];
-        return _CartLineTile(
-          item: item,
-          isMutating: cartState.isMutating,
-          onDecrease: () => ref
-              .read(cartNotifierProvider.notifier)
-              .updateQuantity(item.id, item.quantity - 1),
-          onIncrease: () => ref
-              .read(cartNotifierProvider.notifier)
-              .updateQuantity(item.id, item.quantity + 1),
-          onRemove: () =>
-              ref.read(cartNotifierProvider.notifier).removeItem(item.id),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: () => ref.read(cartNotifierProvider.notifier).load(),
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: cart.items.length,
+        separatorBuilder: (_, __) => const Divider(),
+        itemBuilder: (context, index) {
+          final item = cart.items[index];
+          return _CartLineTile(
+            item: item,
+            isMutating: cartState.isMutating,
+            onDecrease: () => ref
+                .read(cartNotifierProvider.notifier)
+                .updateQuantity(item.id, item.quantity - 1),
+            onIncrease: () => ref
+                .read(cartNotifierProvider.notifier)
+                .updateQuantity(item.id, item.quantity + 1),
+            onRemove: () =>
+                ref.read(cartNotifierProvider.notifier).removeItem(item.id),
+          );
+        },
+      ),
     );
   }
 }

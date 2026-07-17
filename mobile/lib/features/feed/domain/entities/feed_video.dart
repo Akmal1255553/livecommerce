@@ -35,6 +35,8 @@ class FeedVideo {
     this.viewCount = 0,
     this.likeCount = 0,
     this.commentCount = 0,
+    this.isLiked = false,
+    this.isBookmarked = false,
     this.status,
     this.createdAt,
     this.products = const [],
@@ -50,9 +52,37 @@ class FeedVideo {
   final int viewCount;
   final int likeCount;
   final int commentCount;
+  final bool isLiked;
+  final bool isBookmarked;
   final String? status;
   final String? createdAt;
   final List<VideoProductTag> products;
+
+  FeedVideo copyWith({
+    int? viewCount,
+    int? likeCount,
+    int? commentCount,
+    bool? isLiked,
+    bool? isBookmarked,
+  }) {
+    return FeedVideo(
+      id: id,
+      user: user,
+      title: title,
+      description: description,
+      videoUrl: videoUrl,
+      thumbnailUrl: thumbnailUrl,
+      duration: duration,
+      viewCount: viewCount ?? this.viewCount,
+      likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      isLiked: isLiked ?? this.isLiked,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
+      status: status,
+      createdAt: createdAt,
+      products: products,
+    );
+  }
 
   factory FeedVideo.fromJson(Map<String, dynamic> json) {
     final productsJson = json['products'] as List<dynamic>? ?? [];
@@ -68,6 +98,8 @@ class FeedVideo {
       viewCount: json['view_count'] as int? ?? 0,
       likeCount: json['like_count'] as int? ?? 0,
       commentCount: json['comment_count'] as int? ?? 0,
+      isLiked: json['is_liked'] as bool? ?? false,
+      isBookmarked: json['is_bookmarked'] as bool? ?? false,
       status: json['status'] as String?,
       createdAt: json['created_at'] as String?,
       products: productsJson
@@ -87,4 +119,28 @@ class FeedPage {
   final List<FeedVideo> videos;
   final String? nextCursor;
   final bool hasMore;
+}
+
+class VideoComment {
+  const VideoComment({
+    required this.id,
+    required this.body,
+    required this.username,
+    this.createdAt,
+  });
+
+  final String id;
+  final String body;
+  final String username;
+  final String? createdAt;
+
+  factory VideoComment.fromJson(Map<String, dynamic> json) {
+    final user = json['user'] as Map<String, dynamic>?;
+    return VideoComment(
+      id: json['id'].toString(),
+      body: json['body'] as String? ?? '',
+      username: user?['username'] as String? ?? 'user',
+      createdAt: json['created_at'] as String?,
+    );
+  }
 }

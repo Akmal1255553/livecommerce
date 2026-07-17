@@ -66,6 +66,7 @@ class _LiveDiscoveryScreenState extends ConsumerState<LiveDiscoveryScreen>
             state: live,
             emptyLabel: 'No live sessions right now',
             onRetry: () => ref.read(liveListProvider.notifier).load(),
+            onRefresh: () => ref.read(liveListProvider.notifier).load(),
             onTap: (id) => context.push('/live/$id'),
             leading: const CircleAvatar(
               backgroundColor: Colors.red,
@@ -85,6 +86,7 @@ class _LiveDiscoveryScreenState extends ConsumerState<LiveDiscoveryScreen>
             state: replays,
             emptyLabel: 'No replays yet — end a live to generate one',
             onRetry: () => ref.read(liveReplayListProvider.notifier).load(),
+            onRefresh: () => ref.read(liveReplayListProvider.notifier).load(),
             onTap: (id) => context.push('/live/replay/$id'),
             leading: const CircleAvatar(
               backgroundColor: Color(0xFF0F3460),
@@ -106,6 +108,7 @@ class _SessionList extends StatelessWidget {
     required this.state,
     required this.emptyLabel,
     required this.onRetry,
+    required this.onRefresh,
     required this.onTap,
     required this.leading,
     required this.subtitleBuilder,
@@ -114,6 +117,7 @@ class _SessionList extends StatelessWidget {
   final LiveListState state;
   final String emptyLabel;
   final VoidCallback onRetry;
+  final Future<void> Function() onRefresh;
   final void Function(String id) onTap;
   final Widget leading;
   final String Function(LiveSession session) subtitleBuilder;
@@ -129,28 +133,43 @@ class _SessionList extends StatelessWidget {
     }
 
     if (state.sessions.isEmpty) {
-      return EmptyState(
-        title: emptyLabel,
-        icon: Icons.live_tv_outlined,
-        actionLabel: 'Refresh',
-        onAction: onRetry,
+      return RefreshIndicator(
+        onRefresh: onRefresh,
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(
+              height: MediaQuery.sizeOf(context).height * 0.5,
+              child: EmptyState(
+                title: emptyLabel,
+                icon: Icons.live_tv_outlined,
+                actionLabel: 'Refresh',
+                onAction: onRetry,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(16),
-      itemCount: state.sessions.length,
-      separatorBuilder: (_, __) => const Divider(),
-      itemBuilder: (context, index) {
-        final session = state.sessions[index];
-        return ListTile(
-          leading: leading,
-          title: Text(session.title),
-          subtitle: Text(subtitleBuilder(session)),
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => onTap(session.id),
-        );
-      },
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: ListView.separated(
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: state.sessions.length,
+        separatorBuilder: (_, __) => const Divider(),
+        itemBuilder: (context, index) {
+          final session = state.sessions[index];
+          return ListTile(
+            leading: leading,
+            title: Text(session.title),
+            subtitle: Text(subtitleBuilder(session)),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => onTap(session.id),
+          );
+        },
+      ),
     );
   }
 }

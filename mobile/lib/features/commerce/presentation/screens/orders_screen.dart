@@ -70,22 +70,26 @@ class _OrdersScreenState extends ConsumerState<OrdersScreen> {
       );
     }
 
-    return ListView.separated(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(16),
-      itemCount: state.orders.length + (state.isLoadingMore ? 1 : 0),
-      separatorBuilder: (_, __) => const Divider(),
-      itemBuilder: (context, index) {
-        if (index >= state.orders.length) {
-          return const Padding(
-            padding: EdgeInsets.all(16),
-            child: LoadingIndicator(),
-          );
-        }
+    return RefreshIndicator(
+      onRefresh: () => ref.read(ordersNotifierProvider.notifier).load(),
+      child: ListView.separated(
+        controller: _scrollController,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.all(16),
+        itemCount: state.orders.length + (state.isLoadingMore ? 1 : 0),
+        separatorBuilder: (_, __) => const Divider(),
+        itemBuilder: (context, index) {
+          if (index >= state.orders.length) {
+            return const Padding(
+              padding: EdgeInsets.all(16),
+              child: LoadingIndicator(),
+            );
+          }
 
-        final order = state.orders[index];
-        return _OrderListTile(order: order);
-      },
+          final order = state.orders[index];
+          return _OrderListTile(order: order);
+        },
+      ),
     );
   }
 }

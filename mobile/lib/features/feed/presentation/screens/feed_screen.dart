@@ -6,6 +6,7 @@ import 'package:livecommerce_mobile/features/commerce/presentation/widgets/produ
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
+import 'package:livecommerce_mobile/features/feed/presentation/widgets/video_comments_sheet.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
@@ -130,6 +131,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       scrollDirection: Axis.vertical,
       itemCount: feed.videos.length + (feed.hasMore ? 1 : 0),
       onPageChanged: (index) {
+        if (index < feed.videos.length) {
+          ref.read(feedNotifierProvider.notifier).recordView(feed.videos[index].id);
+        }
         if (feed.hasMore && index >= feed.videos.length - 2) {
           ref.read(feedNotifierProvider.notifier).loadMore();
         }
@@ -184,7 +188,7 @@ class _FeedTabButton extends StatelessWidget {
   }
 }
 
-class _FeedVideoPage extends StatelessWidget {
+class _FeedVideoPage extends ConsumerWidget {
   const _FeedVideoPage({required this.video});
 
   final FeedVideo video;
@@ -200,18 +204,54 @@ class _FeedVideoPage extends StatelessWidget {
     return video.products.first.product;
   }
 
+  Future<void> _toggleLike(BuildContext context, WidgetRef ref) async {
+    final error =
+        await ref.read(feedNotifierProvider.notifier).toggleLike(video.id);
+    if (error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    }
+  }
+
+  Future<void> _toggleBookmark(BuildContext context, WidgetRef ref) async {
+    final error =
+        await ref.read(feedNotifierProvider.notifier).toggleBookmark(video.id);
+    if (error != null && context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+    } else if (context.mounted) {
+      final updated = ref
+          .read(feedNotifierProvider)
+          .videos
+          .where((v) => v.id == video.id)
+          .firstOrNull;
+      final bookmarked = updated?.isBookmarked ?? false;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(bookmarked ? 'Saved to bookmarks' : 'Removed bookmark'),
+          duration: const Duration(milliseconds: 900),
+        ),
+      );
+    }
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final overlayProduct = _overlayProduct;
+    final latest = ref
+            .watch(feedNotifierProvider)
+            .videos
+            .where((v) => v.id == video.id)
+            .firstOrNull ??
+        video;
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (video.thumbnailUrl != null)
+        if (latest.thumbnailUrl != null)
           Image.network(
-            video.thumbnailUrl!,
+            latest.thumbnailUrl!,
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const ColoredBox(color: Color(0xFF1A1A1A)),
+            errorBuilder: (_, __, ___) =>
+                const ColoredBox(color: Color(0xFF1A1A1A)),
           )
         else
           const ColoredBox(color: Color(0xFF1A1A1A)),
@@ -239,26 +279,27 @@ class _FeedVideoPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '@${video.user.username}',
+                '@${latest.user.username}',
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w700,
                   fontSize: 16,
                 ),
               ),
-              if (video.title != null && video.title!.isNotEmpty) ...[
+              if (latest.title != null && latest.title!.isNotEmpty) ...[
                 const SizedBox(height: 8),
                 Text(
-                  video.title!,
+                  latest.title!,
                   style: const TextStyle(color: Colors.white, fontSize: 15),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              if (video.description != null && video.description!.isNotEmpty) ...[
+              if (latest.description != null &&
+                  latest.description!.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
-                  video.description!,
+                  latest.description!,
                   style: const TextStyle(color: Colors.white70, fontSize: 13),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -273,19 +314,44 @@ class _FeedVideoPage extends StatelessWidget {
           child: Column(
             children: [
               CircleAvatar(
-                backgroundImage: video.user.avatarUrl != null
-                    ? NetworkImage(video.user.avatarUrl!)
+                backgroundImage: latest.user.avatarUrl != null
+                    ? NetworkImage(latest.user.avatarUrl!)
                     : null,
-                child: video.user.avatarUrl == null
-                    ? Text(video.user.username.characters.first.toUpperCase())
+                child: latest.user.avatarUrl == null
+                    ? Text(latest.user.username.characters.first.toUpperCase())
                     : null,
               ),
-              const SizedBox(height: 24),
-              _SideAction(icon: Icons.favorite_border, label: '${video.likeCount}'),
-              const SizedBox(height: 16),
-              _SideAction(icon: Icons.chat_bubble_outline, label: '${video.commentCount}'),
-              const SizedBox(height: 16),
-              _SideAction(icon: Icons.remove_red_eye_outlined, label: '${video.viewCount}'),
+              const SizedBox(height: 20),
+              _SideAction(
+                icon: latest.isLiked ? Icons.favorite : Icons.favorite_border,
+                label: '${latest.likeCount}',
+                activeColor: latest.isLiked ? Colors.redAccent : null,
+                onTap: () => _toggleLike(context, ref),
+              ),
+              const SizedBox(height: 14),
+              _SideAction(
+                icon: Icons.chat_bubble_outline,
+                label: '${latest.commentCount}',
+                onTap: () => showVideoCommentsSheet(
+                  context: context,
+                  ref: ref,
+                  videoId: latest.id,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _SideAction(
+                icon: latest.isBookmarked
+                    ? Icons.bookmark
+                    : Icons.bookmark_border,
+                label: 'Save',
+                activeColor: latest.isBookmarked ? Colors.amber : null,
+                onTap: () => _toggleBookmark(context, ref),
+              ),
+              const SizedBox(height: 14),
+              _SideAction(
+                icon: Icons.remove_red_eye_outlined,
+                label: '${latest.viewCount}',
+              ),
             ],
           ),
         ),
@@ -295,19 +361,43 @@ class _FeedVideoPage extends StatelessWidget {
 }
 
 class _SideAction extends StatelessWidget {
-  const _SideAction({required this.icon, required this.label});
+  const _SideAction({
+    required this.icon,
+    required this.label,
+    this.onTap,
+    this.activeColor,
+  });
 
   final IconData icon;
   final String label;
+  final VoidCallback? onTap;
+  final Color? activeColor;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
+    final child = Column(
       children: [
-        Icon(icon, color: Colors.white, size: 28),
+        AnimatedScale(
+          scale: activeColor != null ? 1.08 : 1,
+          duration: const Duration(milliseconds: 160),
+          child: Icon(icon, color: activeColor ?? Colors.white, size: 28),
+        ),
         const SizedBox(height: 4),
         Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
       ],
+    );
+
+    if (onTap == null) {
+      return child;
+    }
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(24),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
+        child: child,
+      ),
     );
   }
 }
