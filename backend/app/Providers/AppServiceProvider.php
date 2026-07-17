@@ -50,6 +50,7 @@ class AppServiceProvider extends ServiceProvider
             RateLimiter::for('auth', fn () => Limit::none());
             RateLimiter::for('checkout', fn () => Limit::none());
             RateLimiter::for('live-chat', fn () => Limit::none());
+            RateLimiter::for('live-poll', fn () => Limit::none());
             RateLimiter::for('search', fn () => Limit::none());
 
             return;
@@ -59,7 +60,8 @@ class AppServiceProvider extends ServiceProvider
             $user = $request->user();
 
             if ($user !== null) {
-                return Limit::perMinute(60)->by('user:'.$user->getAuthIdentifier());
+                // Live room polls session + chat; 60/min was too tight for MVP clients.
+                return Limit::perMinute(180)->by('user:'.$user->getAuthIdentifier());
             }
 
             return Limit::perMinute(20)->by('ip:'.$request->ip());
@@ -78,6 +80,7 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($key);
         });
 
+        // POST chat only — anti-spam for message send.
         RateLimiter::for('live-chat', function (Request $request) {
             $user = $request->user();
             $key = $user !== null
@@ -85,6 +88,16 @@ class AppServiceProvider extends ServiceProvider
                 : 'live-chat:ip:'.$request->ip();
 
             return Limit::perMinute(30)->by($key);
+        });
+
+        // GET chat polling while watching a live room (~12–20 req/min typical).
+        RateLimiter::for('live-poll', function (Request $request) {
+            $user = $request->user();
+            $key = $user !== null
+                ? 'live-poll:user:'.$user->getAuthIdentifier()
+                : 'live-poll:ip:'.$request->ip();
+
+            return Limit::perMinute(120)->by($key);
         });
 
         RateLimiter::for('search', function (Request $request) {

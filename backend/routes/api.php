@@ -141,7 +141,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('live/replays', [LiveSessionController::class, 'replays']);
         Route::get('live/{id}', [LiveSessionController::class, 'show']);
         Route::get('live/{id}/chat', [LiveSessionController::class, 'chatIndex'])
-            ->middleware('throttle:live-chat');
+            ->middleware('throttle:live-poll');
         Route::get('videos/{id}', [VideoController::class, 'show']);
         Route::get('videos/{id}/products', [VideoProductController::class, 'index']);
         Route::post('videos/{id}/view', [VideoInteractionController::class, 'view']);
