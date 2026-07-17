@@ -517,4 +517,26 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get noReplayUrl => 'Takror URL yo\'q';
+
+  @override
+  String get messagesTitle => 'Xabarlar';
+
+  @override
+  String get messageSeller => 'Sotuvchiga yozish';
+
+  @override
+  String get messageAboutOrder => 'Buyurtma haqida yozish';
+
+  @override
+  String get noConversationsTitle => 'Xabarlar yo\'q';
+
+  @override
+  String get noConversationsSubtitle =>
+      'Sotuvchilar bilan yozishuv bu yerda ko\'rinadi.';
+
+  @override
+  String get typeMessageHint => 'Xabar yozing…';
+
+  @override
+  String get sendMessageFailed => 'Xabar yuborib bo\'lmadi';
 }

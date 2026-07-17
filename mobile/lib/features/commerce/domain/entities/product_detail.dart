@@ -66,6 +66,7 @@ class ProductDetail {
     this.images = const [],
     this.variants = const [],
     this.storeName,
+    this.sellerUserId,
     this.isPurchasable = false,
   });
 
@@ -84,6 +85,7 @@ class ProductDetail {
   final List<ProductImage> images;
   final List<ProductVariant> variants;
   final String? storeName;
+  final String? sellerUserId;
   final bool isPurchasable;
 
   String? get primaryImageUrl =>
@@ -131,6 +133,7 @@ class ProductDetail {
           .map((item) => ProductVariant.fromJson(item as Map<String, dynamic>))
           .toList(),
       storeName: store?['name'] as String?,
+      sellerUserId: store?['owner_user_id'] as String?,
       isPurchasable: json['status'] == 'active' && (json['stock_quantity'] as int? ?? 0) > 0,
     );
   }

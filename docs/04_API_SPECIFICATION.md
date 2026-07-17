@@ -870,6 +870,8 @@ Guest carts use `type: "guest"` and string item IDs (`{productId}:{variantId|nul
 | DELETE | `/users/{id}/follow` | Yes | Unfollow user |
 | POST | `/users/{id}/block` | Yes | Block user |
 | DELETE | `/users/{id}/block` | Yes | Unblock user |
+| POST | `/users/{id}/block` | Yes | Block user |
+| DELETE | `/users/{id}/block` | Yes | Unblock user |
 | GET | `/users/{id}/followers` | Optional | List followers |
 | GET | `/users/{id}/following` | Optional | List following |
 
@@ -1058,6 +1060,21 @@ When `local|click|payme|uzum`, order stays `awaiting_payment` until webhook / sa
 **GET /refunds/{id} Response:** Returns `{ RefundResource }` (see §6.9).
 
 > **Note:** Older drafts used `POST /orders` for checkout. Runtime truth is `POST /checkout` (Sprint 4.5+).
+
+---
+
+### 7.9c Messaging (Sprint 8)
+
+| Method | Path | Auth | Description |
+|--------|------|------|-------------|
+| GET | `/conversations` | Yes | List conversations (cursor) |
+| POST | `/conversations` | Yes | Create/get buyer↔seller thread (`seller_id`, optional `order_id`, `message`) |
+| GET | `/conversations/unread-count` | Yes | Total unread messages |
+| GET | `/conversations/{id}/messages` | Yes | List messages (cursor) |
+| POST | `/conversations/{id}/messages` | Yes | Send text and/or `image_url` |
+| PUT | `/conversations/{id}/read` | Yes | Mark conversation read |
+
+Block enforcement: either-direction block → `403` on send. Push: `NEW_MESSAGE` via stub FCM. Media: `purpose=message_image` on `POST /media/presigned-url`.
 
 ---
 

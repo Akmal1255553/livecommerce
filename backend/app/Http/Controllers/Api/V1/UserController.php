@@ -14,6 +14,7 @@ use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use App\Services\Follow\FollowService;
 use App\Services\Notification\NotificationService;
+use App\Services\Block\BlockService;
 use App\Services\User\ProfileService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -24,6 +25,7 @@ class UserController extends Controller
         private readonly ProfileService $profileService,
         private readonly FollowService $followService,
         private readonly NotificationService $notificationService,
+        private readonly BlockService $blockService,
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -55,6 +57,20 @@ class UserController extends Controller
         $this->followService->unfollow($request->user(), $id);
 
         return ApiResponse::success(['message' => 'User unfollowed successfully.']);
+    }
+
+    public function block(Request $request, string $id): JsonResponse
+    {
+        $this->blockService->block($request->user(), $id);
+
+        return ApiResponse::created(['message' => 'User blocked.']);
+    }
+
+    public function unblock(Request $request, string $id): JsonResponse
+    {
+        $this->blockService->unblock($request->user(), $id);
+
+        return ApiResponse::success(['message' => 'User unblocked.']);
     }
 
     public function followers(Request $request, string $id): JsonResponse

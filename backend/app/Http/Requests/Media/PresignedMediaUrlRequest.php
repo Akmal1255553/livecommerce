@@ -23,7 +23,7 @@ class PresignedMediaUrlRequest extends FormRequest
             'file_name' => ['required', 'string', 'max:255'],
             'mime_type' => ['required', 'string', 'max:100'],
             'file_size' => ['required', 'integer', 'min:1', 'max:104857600'],
-            'purpose' => ['required', 'string', Rule::in(['video', 'product_image', 'avatar', 'store_logo'])],
+            'purpose' => ['required', 'string', Rule::in(['video', 'product_image', 'avatar', 'store_logo', 'message_image'])],
         ];
     }
 }

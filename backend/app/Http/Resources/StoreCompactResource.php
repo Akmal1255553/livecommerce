@@ -21,6 +21,7 @@ class StoreCompactResource extends JsonResource
             'name' => $this->name,
             'slug' => $this->slug,
             'logo_url' => $this->logo_url,
+            'owner_user_id' => $this->user_id,
         ];
     }
 }

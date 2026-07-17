@@ -245,5 +245,13 @@
 
   "replayTitle": "Takror",
   "replayPlaceholder": "Takror placeholder",
-  "noReplayUrl": "Takror URL yo'q"
+  "noReplayUrl": "Takror URL yo'q",
+
+  "messagesTitle": "Xabarlar",
+  "messageSeller": "Sotuvchiga yozish",
+  "messageAboutOrder": "Buyurtma haqida yozish",
+  "noConversationsTitle": "Xabarlar yo'q",
+  "noConversationsSubtitle": "Sotuvchilar bilan yozishuv bu yerda ko'rinadi.",
+  "typeMessageHint": "Xabar yozing…",
+  "sendMessageFailed": "Xabar yuborib bo'lmadi"
 }
