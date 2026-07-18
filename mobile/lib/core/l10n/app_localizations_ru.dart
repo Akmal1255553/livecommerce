@@ -512,4 +512,26 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get noReplayUrl => 'Нет URL повтора';
+
+  @override
+  String get messagesTitle => 'Сообщения';
+
+  @override
+  String get messageSeller => 'Написать продавцу';
+
+  @override
+  String get messageAboutOrder => 'Написать о заказе';
+
+  @override
+  String get noConversationsTitle => 'Нет сообщений';
+
+  @override
+  String get noConversationsSubtitle =>
+      'Переписка с продавцами появится здесь.';
+
+  @override
+  String get typeMessageHint => 'Введите сообщение…';
+
+  @override
+  String get sendMessageFailed => 'Не удалось отправить сообщение';
 }

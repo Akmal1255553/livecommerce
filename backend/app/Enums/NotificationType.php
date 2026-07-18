@@ -13,4 +13,5 @@ enum NotificationType: string
     case ORDER_CREATED = 'ORDER_CREATED';
     case ORDER_PAID = 'ORDER_PAID';
     case REFUND_APPROVED = 'REFUND_APPROVED';
+    case NEW_MESSAGE = 'NEW_MESSAGE';
 }

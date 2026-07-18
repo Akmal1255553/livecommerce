@@ -927,23 +927,23 @@ Private Chat, Seller-Buyer Chat, Order Chat, Image Sharing, Real-Time Messaging
 
 ## Backend Deliverables
 
-- [ ] Migrations: conversations, messages, conversation_participants
-- [ ] MessagingService
-- [ ] Create conversation (buyer ↔ seller)
-- [ ] Send/receive messages (text + image)
-- [ ] Order-linked conversations
-- [ ] Message notifications via FCM
-- [ ] Block check (blocked users cannot message)
-- [ ] Feature tests: create conversation, send message, list messages
+- [x] Migrations: conversations, messages, conversation_participants (+ blocks)
+- [x] MessagingService
+- [x] Create conversation (buyer ↔ seller)
+- [x] Send/receive messages (text + image URL)
+- [x] Order-linked conversations
+- [x] Message notifications via FCM stub
+- [x] Block check (blocked users cannot message)
+- [x] Feature tests: create conversation, send message, list messages
 
 ## Mobile Deliverables
 
-- [ ] Conversation list screen
-- [ ] Chat screen (message bubbles, input, image attach)
-- [ ] Start conversation from product/store page
-- [ ] Order-linked chat (from order detail)
-- [ ] Unread message badge
-- [ ] Push notification for new messages
+- [x] Conversation list screen
+- [x] Chat screen (message bubbles, input; image display)
+- [x] Start conversation from product/store page
+- [x] Order-linked chat (from order detail)
+- [x] Unread message badge
+- [ ] Push notification for new messages (device token path exists; OS push deferred)
 
 ## API Endpoints
 

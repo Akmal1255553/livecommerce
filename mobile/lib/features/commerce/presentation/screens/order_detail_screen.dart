@@ -5,36 +5,85 @@ import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/money_amount.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:livecommerce_mobile/features/messaging/presentation/providers/messaging_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
-class OrderDetailScreen extends ConsumerWidget {
+class OrderDetailScreen extends ConsumerStatefulWidget {
   const OrderDetailScreen({super.key, required this.orderId});
 
   final String orderId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final orderAsync = ref.watch(orderDetailProvider(orderId));
+  ConsumerState<OrderDetailScreen> createState() => _OrderDetailScreenState();
+}
+
+class _OrderDetailScreenState extends ConsumerState<OrderDetailScreen> {
+  bool _isMessaging = false;
+
+  Future<void> _messageAboutOrder(Order order) async {
+    if (order.sellerUserId == null) return;
+    setState(() => _isMessaging = true);
+    try {
+      final conv = await ref
+          .read(conversationsNotifierProvider.notifier)
+          .createConversation(
+            sellerId: order.sellerUserId!,
+            orderId: order.id,
+          );
+      if (mounted) {
+        context.push('/conversations/${conv.id}', extra: conv);
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content:
+                Text(AppLocalizations.of(context)!.sendMessageFailed),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isMessaging = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final orderAsync = ref.watch(orderDetailProvider(widget.orderId));
 
     return Scaffold(
-      appBar: AppBar(title: Text(AppLocalizations.of(context)!.orderDetailsTitle)),
+      appBar: AppBar(
+        title: Text(AppLocalizations.of(context)!.orderDetailsTitle),
+      ),
       body: orderAsync.when(
         loading: () => const ListSkeleton(itemCount: 4),
         error: (error, _) => ErrorDisplay(
           message: error.toString(),
-          onRetry: () => ref.invalidate(orderDetailProvider(orderId)),
+          onRetry: () => ref.invalidate(orderDetailProvider(widget.orderId)),
         ),
-        data: (order) => _OrderDetailBody(order: order),
+        data: (order) => _OrderDetailBody(
+          order: order,
+          isMessaging: _isMessaging,
+          onMessageAboutOrder: order.sellerUserId != null
+              ? () => _messageAboutOrder(order)
+              : null,
+        ),
       ),
     );
   }
 }
 
 class _OrderDetailBody extends StatelessWidget {
-  const _OrderDetailBody({required this.order});
+  const _OrderDetailBody({
+    required this.order,
+    required this.isMessaging,
+    this.onMessageAboutOrder,
+  });
 
   final Order order;
+  final bool isMessaging;
+  final VoidCallback? onMessageAboutOrder;
 
   @override
   Widget build(BuildContext context) {
@@ -71,6 +120,19 @@ class _OrderDetailBody extends StatelessWidget {
           OutlinedButton(
             onPressed: () => context.push('/orders/${order.id}/refund'),
             child: Text(l10n.requestRefund),
+          ),
+        ],
+        if (onMessageAboutOrder != null) ...[
+          const SizedBox(height: 12),
+          OutlinedButton(
+            onPressed: isMessaging ? null : onMessageAboutOrder,
+            child: isMessaging
+                ? const SizedBox(
+                    height: 18,
+                    width: 18,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : Text(l10n.messageAboutOrder),
           ),
         ],
         const SizedBox(height: 20),

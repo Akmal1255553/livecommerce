@@ -1033,6 +1033,48 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Takror URL yo\'q'**
   String get noReplayUrl;
+
+  /// No description provided for @messagesTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xabarlar'**
+  String get messagesTitle;
+
+  /// No description provided for @messageSeller.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sotuvchiga yozish'**
+  String get messageSeller;
+
+  /// No description provided for @messageAboutOrder.
+  ///
+  /// In uz, this message translates to:
+  /// **'Buyurtma haqida yozish'**
+  String get messageAboutOrder;
+
+  /// No description provided for @noConversationsTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xabarlar yo\'q'**
+  String get noConversationsTitle;
+
+  /// No description provided for @noConversationsSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sotuvchilar bilan yozishuv bu yerda ko\'rinadi.'**
+  String get noConversationsSubtitle;
+
+  /// No description provided for @typeMessageHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xabar yozing…'**
+  String get typeMessageHint;
+
+  /// No description provided for @sendMessageFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xabar yuborib bo\'lmadi'**
+  String get sendMessageFailed;
 }
 
 class _AppLocalizationsDelegate

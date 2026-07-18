@@ -245,5 +245,13 @@
 
   "replayTitle": "Повтор",
   "replayPlaceholder": "Заглушка повтора",
-  "noReplayUrl": "Нет URL повтора"
+  "noReplayUrl": "Нет URL повтора",
+
+  "messagesTitle": "Сообщения",
+  "messageSeller": "Написать продавцу",
+  "messageAboutOrder": "Написать о заказе",
+  "noConversationsTitle": "Нет сообщений",
+  "noConversationsSubtitle": "Переписка с продавцами появится здесь.",
+  "typeMessageHint": "Введите сообщение…",
+  "sendMessageFailed": "Не удалось отправить сообщение"
 }

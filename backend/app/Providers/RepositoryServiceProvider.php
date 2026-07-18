@@ -8,14 +8,17 @@ use App\Contracts\Recommendation\EngagementEventRepositoryInterface;
 use App\Contracts\Recommendation\RecommendationServiceInterface;
 use App\Contracts\Recommendation\VideoEngagementRollupRepositoryInterface;
 use App\Contracts\Repositories\BookmarkRepositoryInterface;
+use App\Contracts\Repositories\BlockRepositoryInterface;
 use App\Contracts\Repositories\BrandRepositoryInterface;
 use App\Contracts\Repositories\CartRepositoryInterface;
 use App\Contracts\Repositories\CategoryRepositoryInterface;
 use App\Contracts\Repositories\CommentRepositoryInterface;
+use App\Contracts\Repositories\ConversationRepositoryInterface;
 use App\Contracts\Repositories\FollowRepositoryInterface;
 use App\Contracts\Repositories\LiveSessionRepositoryInterface;
 use App\Contracts\Repositories\LiveStreamRepositoryInterface;
 use App\Contracts\Repositories\MediaUploadRepositoryInterface;
+use App\Contracts\Repositories\MessageRepositoryInterface;
 use App\Contracts\Repositories\NotificationRepositoryInterface;
 use App\Contracts\Repositories\OrderRepositoryInterface;
 use App\Contracts\Repositories\ProductRepositoryInterface;
@@ -38,6 +41,7 @@ use App\Contracts\Services\LiveAssistantServiceInterface;
 use App\Contracts\Services\LiveSessionServiceInterface;
 use App\Contracts\Services\MediaAssetServiceInterface;
 use App\Contracts\Services\MediaServiceInterface;
+use App\Contracts\Services\MessagingServiceInterface;
 use App\Contracts\Services\MetricsServiceInterface;
 use App\Contracts\Services\OrderNumberGeneratorInterface;
 use App\Contracts\Services\OrderServiceInterface;
@@ -59,6 +63,7 @@ use App\Contracts\Services\ViewerMetricsServiceInterface;
 use App\Contracts\VideoProcessing\FfmpegTranscoderInterface;
 use App\Events\CommentCreated;
 use App\Events\LiveSessionStarted;
+use App\Events\MessageSent;
 use App\Events\OrderCancelled;
 use App\Events\OrderCreated;
 use App\Events\OrderPaid;
@@ -73,18 +78,22 @@ use App\Listeners\DispatchVideoProcessingPipeline;
 use App\Listeners\MergeGuestCartOnLogin;
 use App\Listeners\NotifyOnComment;
 use App\Listeners\NotifyOnLiveStarted;
+use App\Listeners\NotifyOnMessageSent;
 use App\Listeners\NotifyOnVideoLiked;
 use App\Listeners\RecordOrderAnalytics;
 use App\Repositories\Eloquent\BookmarkRepository;
+use App\Repositories\Eloquent\BlockRepository;
 use App\Repositories\Eloquent\BrandRepository;
 use App\Repositories\Eloquent\CartRepository;
 use App\Repositories\Eloquent\CategoryRepository;
 use App\Repositories\Eloquent\CommentRepository;
+use App\Repositories\Eloquent\ConversationRepository;
 use App\Repositories\Eloquent\EngagementEventRepository;
 use App\Repositories\Eloquent\FollowRepository;
 use App\Repositories\Eloquent\LiveSessionRepository;
 use App\Repositories\Eloquent\LiveStreamRepository;
 use App\Repositories\Eloquent\MediaUploadRepository;
+use App\Repositories\Eloquent\MessageRepository;
 use App\Repositories\Eloquent\NotificationRepository;
 use App\Repositories\Eloquent\OrderRepository;
 use App\Repositories\Eloquent\ProductRepository;
@@ -110,6 +119,7 @@ use App\Services\LiveSession\LiveSessionService;
 use App\Services\LiveSession\ViewerMetricsService;
 use App\Services\Media\MediaAssetService;
 use App\Services\Media\MediaService;
+use App\Services\Messaging\MessagingService;
 use App\Services\Metrics\MetricsService;
 use App\Services\Notification\StubFcmPushNotification;
 use App\Services\Order\DateSequenceOrderNumberGenerator;
@@ -161,6 +171,9 @@ class RepositoryServiceProvider extends ServiceProvider
         NotificationRepositoryInterface::class => NotificationRepository::class,
         UserDeviceRepositoryInterface::class => UserDeviceRepository::class,
         FollowRepositoryInterface::class => FollowRepository::class,
+        BlockRepositoryInterface::class => BlockRepository::class,
+        ConversationRepositoryInterface::class => ConversationRepository::class,
+        MessageRepositoryInterface::class => MessageRepository::class,
         VideoLikeRepositoryInterface::class => VideoLikeRepository::class,
         CommentRepositoryInterface::class => CommentRepository::class,
         BookmarkRepositoryInterface::class => BookmarkRepository::class,
@@ -177,6 +190,7 @@ class RepositoryServiceProvider extends ServiceProvider
         LiveAnalyticsServiceInterface::class => LiveAnalyticsService::class,
         LiveAssistantServiceInterface::class => LiveAssistantService::class,
         MediaServiceInterface::class => MediaService::class,
+        MessagingServiceInterface::class => MessagingService::class,
         VideoUploadServiceInterface::class => VideoUploadService::class,
         VideoInteractionServiceInterface::class => VideoInteractionService::class,
         VideoCommerceServiceInterface::class => VideoCommerceService::class,
@@ -270,6 +284,7 @@ class RepositoryServiceProvider extends ServiceProvider
         Event::listen(VideoLiked::class, NotifyOnVideoLiked::class);
         Event::listen(CommentCreated::class, NotifyOnComment::class);
         Event::listen(LiveSessionStarted::class, NotifyOnLiveStarted::class);
+        Event::listen(MessageSent::class, NotifyOnMessageSent::class);
         Event::listen(OrderCreated::class, [RecordOrderAnalytics::class, 'handleOrderCreated']);
         Event::listen(OrderPaid::class, [RecordOrderAnalytics::class, 'handleOrderPaid']);
         Event::listen(OrderCancelled::class, [RecordOrderAnalytics::class, 'handleOrderCancelled']);

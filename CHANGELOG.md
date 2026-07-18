@@ -6,12 +6,19 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
+### Added
+
+#### Sprint 8 — Messaging
+
+- Tables: `blocks`, `conversations`, `conversation_participants`, `messages`
+- API: conversations CRUD-ish, messages, mark read, unread count, user block/unblock
+- `MessagingService` + block enforcement + `NEW_MESSAGE` notifications (stub FCM)
+- Mobile: conversation list, chat screen (5s poll), entry from product/order/profile
+
 ### Changed
 
 - **ADR-018 / Render:** free-tier API path via Render Blueprint (`render.yaml`) + optional Supabase; Railway when paid. See [docs/24_RENDER_DEPLOY.md](./docs/24_RENDER_DEPLOY.md).
 - Preferred infra is **Supabase (Postgres)** + **Render/Railway (API)**; Docker optional. See [docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md](./docs/22_CLOUD_INFRA_SUPABASE_RAILWAY.md).
-
-### Added
 
 #### UX polish (post-RC1)
 

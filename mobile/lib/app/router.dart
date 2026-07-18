@@ -17,6 +17,9 @@ import 'package:livecommerce_mobile/features/commerce/presentation/screens/payme
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/product_screen.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/screens/refund_request_screen.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/screens/feed_screen.dart';
+import 'package:livecommerce_mobile/features/messaging/domain/entities/conversation.dart';
+import 'package:livecommerce_mobile/features/messaging/presentation/screens/chat_screen.dart';
+import 'package:livecommerce_mobile/features/messaging/presentation/screens/conversations_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/go_live_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/live_discovery_screen.dart';
 import 'package:livecommerce_mobile/features/live/presentation/screens/live_replay_screen.dart';
@@ -276,6 +279,29 @@ class AppRouter {
             return AppPageTransitions.fadeSlide(
               key: state.pageKey,
               child: PublicStoreScreen(slug: slug),
+            );
+          },
+        ),
+        GoRoute(
+          path: '/conversations',
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const ConversationsScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/conversations/:id',
+          pageBuilder: (context, state) {
+            final id = state.pathParameters['id']!;
+            final conv = state.extra is Conversation
+                ? state.extra as Conversation
+                : null;
+            return AppPageTransitions.fadeSlide(
+              key: state.pageKey,
+              child: ChatScreen(
+                conversationId: id,
+                initialConversation: conv,
+              ),
             );
           },
         ),

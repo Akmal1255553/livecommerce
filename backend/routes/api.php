@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\DiscoverController;
 use App\Http\Controllers\Api\V1\FeedController;
@@ -69,6 +70,15 @@ Route::prefix('v1')->group(function (): void {
 
         Route::post('users/{id}/follow', [UserController::class, 'follow']);
         Route::delete('users/{id}/follow', [UserController::class, 'unfollow']);
+        Route::post('users/{id}/block', [UserController::class, 'block']);
+        Route::delete('users/{id}/block', [UserController::class, 'unblock']);
+
+        Route::get('conversations/unread-count', [ConversationController::class, 'unreadCount']);
+        Route::get('conversations', [ConversationController::class, 'index']);
+        Route::post('conversations', [ConversationController::class, 'store']);
+        Route::get('conversations/{id}/messages', [ConversationController::class, 'messages']);
+        Route::post('conversations/{id}/messages', [ConversationController::class, 'sendMessage']);
+        Route::put('conversations/{id}/read', [ConversationController::class, 'markRead']);
 
         Route::get('feed/following', [FeedController::class, 'following']);
 

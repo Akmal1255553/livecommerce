@@ -129,6 +129,7 @@ class Order {
     this.paymentMethod,
     this.paymentProvider,
     this.paymentReference,
+    this.sellerUserId,
   });
 
   final String id;
@@ -143,6 +144,7 @@ class Order {
   final String? paymentMethod;
   final String? paymentProvider;
   final String? paymentReference;
+  final String? sellerUserId;
 
   bool get isAwaitingPayment => status == 'awaiting_payment';
 
@@ -154,6 +156,7 @@ class Order {
     final shipment = json['shipment'] as Map<String, dynamic>?;
     final addressJson = shipment?['address'] as Map<String, dynamic>?;
     final payment = json['payment'] as Map<String, dynamic>?;
+    final store = json['store'] as Map<String, dynamic>?;
 
     return Order(
       id: json['id'] as String,
@@ -171,6 +174,7 @@ class Order {
       paymentMethod: payment?['method'] as String?,
       paymentProvider: payment?['provider'] as String?,
       paymentReference: payment?['reference'] as String?,
+      sellerUserId: store?['owner_user_id'] as String?,
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:livecommerce_mobile/features/messaging/presentation/providers/messaging_providers.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -89,6 +90,46 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               FilledButton(
                 onPressed: auth.isLoading ? null : _save,
                 child: Text(l10n.saveButton),
+              ),
+              const SizedBox(height: 12),
+              Consumer(
+                builder: (context, ref, _) {
+                  final unreadAsync = ref.watch(unreadCountProvider);
+                  final count = unreadAsync.valueOrNull ?? 0;
+                  return OutlinedButton(
+                    onPressed: () => context.push('/conversations'),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(l10n.messagesTitle),
+                        if (count > 0) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 1,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).colorScheme.primary,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '$count',
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelSmall
+                                  ?.copyWith(
+                                    color: Theme.of(context)
+                                        .colorScheme
+                                        .onPrimary,
+                                  ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                },
               ),
               const SizedBox(height: 12),
               OutlinedButton(
