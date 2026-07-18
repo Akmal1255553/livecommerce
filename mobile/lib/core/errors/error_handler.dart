@@ -49,7 +49,10 @@ Failure mapExceptionToFailure(Object error) {
     }
 
     if (statusCode == 429) {
-      return RateLimitFailure(_messageFromBody(data) ?? 'Too many requests.');
+      return RateLimitFailure(
+        _messageFromBody(data) ??
+            'Too many requests. Wait a minute and try again.',
+      );
     }
 
     if (error.type == DioExceptionType.connectionTimeout ||

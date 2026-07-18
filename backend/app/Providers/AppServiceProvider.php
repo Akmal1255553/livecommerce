@@ -77,7 +77,8 @@ class AppServiceProvider extends ServiceProvider
                 ? 'checkout:user:'.$user->getAuthIdentifier()
                 : 'checkout:ip:'.$request->ip();
 
-            return Limit::perMinute(10)->by($key);
+            // Beta: allow retries after stale cart / validation without 429.
+            return Limit::perMinute(30)->by($key);
         });
 
         // POST chat only — anti-spam for message send.

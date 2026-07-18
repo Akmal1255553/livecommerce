@@ -45,6 +45,10 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
       return;
     }
 
+    if (ref.read(checkoutNotifierProvider).isSubmitting) {
+      return;
+    }
+
     await ref.read(cartNotifierProvider.notifier).load();
     if (!mounted) {
       return;
