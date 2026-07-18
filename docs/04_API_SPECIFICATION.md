@@ -1384,7 +1384,7 @@ All admin endpoints require `role: admin` or `role: moderator` unless noted. Bas
 | Auth endpoints (login, register, OTP, refresh) | 5 requests | 1 minute | `throttle:auth` |
 | OTP resend | 1 request | 60 seconds | App-level cooldown |
 | OTP verify attempts | 5 failures | 15 minute lockout | `OtpService` |
-| Checkout | 10 requests | 1 minute | `throttle:checkout` |
+| Checkout | 30 requests | 1 minute | `throttle:checkout` |
 | Live chat POST | 30 requests | 1 minute | `throttle:live-chat` |
 | Live chat GET (room poll) | 120 requests | 1 minute | `throttle:live-poll` |
 | Video upload | 10 requests | 1 hour | `VideoUploadService` |
