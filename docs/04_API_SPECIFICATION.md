@@ -1346,6 +1346,15 @@ All admin endpoints require `role: admin` or `role: moderator` unless noted. Bas
 | PUT | `/admin/stores/{id}/approve` | Admin | Approve seller store |
 | PUT | `/admin/stores/{id}/reject` | Admin | Reject seller application |
 | GET | `/admin/audit-logs` | Admin | View audit log entries (offset) |
+| POST | `/admin/categories` | Admin | Create category |
+| PUT | `/admin/categories/{id}` | Admin | Update category |
+| DELETE | `/admin/categories/{id}` | Admin | Soft-deactivate category (`is_active=false`) |
+| GET | `/admin/reports` | Moderator | Content reports queue |
+| PUT | `/admin/reports/{id}/resolve` | Moderator | Resolve report |
+| PUT | `/admin/reports/{id}/dismiss` | Moderator | Dismiss report |
+| POST | `/reports` | Yes | Submit content report (`target_type`, `target_id`, `reason`) |
+
+**Seller apply:** creates store with `status: pending` until admin approves.
 
 **PUT /admin/refunds/{id}/approve Response:**
 ```json

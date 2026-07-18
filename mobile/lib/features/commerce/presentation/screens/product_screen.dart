@@ -6,6 +6,7 @@ import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/product_detail.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/messaging/presentation/providers/messaging_providers.dart';
+import 'package:livecommerce_mobile/features/moderation/presentation/report_sheet.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
@@ -32,6 +33,16 @@ class _ProductScreenState extends ConsumerState<ProductScreen> {
       appBar: AppBar(
         title: Text(AppLocalizations.of(context)!.productTitle),
         actions: [
+          IconButton(
+            tooltip: AppLocalizations.of(context)!.reportAction,
+            icon: const Icon(Icons.flag_outlined),
+            onPressed: () => showReportSheet(
+              context: context,
+              ref: ref,
+              targetType: 'product',
+              targetId: widget.productId,
+            ),
+          ),
           IconButton(
             icon: Badge(
               isLabelVisible: cart.itemCount > 0,

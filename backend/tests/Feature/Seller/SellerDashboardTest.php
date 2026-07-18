@@ -10,7 +10,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\User;
 
-test('user can apply to become a seller with active store', function () {
+test('user can apply to become a seller with pending store', function () {
     $auth = registerUser('newseller', 'newseller@example.com');
 
     $response = test()->withToken($auth['access_token'])
@@ -20,7 +20,7 @@ test('user can apply to become a seller with active store', function () {
         ])
         ->assertCreated()
         ->assertJsonPath('data.name', 'Fashion Hub')
-        ->assertJsonPath('data.status', 'active')
+        ->assertJsonPath('data.status', 'pending')
         ->assertJsonPath('data.slug', 'fashion-hub');
 
     $user = User::query()->findOrFail($auth['user_id']);

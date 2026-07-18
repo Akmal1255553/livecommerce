@@ -79,7 +79,7 @@ class StoreService extends BaseService implements StoreServiceInterface
                 'name' => $name,
                 'slug' => $slug,
                 'description' => $payload['description'] ?? null,
-                'status' => StoreStatus::Active,
+                'status' => StoreStatus::Pending,
                 'commission_rate' => 10.00,
             ]);
 

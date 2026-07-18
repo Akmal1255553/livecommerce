@@ -1075,6 +1075,48 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Xabar yuborib bo\'lmadi'**
   String get sendMessageFailed;
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shikoyat qilish'**
+  String get reportTitle;
+
+  /// No description provided for @reportReasonSpam.
+  ///
+  /// In uz, this message translates to:
+  /// **'Spam'**
+  String get reportReasonSpam;
+
+  /// No description provided for @reportReasonInappropriate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nomaqbul kontent'**
+  String get reportReasonInappropriate;
+
+  /// No description provided for @reportReasonScam.
+  ///
+  /// In uz, this message translates to:
+  /// **'Firibgarlik'**
+  String get reportReasonScam;
+
+  /// No description provided for @reportReasonOther.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshqa'**
+  String get reportReasonOther;
+
+  /// No description provided for @reportSubmitted.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shikoyat yuborildi'**
+  String get reportSubmitted;
+
+  /// No description provided for @reportAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shikoyat'**
+  String get reportAction;
 }
 
 class _AppLocalizationsDelegate

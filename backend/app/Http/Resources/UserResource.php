@@ -26,6 +26,7 @@ class UserResource extends JsonResource
             'bio' => $this->bio,
             'is_verified' => $this->is_verified,
             'role' => $this->role->value,
+            'status' => $this->status->value,
             'follower_count' => $profile !== null ? $profile->follower_count : 0,
             'following_count' => $profile !== null ? $profile->following_count : 0,
             'video_count' => $profile !== null ? $profile->video_count : 0,

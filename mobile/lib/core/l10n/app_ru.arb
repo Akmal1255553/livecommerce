@@ -253,5 +253,13 @@
   "noConversationsTitle": "Нет сообщений",
   "noConversationsSubtitle": "Переписка с продавцами появится здесь.",
   "typeMessageHint": "Введите сообщение…",
-  "sendMessageFailed": "Не удалось отправить сообщение"
+  "sendMessageFailed": "Не удалось отправить сообщение",
+
+  "reportTitle": "Пожаловаться",
+  "reportReasonSpam": "Спам",
+  "reportReasonInappropriate": "Неприемлемый контент",
+  "reportReasonScam": "Мошенничество",
+  "reportReasonOther": "Другое",
+  "reportSubmitted": "Жалоба отправлена",
+  "reportAction": "Пожаловаться"
 }

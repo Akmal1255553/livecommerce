@@ -539,4 +539,25 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get sendMessageFailed => 'Xabar yuborib bo\'lmadi';
+
+  @override
+  String get reportTitle => 'Shikoyat qilish';
+
+  @override
+  String get reportReasonSpam => 'Spam';
+
+  @override
+  String get reportReasonInappropriate => 'Nomaqbul kontent';
+
+  @override
+  String get reportReasonScam => 'Firibgarlik';
+
+  @override
+  String get reportReasonOther => 'Boshqa';
+
+  @override
+  String get reportSubmitted => 'Shikoyat yuborildi';
+
+  @override
+  String get reportAction => 'Shikoyat';
 }

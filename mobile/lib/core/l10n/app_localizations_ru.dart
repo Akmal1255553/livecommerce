@@ -534,4 +534,25 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sendMessageFailed => 'Не удалось отправить сообщение';
+
+  @override
+  String get reportTitle => 'Пожаловаться';
+
+  @override
+  String get reportReasonSpam => 'Спам';
+
+  @override
+  String get reportReasonInappropriate => 'Неприемлемый контент';
+
+  @override
+  String get reportReasonScam => 'Мошенничество';
+
+  @override
+  String get reportReasonOther => 'Другое';
+
+  @override
+  String get reportSubmitted => 'Жалоба отправлена';
+
+  @override
+  String get reportAction => 'Пожаловаться';
 }

@@ -15,6 +15,13 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - `MessagingService` + block enforcement + `NEW_MESSAGE` notifications (stub FCM)
 - Mobile: conversation list, chat screen (5s poll), entry from product/order/profile
 
+#### Sprint 14 — Administration (core API)
+
+- Tables: `audit_logs`, `content_reports`
+- Seller apply → `pending`; admin approve/reject stores
+- Admin: users suspend/ban/activate, video queue, reports, categories, audit logs
+- Mobile: report sheet on feed videos and product detail
+
 ### Changed
 
 - **ADR-018 / Render:** free-tier API path via Render Blueprint (`render.yaml`) + optional Supabase; Railway when paid. See [docs/24_RENDER_DEPLOY.md](./docs/24_RENDER_DEPLOY.md).
