@@ -1,10 +1,12 @@
 import 'package:dio/dio.dart';
+import 'package:livecommerce_mobile/core/analytics/analytics_session.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 
 class FeedRemoteDataSource {
-  FeedRemoteDataSource(this._dio);
+  FeedRemoteDataSource(this._dio, this._analyticsSession);
 
   final Dio _dio;
+  final AnalyticsSession _analyticsSession;
 
   Future<FeedPage> fetchForYou({String? cursor, int limit = 20}) async {
     return _fetchFeed('/feed/for-you', cursor: cursor, limit: limit);
@@ -15,7 +17,10 @@ class FeedRemoteDataSource {
   }
 
   Future<void> likeVideo(String videoId) async {
-    await _dio.post<Map<String, dynamic>>('/videos/$videoId/like');
+    await _dio.post<Map<String, dynamic>>(
+      '/videos/$videoId/like',
+      data: await _sessionPayload(),
+    );
   }
 
   Future<void> unlikeVideo(String videoId) async {
@@ -23,7 +28,10 @@ class FeedRemoteDataSource {
   }
 
   Future<void> bookmarkVideo(String videoId) async {
-    await _dio.post<Map<String, dynamic>>('/videos/$videoId/bookmark');
+    await _dio.post<Map<String, dynamic>>(
+      '/videos/$videoId/bookmark',
+      data: await _sessionPayload(),
+    );
   }
 
   Future<void> unbookmarkVideo(String videoId) async {
@@ -31,7 +39,10 @@ class FeedRemoteDataSource {
   }
 
   Future<void> recordView(String videoId) async {
-    await _dio.post<Map<String, dynamic>>('/videos/$videoId/view');
+    await _dio.post<Map<String, dynamic>>(
+      '/videos/$videoId/view',
+      data: await _sessionPayload(),
+    );
   }
 
   Future<List<VideoComment>> fetchComments(String videoId) async {
@@ -48,12 +59,20 @@ class FeedRemoteDataSource {
     required String videoId,
     required String body,
   }) async {
+    final sessionId = await _analyticsSession.id();
     final response = await _dio.post<Map<String, dynamic>>(
       '/videos/$videoId/comments',
-      data: {'body': body},
+      data: {
+        'body': body,
+        'session_id': sessionId,
+      },
     );
     final data = response.data!['data'] as Map<String, dynamic>;
     return VideoComment.fromJson(data);
+  }
+
+  Future<Map<String, String>> _sessionPayload() async {
+    return {'session_id': await _analyticsSession.id()};
   }
 
   Future<FeedPage> _fetchFeed(

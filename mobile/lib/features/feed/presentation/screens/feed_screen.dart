@@ -30,7 +30,11 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
     super.initState();
     _pageController = PageController();
     Future.microtask(() {
-      ref.read(feedNotifierProvider.notifier).load();
+      // Keep in-memory likes/comments when returning to Home; only fetch if empty.
+      final feed = ref.read(feedNotifierProvider);
+      if (feed.videos.isEmpty && !feed.isLoading) {
+        ref.read(feedNotifierProvider.notifier).load();
+      }
       ref.read(cartNotifierProvider.notifier).load();
     });
   }

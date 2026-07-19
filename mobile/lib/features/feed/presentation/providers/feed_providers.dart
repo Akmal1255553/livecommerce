@@ -2,14 +2,22 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:livecommerce_mobile/core/analytics/analytics_session.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:livecommerce_mobile/features/feed/data/feed_repository.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 
+final analyticsSessionProvider = Provider<AnalyticsSession>((ref) {
+  return AnalyticsSession(ref.watch(sharedPreferencesProvider));
+});
+
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
   final dio = ref.watch(authDioProvider);
-  return FeedRepository(remote: FeedRemoteDataSource(dio));
+  final session = ref.watch(analyticsSessionProvider);
+  return FeedRepository(
+    remote: FeedRemoteDataSource(dio, session),
+  );
 });
 
 enum FeedTab { forYou, following }
