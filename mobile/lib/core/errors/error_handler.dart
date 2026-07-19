@@ -50,8 +50,7 @@ Failure mapExceptionToFailure(Object error) {
 
     if (statusCode == 429) {
       return RateLimitFailure(
-        _messageFromBody(data) ??
-            'Too many requests. Wait a minute and try again.',
+        'Слишком много запросов. Подождите ~1 минуту и попробуйте снова.',
       );
     }
 

@@ -57,14 +57,9 @@ class AppServiceProvider extends ServiceProvider
         }
 
         RateLimiter::for('api', function (Request $request) {
-            $user = $request->user();
-
-            if ($user !== null) {
-                // Live room polls session + chat; 60/min was too tight for MVP clients.
-                return Limit::perMinute(180)->by('user:'.$user->getAuthIdentifier());
-            }
-
-            return Limit::perMinute(20)->by('ip:'.$request->ip());
+            // throttleApi runs BEFORE auth.api, so $request->user() is usually null.
+            // Key by bearer token when present so logged-in clients are not capped at guest IP limits.
+            return Limit::perMinute(300)->by($this->rateLimitKey('api', $request));
         });
 
         RateLimiter::for('auth', function (Request $request) {
@@ -72,42 +67,41 @@ class AppServiceProvider extends ServiceProvider
         });
 
         RateLimiter::for('checkout', function (Request $request) {
-            $user = $request->user();
-            $key = $user !== null
-                ? 'checkout:user:'.$user->getAuthIdentifier()
-                : 'checkout:ip:'.$request->ip();
-
             // Beta: allow retries after stale cart / validation without 429.
-            return Limit::perMinute(30)->by($key);
+            return Limit::perMinute(60)->by($this->rateLimitKey('checkout', $request));
         });
 
         // POST chat only — anti-spam for message send.
         RateLimiter::for('live-chat', function (Request $request) {
-            $user = $request->user();
-            $key = $user !== null
-                ? 'live-chat:user:'.$user->getAuthIdentifier()
-                : 'live-chat:ip:'.$request->ip();
-
-            return Limit::perMinute(30)->by($key);
+            return Limit::perMinute(30)->by($this->rateLimitKey('live-chat', $request));
         });
 
         // GET chat polling while watching a live room (~12–20 req/min typical).
         RateLimiter::for('live-poll', function (Request $request) {
-            $user = $request->user();
-            $key = $user !== null
-                ? 'live-poll:user:'.$user->getAuthIdentifier()
-                : 'live-poll:ip:'.$request->ip();
-
-            return Limit::perMinute(120)->by($key);
+            return Limit::perMinute(120)->by($this->rateLimitKey('live-poll', $request));
         });
 
         RateLimiter::for('search', function (Request $request) {
-            $user = $request->user();
-            $key = $user !== null
-                ? 'search:user:'.$user->getAuthIdentifier()
-                : 'search:ip:'.$request->ip();
-
-            return Limit::perMinute(30)->by($key);
+            return Limit::perMinute(30)->by($this->rateLimitKey('search', $request));
         });
+    }
+
+    /**
+     * Prefer authenticated user id; else hash of Bearer JWT (auth runs after throttle);
+     * else IP for true guests.
+     */
+    private function rateLimitKey(string $prefix, Request $request): string
+    {
+        $user = $request->user();
+        if ($user !== null) {
+            return $prefix.':user:'.$user->getAuthIdentifier();
+        }
+
+        $bearer = $request->bearerToken();
+        if (is_string($bearer) && $bearer !== '') {
+            return $prefix.':token:'.hash('sha256', $bearer);
+        }
+
+        return $prefix.':ip:'.$request->ip();
     }
 }
