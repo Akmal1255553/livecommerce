@@ -17,6 +17,12 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Backend `AgoraProvider` builds AccessToken2 RTC tokens (`third_party/agora`)
 - Live session payload includes `app_id`; mobile `LiveAvSurface` (Android/iOS Agora RTC, web/desktop placeholder)
 
+#### Payment providers (Click / Payme / Uzum)
+
+- Dedicated adapters + webhooks: `POST /webhooks/click|payme|uzum`
+- Empty merchant credentials fall back to sandbox URL (Render stays on `PAYMENT_GATEWAY=local`)
+- Mobile payment screen opens external gateway URL and can refresh order status
+
 #### Sprint 8 — Messaging
 
 - Tables: `blocks`, `conversations`, `conversation_participants`, `messages`

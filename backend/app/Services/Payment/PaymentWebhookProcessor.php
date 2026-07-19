@@ -134,9 +134,12 @@ class PaymentWebhookProcessor extends BaseService implements PaymentWebhookProce
 
         $expectedTxn = $order->payment_transaction_id ?? $order->payment_reference;
         if ($expectedTxn !== null && $expectedTxn !== '' && ! hash_equals((string) $expectedTxn, $data->transactionId)) {
-            throw ValidationException::withMessages([
-                'transaction_id' => ['Webhook transaction does not match order payment reference.'],
-            ]);
+            // Provider adapters store "{driver}-pending-{orderId}" until the real gateway txn arrives.
+            if (! str_contains((string) $expectedTxn, '-pending-')) {
+                throw ValidationException::withMessages([
+                    'transaction_id' => ['Webhook transaction does not match order payment reference.'],
+                ]);
+            }
         }
 
         $paid = $this->orders->markPaid($order, $data->transactionId);
@@ -177,9 +180,12 @@ class PaymentWebhookProcessor extends BaseService implements PaymentWebhookProce
 
         $expectedTxn = $order->payment_transaction_id ?? $order->payment_reference;
         if ($expectedTxn !== null && $expectedTxn !== '' && ! hash_equals((string) $expectedTxn, $data->transactionId)) {
-            throw ValidationException::withMessages([
-                'transaction_id' => ['Webhook transaction does not match order payment reference.'],
-            ]);
+            // Provider adapters store "{driver}-pending-{orderId}" until the real gateway txn arrives.
+            if (! str_contains((string) $expectedTxn, '-pending-')) {
+                throw ValidationException::withMessages([
+                    'transaction_id' => ['Webhook transaction does not match order payment reference.'],
+                ]);
+            }
         }
 
         $cancelled = $this->orders->cancelForBuyer(

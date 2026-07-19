@@ -20,8 +20,11 @@ use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrderController;
+use App\Http\Controllers\Api\V1\ClickWebhookController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
+use App\Http\Controllers\Api\V1\PaymeWebhookController;
 use App\Http\Controllers\Api\V1\SandboxPaymentController;
+use App\Http\Controllers\Api\V1\UzumWebhookController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\SellerOrderController;
 use App\Http\Controllers\Api\V1\SellerStoreController;
@@ -37,6 +40,12 @@ Route::prefix('v1')->group(function (): void {
     Route::get('health', HealthController::class);
 
     Route::post('webhooks/payment', PaymentWebhookController::class)
+        ->middleware('throttle:60,1');
+    Route::post('webhooks/click', ClickWebhookController::class)
+        ->middleware('throttle:60,1');
+    Route::post('webhooks/payme', PaymeWebhookController::class)
+        ->middleware('throttle:60,1');
+    Route::post('webhooks/uzum', UzumWebhookController::class)
         ->middleware('throttle:60,1');
 
     Route::prefix('auth')->middleware('throttle:auth')->group(function (): void {

@@ -5,9 +5,9 @@ import 'package:livecommerce_mobile/core/errors/error_handler.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/order.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
+import 'package:url_launcher/url_launcher.dart';
 
-/// Sandbox / local gateway payment step (Sprint 7).
-/// Completes via `POST /payments/sandbox/{id}/complete` until a real Click/Payme SDK is wired.
+/// Payment step: sandbox Pay/Cancel, or open real gateway URL + poll order status.
 class PaymentScreen extends ConsumerStatefulWidget {
   const PaymentScreen({
     super.key,
@@ -28,6 +28,14 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
   bool _busy = false;
   String? _error;
   Order? _order;
+
+  bool get _isSandboxUrl {
+    final url = widget.paymentUrl;
+    if (url == null || url.isEmpty) {
+      return true;
+    }
+    return url.contains('/payments/sandbox/');
+  }
 
   @override
   void initState() {
@@ -54,6 +62,65 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
         return;
       }
       setState(() => _error = describeFailure(error));
+    }
+  }
+
+  Future<void> _openGateway() async {
+    final raw = widget.paymentUrl;
+    if (raw == null || raw.isEmpty) {
+      return;
+    }
+    final uri = Uri.tryParse(raw);
+    if (uri == null) {
+      setState(() => _error = 'Invalid payment URL');
+      return;
+    }
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!ok && mounted) {
+        setState(() => _error = 'Could not open payment page');
+      }
+    } catch (error) {
+      if (mounted) {
+        setState(() => _error = describeFailure(error));
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _busy = false);
+      }
+    }
+  }
+
+  Future<void> _refreshStatus() async {
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      final order =
+          await ref.read(commerceRepositoryProvider).getOrder(widget.orderId);
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _order = order;
+        _busy = false;
+      });
+      if (!order.isAwaitingPayment) {
+        context.go('/order-success/${order.id}', extra: order);
+      }
+    } catch (error) {
+      if (!mounted) {
+        return;
+      }
+      setState(() {
+        _busy = false;
+        _error = describeFailure(error);
+      });
     }
   }
 
@@ -140,7 +207,9 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                   ],
                   const SizedBox(height: 24),
                   Text(
-                    l10n.paymentSandboxHint,
+                    _isSandboxUrl
+                        ? l10n.paymentSandboxHint
+                        : 'Open the payment page, then tap Refresh after paying.',
                     style: theme.textTheme.bodyMedium,
                   ),
                   if (_error != null) ...[
@@ -151,21 +220,33 @@ class _PaymentScreenState extends ConsumerState<PaymentScreen> {
                     ),
                   ],
                   const Spacer(),
-                  FilledButton(
-                    onPressed: _busy ? null : () => _complete('success'),
-                    child: _busy
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.payNow),
-                  ),
-                  const SizedBox(height: 12),
-                  OutlinedButton(
-                    onPressed: _busy ? null : () => _complete('failed'),
-                    child: Text(l10n.cancelPayment),
-                  ),
+                  if (_isSandboxUrl) ...[
+                    FilledButton(
+                      onPressed: _busy ? null : () => _complete('success'),
+                      child: _busy
+                          ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : Text(l10n.payNow),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _busy ? null : () => _complete('failed'),
+                      child: Text(l10n.cancelPayment),
+                    ),
+                  ] else ...[
+                    FilledButton(
+                      onPressed: _busy ? null : _openGateway,
+                      child: Text(l10n.payNow),
+                    ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _busy ? null : _refreshStatus,
+                      child: Text(l10n.refresh),
+                    ),
+                  ],
                 ],
               ),
             ),

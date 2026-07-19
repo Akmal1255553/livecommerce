@@ -128,8 +128,11 @@ use App\Services\Order\OrderStateMachine;
 use App\Services\Order\ShortCodeOrderNumberGenerator;
 use App\Contracts\Services\PaymentWebhookProcessorInterface;
 use App\Listeners\ReleaseInventoryOnOrderCancelled;
+use App\Services\Payment\ClickPaymentGateway;
 use App\Services\Payment\FakePaymentGateway;
 use App\Services\Payment\LocalPaymentGateway;
+use App\Services\Payment\PaymePaymentGateway;
+use App\Services\Payment\UzumPaymentGateway;
 use App\Services\Payment\PaymentWebhookProcessor;
 use App\Services\Pricing\ProductPricingService;
 use App\Services\Recommendation\RecommendationService;
@@ -265,7 +268,10 @@ class RepositoryServiceProvider extends ServiceProvider
             }
 
             return match ($driver) {
-                'local', 'click', 'payme', 'uzum' => $app->make(LocalPaymentGateway::class),
+                'local' => $app->make(LocalPaymentGateway::class),
+                'click' => $app->make(ClickPaymentGateway::class),
+                'payme' => $app->make(PaymePaymentGateway::class),
+                'uzum' => $app->make(UzumPaymentGateway::class),
                 default => $app->make(FakePaymentGateway::class),
             };
         });
