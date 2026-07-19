@@ -22,6 +22,9 @@ php artisan package:discover --ansi --no-interaction || true
 php artisan config:clear
 php artisan migrate --force --no-interaction
 
+# Always ensure demo admin exists for /admin (idempotent)
+php artisan db:seed --class=AdminUserSeeder --force --no-interaction || true
+
 # Idempotent demo catalog when empty (or SEED_ON_BOOT=true)
 if [ "$SEED_ON_BOOT" = "true" ]; then
   php artisan db:seed --class=DemoCommerceSeeder --force --no-interaction
