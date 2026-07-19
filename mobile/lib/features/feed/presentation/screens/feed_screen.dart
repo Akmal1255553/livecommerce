@@ -9,6 +9,7 @@ import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.d
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/widgets/feed_video_player.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/widgets/video_comments_sheet.dart';
+import 'package:livecommerce_mobile/features/moderation/presentation/report_sheet.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
@@ -361,6 +362,17 @@ class _FeedVideoPage extends ConsumerWidget {
                 label: AppLocalizations.of(context)!.saveAction,
                 activeColor: latest.isBookmarked ? Colors.amber : null,
                 onTap: () => _toggleBookmark(context, ref),
+              ),
+              const SizedBox(height: 14),
+              _SideAction(
+                icon: Icons.flag_outlined,
+                label: AppLocalizations.of(context)!.reportAction,
+                onTap: () => showReportSheet(
+                  context: context,
+                  ref: ref,
+                  targetType: 'video',
+                  targetId: latest.id,
+                ),
               ),
               const SizedBox(height: 14),
               _SideAction(

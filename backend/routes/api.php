@@ -26,6 +26,7 @@ use App\Http\Controllers\Api\V1\PaymeWebhookController;
 use App\Http\Controllers\Api\V1\SandboxPaymentController;
 use App\Http\Controllers\Api\V1\UzumWebhookController;
 use App\Http\Controllers\Api\V1\ProductController;
+use App\Http\Controllers\Api\V1\ReportController;
 use App\Http\Controllers\Api\V1\SellerOrderController;
 use App\Http\Controllers\Api\V1\SellerStoreController;
 use App\Http\Controllers\Api\V1\StoreController;
@@ -34,6 +35,12 @@ use App\Http\Controllers\Api\V1\VideoCommentController;
 use App\Http\Controllers\Api\V1\VideoController;
 use App\Http\Controllers\Api\V1\VideoInteractionController;
 use App\Http\Controllers\Api\V1\VideoProductController;
+use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
+use App\Http\Controllers\Api\V1\Admin\AdminCategoryController;
+use App\Http\Controllers\Api\V1\Admin\AdminReportController;
+use App\Http\Controllers\Api\V1\Admin\AdminStoreController;
+use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\Admin\AdminVideoController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -110,6 +117,32 @@ Route::prefix('v1')->group(function (): void {
         Route::post('media/presigned-url', [MediaController::class, 'presignedUrl']);
 
         Route::post('seller/apply', [SellerStoreController::class, 'apply']);
+
+        Route::post('reports', [ReportController::class, 'store']);
+
+        Route::prefix('admin')->middleware('role:admin,moderator')->group(function (): void {
+            Route::get('videos/pending', [AdminVideoController::class, 'pending']);
+            Route::put('videos/{id}/approve', [AdminVideoController::class, 'approve']);
+            Route::put('videos/{id}/reject', [AdminVideoController::class, 'reject']);
+            Route::put('videos/{id}/hide', [AdminVideoController::class, 'hide']);
+            Route::get('reports', [AdminReportController::class, 'index']);
+            Route::put('reports/{id}/resolve', [AdminReportController::class, 'resolve']);
+            Route::put('reports/{id}/dismiss', [AdminReportController::class, 'dismiss']);
+        });
+
+        Route::prefix('admin')->middleware('role:admin')->group(function (): void {
+            Route::get('users', [AdminUserController::class, 'index']);
+            Route::put('users/{id}/suspend', [AdminUserController::class, 'suspend']);
+            Route::put('users/{id}/ban', [AdminUserController::class, 'ban']);
+            Route::put('users/{id}/activate', [AdminUserController::class, 'activate']);
+            Route::get('stores/pending', [AdminStoreController::class, 'pending']);
+            Route::put('stores/{id}/approve', [AdminStoreController::class, 'approve']);
+            Route::put('stores/{id}/reject', [AdminStoreController::class, 'reject']);
+            Route::get('audit-logs', [AdminAuditLogController::class, 'index']);
+            Route::post('categories', [AdminCategoryController::class, 'store']);
+            Route::put('categories/{id}', [AdminCategoryController::class, 'update']);
+            Route::delete('categories/{id}', [AdminCategoryController::class, 'destroy']);
+        });
 
         Route::middleware('seller')->group(function (): void {
             Route::get('seller/dashboard', [SellerStoreController::class, 'dashboard']);

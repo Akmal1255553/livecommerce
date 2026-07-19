@@ -1174,18 +1174,18 @@ Admin Dashboard, Content Moderation, User Reports, Ban/Suspend System, Category 
 
 ## Backend Deliverables
 
-- [ ] Admin middleware (EnsureAdmin, EnsureModerator)
-- [ ] Admin endpoints: user management, seller approval, category CRUD
-- [ ] Moderation queue (reported/flagged content)
-- [ ] Ban/suspend user endpoints
-- [ ] Report content endpoint (user-facing)
+- [x] Admin middleware (EnsureAdmin, EnsureModerator) — via `role:admin` / `role:admin,moderator`
+- [x] Admin endpoints: user management, seller approval, category CRUD
+- [x] Moderation queue (reported/flagged content)
+- [x] Ban/suspend user endpoints
+- [x] Report content endpoint (user-facing)
 - [ ] Admin analytics overview
-- [ ] Audit log viewer endpoint
-- [ ] Feature tests: admin actions, moderation, reports
+- [x] Audit log viewer endpoint
+- [x] Feature tests: admin actions, moderation, reports
 
 ## Mobile Deliverables
 
-- [ ] Report content/user button (on videos, profiles, products)
+- [x] Report content/user button (on videos, products)
 - [ ] (Admin panel is web-only for MVP — not mobile)
 
 ## Web Admin Panel (Separate — MVP Scope)

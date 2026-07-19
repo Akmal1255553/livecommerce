@@ -256,5 +256,13 @@
   "noConversationsTitle": "Xabarlar yo'q",
   "noConversationsSubtitle": "Sotuvchilar bilan yozishuv bu yerda ko'rinadi.",
   "typeMessageHint": "Xabar yozing…",
-  "sendMessageFailed": "Xabar yuborib bo'lmadi"
+  "sendMessageFailed": "Xabar yuborib bo'lmadi",
+
+  "reportTitle": "Shikoyat qilish",
+  "reportReasonSpam": "Spam",
+  "reportReasonInappropriate": "Nomaqbul kontent",
+  "reportReasonScam": "Firibgarlik",
+  "reportReasonOther": "Boshqa",
+  "reportSubmitted": "Shikoyat yuborildi",
+  "reportAction": "Shikoyat"
 }
