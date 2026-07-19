@@ -26,6 +26,14 @@ Static admin UI served from the Laravel API at `/admin/`.
 
 ## Access
 
+| Field | Value |
+|-------|-------|
+| Email / username | `admin@livecommerce.local` or `admin` |
+| Password | `Password1!` |
+| Role | `admin` |
+
+Seeded by `php artisan db:seed --class=AdminUserSeeder` (also part of `db:seed`).
+
 Sign in with an account that has `role=admin` or `role=moderator`.
 
 ## Docs
