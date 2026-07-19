@@ -7,6 +7,7 @@ import 'package:livecommerce_mobile/features/commerce/presentation/providers/com
 import 'package:livecommerce_mobile/features/live/data/live_repository.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
+import 'package:livecommerce_mobile/features/live/presentation/widgets/live_av_surface.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/providers/seller_providers.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
@@ -244,7 +245,13 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            const _LivePlaceholder(),
+                            if (session != null)
+                              LiveAvSurface(
+                                session: session,
+                                isHost: state.isHost,
+                              )
+                            else
+                              const ColoredBox(color: Color(0xFF1A1A2E)),
                             Positioned(
                               left: 12,
                               right: 12,
@@ -437,42 +444,6 @@ class _LiveHeader extends StatelessWidget {
               child: Text(l10n.endLive, style: const TextStyle(color: Colors.redAccent)),
             ),
         ],
-      ),
-    );
-  }
-}
-
-class _LivePlaceholder extends StatelessWidget {
-  const _LivePlaceholder();
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1A1A2E), Color(0xFF16213E), Color(0xFF0F3460)],
-        ),
-      ),
-      child: Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.videocam, color: Colors.white54, size: 64),
-            const SizedBox(height: 12),
-            Text(
-              l10n.livePlaceholderTitle,
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              l10n.livePlaceholderBody,
-              style: const TextStyle(color: Colors.white38, fontSize: 12),
-            ),
-          ],
-        ),
       ),
     );
   }

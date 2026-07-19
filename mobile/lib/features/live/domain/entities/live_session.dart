@@ -122,6 +122,7 @@ class LiveSession {
     this.productTimeline = const [],
     this.publisherToken,
     this.subscriberToken,
+    this.appId,
     this.replayUrl,
     this.durationSeconds,
     this.startedAt,
@@ -140,6 +141,7 @@ class LiveSession {
   final List<LiveTimelineProduct> productTimeline;
   final String? publisherToken;
   final String? subscriberToken;
+  final String? appId;
   final String? replayUrl;
   final int? durationSeconds;
   final String? startedAt;
@@ -173,6 +175,7 @@ class LiveSession {
           .toList(),
       publisherToken: json['publisher_token'] as String?,
       subscriberToken: json['subscriber_token'] as String?,
+      appId: json['app_id'] as String?,
       replayUrl: json['replay_url'] as String?,
       durationSeconds: json['duration_seconds'] as int?,
       startedAt: json['started_at'] as String?,

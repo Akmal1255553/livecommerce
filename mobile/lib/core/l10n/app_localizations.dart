@@ -935,8 +935,26 @@ abstract class AppLocalizations {
   /// No description provided for @livePlaceholderBody.
   ///
   /// In uz, this message translates to:
-  /// **'Agora kamera keyingi bosqichda qo\'shiladi'**
+  /// **'A/V Android/iOS da STREAMING_PROVIDER=agora bilan ishlaydi'**
   String get livePlaceholderBody;
+
+  /// No description provided for @liveAvNativeOnly.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kamera bilan jonli efir faqat Android/iOS da'**
+  String get liveAvNativeOnly;
+
+  /// No description provided for @liveConnecting.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ulanmoqda…'**
+  String get liveConnecting;
+
+  /// No description provided for @liveWaitingHost.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshlovchi kutilmoqda…'**
+  String get liveWaitingHost;
 
   /// No description provided for @chatHint.
   ///

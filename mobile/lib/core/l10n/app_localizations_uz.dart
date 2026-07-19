@@ -467,7 +467,16 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get livePlaceholderBody =>
-      'Agora kamera keyingi bosqichda qo\'shiladi';
+      'A/V Android/iOS da STREAMING_PROVIDER=agora bilan ishlaydi';
+
+  @override
+  String get liveAvNativeOnly => 'Kamera bilan jonli efir faqat Android/iOS da';
+
+  @override
+  String get liveConnecting => 'Ulanmoqda…';
+
+  @override
+  String get liveWaitingHost => 'Boshlovchi kutilmoqda…';
 
   @override
   String get chatHint => 'Biror narsa yozing…';

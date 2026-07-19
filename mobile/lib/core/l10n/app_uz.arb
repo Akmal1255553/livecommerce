@@ -228,7 +228,10 @@
 
   "liveRoomTitle": "Jonli efir",
   "livePlaceholderTitle": "Jonli placeholder",
-  "livePlaceholderBody": "Agora kamera keyingi bosqichda qo'shiladi",
+  "livePlaceholderBody": "A/V Android/iOS da STREAMING_PROVIDER=agora bilan ishlaydi",
+  "liveAvNativeOnly": "Kamera bilan jonli efir faqat Android/iOS da",
+  "liveConnecting": "Ulanmoqda…",
+  "liveWaitingHost": "Boshlovchi kutilmoqda…",
   "chatHint": "Biror narsa yozing…",
   "endLive": "Tugatish",
   "assistantTooltip": "Yordamchi",

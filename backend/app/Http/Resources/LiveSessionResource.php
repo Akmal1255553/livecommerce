@@ -79,6 +79,7 @@ class LiveSessionResource extends JsonResource
             })->values()->all(),
             'publisher_token' => $this->publisherToken,
             'subscriber_token' => $this->subscriberToken,
+            'app_id' => (string) config('streaming.agora.app_id', ''),
             'channel_id' => $this->channel_id,
             'replay_url' => $this->replay_url,
             'duration_seconds' => $durationSeconds,

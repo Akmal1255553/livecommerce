@@ -12,6 +12,11 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 - Mobile `video_player` in For You / Following: play active slide, pause neighbors, mute-by-default tap unmute, thumbnail fallback
 
+#### Live Agora A/V
+
+- Backend `AgoraProvider` builds AccessToken2 RTC tokens (`third_party/agora`)
+- Live session payload includes `app_id`; mobile `LiveAvSurface` (Android/iOS Agora RTC, web/desktop placeholder)
+
 #### Sprint 8 — Messaging
 
 - Tables: `blocks`, `conversations`, `conversation_participants`, `messages`

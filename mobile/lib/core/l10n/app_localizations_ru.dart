@@ -462,7 +462,18 @@ class AppLocalizationsRu extends AppLocalizations {
   String get livePlaceholderTitle => 'Заглушка эфира';
 
   @override
-  String get livePlaceholderBody => 'Камера Agora появится позже';
+  String get livePlaceholderBody =>
+      'A/V доступно на Android/iOS при STREAMING_PROVIDER=agora';
+
+  @override
+  String get liveAvNativeOnly =>
+      'Прямой эфир с камерой — только на Android/iOS';
+
+  @override
+  String get liveConnecting => 'Подключение…';
+
+  @override
+  String get liveWaitingHost => 'Ожидание ведущего…';
 
   @override
   String get chatHint => 'Напишите что-нибудь…';

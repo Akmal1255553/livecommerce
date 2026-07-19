@@ -228,7 +228,10 @@
 
   "liveRoomTitle": "Прямой эфир",
   "livePlaceholderTitle": "Заглушка эфира",
-  "livePlaceholderBody": "Камера Agora появится позже",
+  "livePlaceholderBody": "A/V доступно на Android/iOS при STREAMING_PROVIDER=agora",
+  "liveAvNativeOnly": "Прямой эфир с камерой — только на Android/iOS",
+  "liveConnecting": "Подключение…",
+  "liveWaitingHost": "Ожидание ведущего…",
   "chatHint": "Напишите что-нибудь…",
   "endLive": "Завершить",
   "assistantTooltip": "Ассистент",

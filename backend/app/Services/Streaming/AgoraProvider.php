@@ -10,12 +10,17 @@ use RuntimeException;
 
 class AgoraProvider implements StreamingProviderInterface
 {
+    private const TOKEN_TTL_SECONDS = 21600;
+
     public function __construct(
         private readonly string $appId,
         private readonly string $appCertificate,
     ) {
         if ($this->appId === '') {
             throw new RuntimeException('AGORA_APP_ID is required when STREAMING_PROVIDER=agora.');
+        }
+        if ($this->appCertificate === '') {
+            throw new RuntimeException('AGORA_APP_CERTIFICATE is required when STREAMING_PROVIDER=agora.');
         }
     }
 
@@ -29,12 +34,12 @@ class AgoraProvider implements StreamingProviderInterface
 
     public function generatePublisherToken(string $channelId, string $userId): string
     {
-        return $this->sign('publisher', $channelId, $userId);
+        return $this->buildToken($channelId, $userId, 1); // ROLE_PUBLISHER
     }
 
     public function generateSubscriberToken(string $channelId, string $userId): string
     {
-        return $this->sign('subscriber', $channelId, $userId);
+        return $this->buildToken($channelId, $userId, 2); // ROLE_SUBSCRIBER
     }
 
     public function endChannel(string $channelId): void {}
@@ -46,24 +51,37 @@ class AgoraProvider implements StreamingProviderInterface
 
     public function fetchReplayUrl(string $channelId, string $sessionId): ?string
     {
-        // Cloud recording fetch is deferred; fake-compatible stub for Agora env.
+        // Cloud recording fetch is deferred.
         return null;
     }
 
-    private function sign(string $role, string $channelId, string $userId): string
+    public function appId(): string
     {
-        $payload = [
-            'provider' => 'agora',
-            'app_id' => $this->appId,
-            'role' => $role,
-            'channel_id' => $channelId,
-            'user_id' => $userId,
-            'exp' => now()->addHours(6)->timestamp,
-        ];
+        return $this->appId;
+    }
 
-        $body = base64_encode(json_encode($payload, JSON_THROW_ON_ERROR));
-        $sig = hash_hmac('sha256', $body, $this->appCertificate !== '' ? $this->appCertificate : $this->appId);
+    private function buildToken(string $channelId, string $userId, int $role): string
+    {
+        // uid 0 = any client uid may join (matches Flutter joinChannel uid: 0).
+        unset($userId);
 
-        return $body.'.'.$sig;
+        require_once base_path('third_party/agora/RtcTokenBuilder2.php');
+
+        /** @var string $token */
+        $token = \RtcTokenBuilder2::buildTokenWithUid(
+            $this->appId,
+            $this->appCertificate,
+            $channelId,
+            0,
+            $role,
+            self::TOKEN_TTL_SECONDS,
+            self::TOKEN_TTL_SECONDS,
+        );
+
+        if ($token === '') {
+            throw new RuntimeException('Failed to build Agora RTC token. Check AGORA_APP_ID / AGORA_APP_CERTIFICATE.');
+        }
+
+        return $token;
     }
 }
