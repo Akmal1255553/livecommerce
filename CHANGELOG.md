@@ -8,6 +8,10 @@ Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
+#### Feed HLS playback
+
+- Mobile `video_player` in For You / Following: play active slide, pause neighbors, mute-by-default tap unmute, thumbnail fallback
+
 #### Sprint 8 — Messaging
 
 - Tables: `blocks`, `conversations`, `conversation_participants`, `messages`

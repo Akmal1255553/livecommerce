@@ -7,6 +7,7 @@ import 'package:livecommerce_mobile/features/commerce/presentation/widgets/produ
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
+import 'package:livecommerce_mobile/features/feed/presentation/widgets/feed_video_player.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/widgets/video_comments_sheet.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
@@ -21,6 +22,7 @@ class FeedScreen extends ConsumerStatefulWidget {
 
 class _FeedScreenState extends ConsumerState<FeedScreen> {
   late final PageController _pageController;
+  int _currentPage = 0;
 
   @override
   void initState() {
@@ -133,6 +135,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
       scrollDirection: Axis.vertical,
       itemCount: feed.videos.length + (feed.hasMore ? 1 : 0),
       onPageChanged: (index) {
+        setState(() => _currentPage = index);
         if (index < feed.videos.length) {
           ref.read(feedNotifierProvider.notifier).recordView(feed.videos[index].id);
         }
@@ -147,7 +150,10 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           );
         }
 
-        return _FeedVideoPage(video: feed.videos[index]);
+        return _FeedVideoPage(
+          video: feed.videos[index],
+          isActive: index == _currentPage,
+        );
       },
     );
   }
@@ -191,9 +197,13 @@ class _FeedTabButton extends StatelessWidget {
 }
 
 class _FeedVideoPage extends ConsumerWidget {
-  const _FeedVideoPage({required this.video});
+  const _FeedVideoPage({
+    required this.video,
+    required this.isActive,
+  });
 
   final FeedVideo video;
+  final bool isActive;
 
   ProductCard? get _overlayProduct {
     if (video.products.isEmpty) {
@@ -247,18 +257,19 @@ class _FeedVideoPage extends ConsumerWidget {
             .firstOrNull ??
         video;
 
+    final videoUrl = latest.videoUrl;
+
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (latest.thumbnailUrl != null)
-          Image.network(
-            latest.thumbnailUrl!,
-            fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) =>
-                const ColoredBox(color: Color(0xFF1A1A1A)),
+        if (videoUrl != null && videoUrl.isNotEmpty)
+          FeedVideoPlayer(
+            videoUrl: videoUrl,
+            thumbnailUrl: latest.thumbnailUrl,
+            isActive: isActive,
           )
         else
-          const ColoredBox(color: Color(0xFF1A1A1A)),
+          FeedThumbnailFallback(thumbnailUrl: latest.thumbnailUrl),
         Container(
           decoration: const BoxDecoration(
             gradient: LinearGradient(

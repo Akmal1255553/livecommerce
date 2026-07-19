@@ -19,6 +19,7 @@ dependencies:
   shared_preferences: ^2.5.3
   intl: ^0.20.2
   connectivity_plus: ^7.3.0
+  video_player: ^2.13.0
 
 dev_dependencies:
   flutter_test:
