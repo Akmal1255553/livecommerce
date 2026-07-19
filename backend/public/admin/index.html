@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LiveCommerce Admin</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div id="app">
+    <section id="login-view" class="panel login-panel hidden">
+      <h1>LiveCommerce Admin</h1>
+      <p class="muted">Sign in with an admin or moderator account.</p>
+      <form id="login-form">
+        <label>
+          Email or username
+          <input id="login" name="login" autocomplete="username" required />
+        </label>
+        <label>
+          Password
+          <input id="password" name="password" type="password" autocomplete="current-password" required />
+        </label>
+        <button type="submit">Sign in</button>
+        <p id="login-error" class="error" role="alert"></p>
+      </form>
+    </section>
+
+    <section id="shell-view" class="shell hidden">
+      <header class="topbar">
+        <div>
+          <strong>LiveCommerce Admin</strong>
+          <span id="whoami" class="muted"></span>
+        </div>
+        <button type="button" id="logout-btn" class="ghost">Log out</button>
+      </header>
+
+      <nav class="tabs" id="tabs">
+        <button type="button" data-tab="reports" class="active">Reports</button>
+        <button type="button" data-tab="videos">Pending videos</button>
+        <button type="button" data-tab="stores" data-admin-only>Stores</button>
+        <button type="button" data-tab="users" data-admin-only>Users</button>
+      </nav>
+
+      <main>
+        <p id="flash" class="flash hidden" role="status"></p>
+        <div id="content"></div>
+      </main>
+    </section>
+  </div>
+  <script src="./app.js"></script>
+</body>
+</html>
