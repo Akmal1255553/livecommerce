@@ -66,3 +66,9 @@ services:
         generateValue: true
       - key: PAYMENT_SANDBOX_ENABLED
         value: "true"
+      - key: SENTRY_LARAVEL_DSN
+        sync: false
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: "0.1"
+      - key: SENTRY_ENVIRONMENT
+        value: production

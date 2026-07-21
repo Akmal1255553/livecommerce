@@ -27,6 +27,8 @@ use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
+use Sentry\Laravel\Integration;
+use Throwable;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -62,6 +64,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $schedule->job(new ReleaseExpiredInventoryReservationsJob)->everyMinute();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        Integration::handles($exceptions);
+
         $exceptions->render(function (BusinessException $exception, Request $request) {
             if (! $request->is('api/*')) {
                 return null;

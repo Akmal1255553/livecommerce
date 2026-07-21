@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:livecommerce_mobile/core/config/dev_config.dart';
 import 'package:livecommerce_mobile/app/app.dart';
+import 'package:livecommerce_mobile/core/config/dev_config.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> bootstrap() async {
@@ -18,14 +20,37 @@ Future<void> bootstrap() async {
 
   await container.read(authNotifierProvider.notifier).restoreSession();
 
-  if (DevConfig.bypassAuth && !container.read(authNotifierProvider).isAuthenticated) {
+  if (DevConfig.bypassAuth &&
+      !container.read(authNotifierProvider).isAuthenticated) {
     container.read(authNotifierProvider.notifier).enterDevGuestMode();
   }
 
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const LiveCommerceApp(),
-    ),
+  Future<void> run() async {
+    runApp(
+      UncontrolledProviderScope(
+        container: container,
+        child: const LiveCommerceApp(),
+      ),
+    );
+  }
+
+  const dsn = String.fromEnvironment('SENTRY_DSN');
+  if (dsn.isEmpty) {
+    await run();
+    return;
+  }
+
+  await SentryFlutter.init(
+    (options) {
+      options.dsn = dsn;
+      const envOverride =
+          String.fromEnvironment('SENTRY_ENVIRONMENT', defaultValue: '');
+      options.environment = envOverride.isNotEmpty
+          ? envOverride
+          : (kReleaseMode ? 'production' : 'development');
+      options.tracesSampleRate = 0.1;
+      options.sendDefaultPii = false;
+    },
+    appRunner: run,
   );
 }

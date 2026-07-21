@@ -27,6 +27,20 @@ GET https://YOUR-SERVICE.onrender.com/up
 GET https://YOUR-SERVICE.onrender.com/api/v1/health
 ```
 
+### Sentry (error tracking)
+
+1. Create free projects at [sentry.io](https://sentry.io) — one **Laravel/PHP**, one **Flutter**.
+2. In Render → Environment → set `SENTRY_LARAVEL_DSN` to the PHP project DSN (leave empty to disable).
+3. Mobile release / chrome run:
+
+```powershell
+& "..\flutter\bin\flutter.bat" run -d chrome `
+  --dart-define=API_BASE_URL=https://YOUR-SERVICE.onrender.com/api/v1 `
+  --dart-define=SENTRY_DSN=https://YOUR_KEY@oXXXX.ingest.sentry.io/PROJECT
+```
+
+Without `SENTRY_DSN` / `SENTRY_LARAVEL_DSN`, Sentry stays off (safe for local + CI).
+
 Mobile:
 
 ```powershell
