@@ -1,9 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:livecommerce_mobile/features/messaging/presentation/providers/messaging_providers.dart';
+import 'package:sentry_flutter/sentry_flutter.dart';
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -148,6 +150,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 onPressed: () => context.push('/settings'),
                 child: Text(l10n.settingsTitle),
               ),
+              if (kDebugMode) ...[
+                const SizedBox(height: 24),
+                OutlinedButton(
+                  onPressed: () {
+                    Sentry.captureException(
+                      StateError('This is test exception'),
+                    );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Sentry test event sent'),
+                      ),
+                    );
+                  },
+                  child: const Text('Verify Sentry Setup'),
+                ),
+              ],
             ],
           ),
         ),

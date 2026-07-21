@@ -7,6 +7,11 @@ import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_pr
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+/// Default Flutter Sentry DSN (project flutter-h1). Override with
+/// `--dart-define=SENTRY_DSN=` (empty disables) or a different DSN.
+const String _defaultSentryDsn =
+    'https://78acd4c6ce126ae3b30007d0d3481044@o4511773106110464.ingest.us.sentry.io/4511773139599360';
+
 Future<void> bootstrap() async {
   WidgetsFlutterBinding.ensureInitialized();
 
@@ -29,13 +34,18 @@ Future<void> bootstrap() async {
     runApp(
       UncontrolledProviderScope(
         container: container,
-        child: const LiveCommerceApp(),
+        child: const SentryWidget(child: LiveCommerceApp()),
       ),
     );
   }
 
-  const dsn = String.fromEnvironment('SENTRY_DSN');
-  if (dsn.isEmpty) {
+  // Empty `--dart-define=SENTRY_DSN=` disables; otherwise use define or default.
+  const fromEnv = String.fromEnvironment('SENTRY_DSN', defaultValue: '__unset__');
+  final dsn = fromEnv == '__unset__'
+      ? _defaultSentryDsn
+      : (fromEnv.isEmpty ? null : fromEnv);
+
+  if (dsn == null) {
     await run();
     return;
   }
