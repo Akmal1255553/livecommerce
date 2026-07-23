@@ -7,10 +7,13 @@ Blueprint: [`render.yaml`](../render.yaml) at repo root.
 
 | Resource | Plan | Role |
 |----------|------|------|
-| Web Service `livecommerce-api` | **free** | Laravel API (Docker) |
-| PostgreSQL `livecommerce-db` | **free** | App database |
+| Web Service `livecommerce-api` | **free** | Laravel API (Docker + FFmpeg in image) |
+| Background Worker `livecommerce-worker` | **starter** | `queue:work` — VOD FFmpeg pipeline |
+| PostgreSQL `livecommerce-db` | **free** | App database + `jobs` table |
 
-MVP uses `CACHE_STORE=file` + `QUEUE_CONNECTION=sync` (no Redis bill). Guest cart Redis features need Upstash later.
+MVP uses `CACHE_STORE=file` + `QUEUE_CONNECTION=database` (no Redis bill). Guest cart Redis features need Upstash later.
+
+> **Worker cost:** Render Background Workers are not on the free plan. `livecommerce-worker` uses **Starter**. Without it, VOD jobs stay in `jobs` forever.
 
 ## One-click deploy
 
@@ -58,6 +61,35 @@ Without `SENTRY_DSN` / `SENTRY_LARAVEL_DSN`, Sentry stays off (safe for local + 
 
 If `STREAMING_PROVIDER` stays `fake` or App ID is empty, the app shows the live placeholder instead of camera.
 
+### VOD upload (FFmpeg + worker)
+
+Confirm-upload enqueues `ProcessVideoPipelineJob` on queue `video-processing`. The worker runs ffprobe → thumbnail → HLS 720p/480p → publish.
+
+| Requirement | Detail |
+|-------------|--------|
+| **Image** | `backend/Dockerfile` installs `ffmpeg` / `ffprobe` |
+| **Worker** | Blueprint service `livecommerce-worker`, `dockerCommand: worker` |
+| **Queue** | `QUEUE_CONNECTION=database` on **both** web and worker; `DB_QUEUE_RETRY_AFTER=660` (> job timeout 600s) |
+| **Object storage** | Web and worker do **not** share local disk — set `STORAGE_DRIVER=s3` + Supabase Storage (S3) vars on **both** services |
+
+Supabase Storage (same pattern as [22_CLOUD…](./22_CLOUD_INFRA_SUPABASE_RAILWAY.md)):
+
+| Key | Example |
+|-----|---------|
+| `STORAGE_DRIVER` | `s3` |
+| `AWS_ACCESS_KEY_ID` | Storage S3 access key |
+| `AWS_SECRET_ACCESS_KEY` | Storage S3 secret |
+| `AWS_BUCKET` | `livecommerce` |
+| `AWS_ENDPOINT` | `https://<project-ref>.supabase.co/storage/v1/s3` |
+| `AWS_USE_PATH_STYLE_ENDPOINT` | `true` |
+| `AWS_URL` | public/CDN base for objects |
+
+Copy `APP_KEY` and `JWT_SECRET` from the web service onto the worker (same values). After Blueprint sync: **Manual Deploy** web + worker.
+
+Smoke: upload → confirm → worker logs show queue work → `videos.status` becomes `published` with HLS URLs.
+
+Without S3, uploads land on the web container only and the worker cannot download the raw file.
+
 Mobile:
 
 ```powershell
@@ -68,10 +100,12 @@ cd "d:\liveStream\mobile"
 
 ## Notes
 
-- Free web services **sleep** after ~15 min idle → first request may take 30–60s.
+- Free web services **sleep** after ~15 min idle → first request may take 30–60s. The **worker** stays up on Starter (billed while running).
 - Free Postgres may be deleted after long inactivity — for durable DB switch `DB_URL` to **Supabase** (see [22_CLOUD…](./22_CLOUD_INFRA_SUPABASE_RAILWAY.md)).
-- Dockerfile lives in `backend/`; Render `rootDir: backend`.
+- Dockerfile lives in `backend/`; Render `rootDir: backend`. CMD `web` vs `worker` is selected via `dockerCommand`.
 
 ## Manual Web Service (without Blueprint)
 
 Dashboard → New → Web Service → repo → Docker → Root Directory `backend` → Health Check `/up` → add env vars from `render.yaml`.
+
+For VOD: New → Background Worker → same Docker image → Docker Command `worker` → same DB + `QUEUE_CONNECTION=database` + S3 env as the web service.

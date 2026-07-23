@@ -242,6 +242,12 @@ abstract class AppLocalizations {
   /// **'Saqlash'**
   String get saveButton;
 
+  /// No description provided for @cancelButton.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilish'**
+  String get cancelButton;
+
   /// No description provided for @logoutButton.
   ///
   /// In uz, this message translates to:
@@ -1093,6 +1099,66 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Xabar yuborib bo\'lmadi'**
   String get sendMessageFailed;
+
+  /// No description provided for @attachImage.
+  ///
+  /// In uz, this message translates to:
+  /// **'Rasm biriktirish'**
+  String get attachImage;
+
+  /// No description provided for @imageUploadFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Rasm yuklanmadi'**
+  String get imageUploadFailed;
+
+  /// No description provided for @blockUserTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklash'**
+  String get blockUserTitle;
+
+  /// No description provided for @blockUserConfirm.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bu foydalanuvchi bilan xabar almasha olmaysiz.'**
+  String get blockUserConfirm;
+
+  /// No description provided for @blockUserAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklash'**
+  String get blockUserAction;
+
+  /// No description provided for @unblockUserAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Blokdan chiqarish'**
+  String get unblockUserAction;
+
+  /// No description provided for @userBlocked.
+  ///
+  /// In uz, this message translates to:
+  /// **'Foydalanuvchi bloklandi'**
+  String get userBlocked;
+
+  /// No description provided for @userUnblocked.
+  ///
+  /// In uz, this message translates to:
+  /// **'Blok olib tashlandi'**
+  String get userUnblocked;
+
+  /// No description provided for @blockUserFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bloklab bo\'lmadi'**
+  String get blockUserFailed;
+
+  /// No description provided for @unblockUserFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Blokdan chiqarib bo\'lmadi'**
+  String get unblockUserFailed;
 
   /// No description provided for @reportTitle.
   ///

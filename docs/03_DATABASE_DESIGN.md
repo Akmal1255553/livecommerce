@@ -185,7 +185,7 @@ erDiagram
 | Domain | Tables |
 |--------|--------|
 | **Auth & Users** | users, user_profiles, user_devices, refresh_tokens |
-| **Social** | follows, blocks |
+| **Social** | follows, blocks, conversations, conversation_participants, messages |
 | **Content** | videos, video_likes, comments, bookmarks, video_products |
 | **Catalog** | categories, stores, products, product_images, product_variants |
 | **Commerce** | carts, cart_items, orders, order_items, refund_requests, coupons, coupon_usages |
@@ -324,6 +324,61 @@ User block relationships.
 | created_at | TIMESTAMP | NOT NULL | |
 
 **Unique constraint:** (blocker_id, blocked_id)
+
+Either-direction block prevents DM send (`403`).
+
+---
+
+### 3.6a conversations
+
+Buyer ↔ seller direct messaging (Sprint 8). Optional link to an order.
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | UUID | PK | |
+| type | VARCHAR(20) | NOT NULL, DEFAULT `direct` | `direct` \| `order` |
+| order_id | UUID | FK → orders.id, NULLABLE | Order-linked chat |
+| created_by | UUID | FK → users.id, NOT NULL | Initiator |
+| last_message_preview | VARCHAR(280) | NULLABLE | Denormalized preview |
+| last_message_at | TIMESTAMP | NULLABLE | For inbox sort |
+| created_at | TIMESTAMP | NOT NULL | |
+| updated_at | TIMESTAMP | NOT NULL | |
+
+**Indexes:** `last_message_at`, `order_id`
+
+---
+
+### 3.6b conversation_participants
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | UUID | PK | |
+| conversation_id | UUID | FK → conversations.id, NOT NULL | Cascade delete |
+| user_id | UUID | FK → users.id, NOT NULL | Participant |
+| last_read_at | TIMESTAMP | NULLABLE | Read cursor |
+| unread_count | INTEGER | NOT NULL, DEFAULT 0 | Per-user unread |
+| created_at | TIMESTAMP | NOT NULL | |
+| updated_at | TIMESTAMP | NOT NULL | |
+
+**Unique:** (conversation_id, user_id)  
+**Index:** `user_id`
+
+---
+
+### 3.6c messages
+
+| Column | Type | Constraints | Description |
+|--------|------|-------------|-------------|
+| id | UUID | PK | |
+| conversation_id | UUID | FK → conversations.id, NOT NULL | Cascade delete |
+| sender_id | UUID | FK → users.id, NOT NULL | |
+| type | VARCHAR(20) | NOT NULL, DEFAULT `text` | `text` \| `image` |
+| body | TEXT | NULLABLE | Caption / text |
+| image_url | VARCHAR(500) | NULLABLE | Public URL (`purpose=message_image`) |
+| created_at | TIMESTAMP | NOT NULL | Immutable |
+
+**Check (Postgres):** `body IS NOT NULL OR image_url IS NOT NULL`  
+**Index:** (conversation_id, created_at)
 
 ---
 
@@ -816,6 +871,13 @@ See [Section 8: Audit Logs](#8-audit-logs).
 | users | refresh_tokens | 1:N | user_id | RESTRICT |
 | users | follows (follower) | 1:N | follower_id | RESTRICT |
 | users | follows (following) | 1:N | following_id | RESTRICT |
+| users | blocks (blocker) | 1:N | blocker_id | RESTRICT |
+| users | conversations | 1:N | created_by | RESTRICT |
+| conversations | conversation_participants | 1:N | conversation_id | CASCADE |
+| conversations | messages | 1:N | conversation_id | CASCADE |
+| users | conversation_participants | 1:N | user_id | RESTRICT |
+| users | messages | 1:N | sender_id | RESTRICT |
+| orders | conversations | 1:N | order_id | SET NULL |
 | users | videos | 1:N | user_id | RESTRICT |
 | users | stores | 1:1 | user_id | RESTRICT |
 | users | orders | 1:N | user_id | RESTRICT |
@@ -1149,7 +1211,7 @@ YYYY_MM_DD_HHMMSS_add_{column}_to_{table_name}_table.php
 
 1. users
 2. user_profiles, user_devices, refresh_tokens
-3. follows, blocks
+3. follows, blocks, conversations, conversation_participants, messages
 4. categories
 5. stores
 6. products, product_images, product_variants, product_favorites

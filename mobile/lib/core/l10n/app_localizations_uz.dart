@@ -81,6 +81,9 @@ class AppLocalizationsUz extends AppLocalizations {
   String get saveButton => 'Saqlash';
 
   @override
+  String get cancelButton => 'Bekor qilish';
+
+  @override
   String get logoutButton => 'Chiqish';
 
   @override
@@ -548,6 +551,37 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get sendMessageFailed => 'Xabar yuborib bo\'lmadi';
+
+  @override
+  String get attachImage => 'Rasm biriktirish';
+
+  @override
+  String get imageUploadFailed => 'Rasm yuklanmadi';
+
+  @override
+  String get blockUserTitle => 'Bloklash';
+
+  @override
+  String get blockUserConfirm =>
+      'Bu foydalanuvchi bilan xabar almasha olmaysiz.';
+
+  @override
+  String get blockUserAction => 'Bloklash';
+
+  @override
+  String get unblockUserAction => 'Blokdan chiqarish';
+
+  @override
+  String get userBlocked => 'Foydalanuvchi bloklandi';
+
+  @override
+  String get userUnblocked => 'Blok olib tashlandi';
+
+  @override
+  String get blockUserFailed => 'Bloklab bo\'lmadi';
+
+  @override
+  String get unblockUserFailed => 'Blokdan chiqarib bo\'lmadi';
 
   @override
   String get reportTitle => 'Shikoyat qilish';

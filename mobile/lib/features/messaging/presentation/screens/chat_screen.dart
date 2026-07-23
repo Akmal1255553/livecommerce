@@ -2,10 +2,14 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:livecommerce_mobile/features/messaging/data/media_upload_repository.dart';
+import 'package:livecommerce_mobile/features/messaging/data/messaging_repository.dart';
 import 'package:livecommerce_mobile/features/messaging/domain/entities/conversation.dart';
 import 'package:livecommerce_mobile/features/messaging/presentation/providers/messaging_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
 
 class ChatScreen extends ConsumerStatefulWidget {
@@ -25,7 +29,9 @@ class ChatScreen extends ConsumerStatefulWidget {
 class _ChatScreenState extends ConsumerState<ChatScreen> {
   final _textController = TextEditingController();
   final _scrollController = ScrollController();
+  final _picker = ImagePicker();
   Timer? _pollTimer;
+  bool _uploadingImage = false;
 
   @override
   void initState() {
@@ -39,9 +45,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
   void _startPolling() {
     _pollTimer = Timer.periodic(const Duration(seconds: 5), (_) {
       if (mounted) {
-        ref
-            .read(chatNotifierProvider(widget.conversationId).notifier)
-            .poll();
+        ref.read(chatNotifierProvider(widget.conversationId).notifier).poll();
       }
     });
   }
@@ -73,6 +77,115 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     }
   }
 
+  Future<void> _attachImage() async {
+    final l10n = AppLocalizations.of(context)!;
+    final chatState = ref.read(chatNotifierProvider(widget.conversationId));
+    if (chatState.isSending || _uploadingImage) return;
+
+    final picked = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1920,
+      maxHeight: 1920,
+      imageQuality: 85,
+    );
+    if (picked == null || !mounted) return;
+
+    setState(() => _uploadingImage = true);
+    try {
+      final bytes = await picked.readAsBytes();
+      final mimeType = _mimeFromName(picked.name);
+      final publicUrl = await ref.read(mediaUploadRepositoryProvider).uploadMessageImage(
+            fileName: picked.name,
+            mimeType: mimeType,
+            bytes: bytes,
+          );
+      final caption = _textController.text.trim();
+      _textController.clear();
+      final success = await ref
+          .read(chatNotifierProvider(widget.conversationId).notifier)
+          .sendMessage(caption, imageUrl: publicUrl);
+      if (!mounted) return;
+      if (!success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.sendMessageFailed)),
+        );
+      } else {
+        _scrollToBottom();
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.imageUploadFailed)),
+      );
+    } finally {
+      if (mounted) setState(() => _uploadingImage = false);
+    }
+  }
+
+  String _mimeFromName(String name) {
+    final lower = name.toLowerCase();
+    if (lower.endsWith('.png')) return 'image/png';
+    if (lower.endsWith('.webp')) return 'image/webp';
+    if (lower.endsWith('.gif')) return 'image/gif';
+    return 'image/jpeg';
+  }
+
+  Future<void> _blockPeer() async {
+    final peerId = widget.initialConversation?.participant.id;
+    if (peerId == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.blockUserTitle),
+        content: Text(l10n.blockUserConfirm),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.cancelButton),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(l10n.blockUserAction),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    try {
+      await ref.read(messagingRepositoryProvider).blockUser(peerId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.userBlocked)),
+      );
+      Navigator.of(context).pop();
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.blockUserFailed)),
+      );
+    }
+  }
+
+  Future<void> _unblockPeer() async {
+    final peerId = widget.initialConversation?.participant.id;
+    if (peerId == null) return;
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref.read(messagingRepositoryProvider).unblockUser(peerId);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.userUnblocked)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.unblockUserFailed)),
+      );
+    }
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -91,6 +204,7 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     final chatState = ref.watch(chatNotifierProvider(widget.conversationId));
     final auth = ref.watch(authNotifierProvider);
     final currentUserId = auth.user?.id;
+    final busy = chatState.isSending || _uploadingImage;
 
     ref.listen(chatNotifierProvider(widget.conversationId), (prev, next) {
       if (prev != null && next.messages.length > prev.messages.length) {
@@ -100,15 +214,40 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
 
     final title =
         widget.initialConversation?.participant.displayName ?? l10n.messagesTitle;
+    final hasPeer = widget.initialConversation?.participant.id != null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(title)),
+      appBar: AppBar(
+        title: Text(title),
+        actions: [
+          if (hasPeer)
+            PopupMenuButton<String>(
+              onSelected: (value) {
+                if (value == 'block') {
+                  _blockPeer();
+                } else if (value == 'unblock') {
+                  _unblockPeer();
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'block',
+                  child: Text(l10n.blockUserAction),
+                ),
+                PopupMenuItem(
+                  value: 'unblock',
+                  child: Text(l10n.unblockUserAction),
+                ),
+              ],
+            ),
+        ],
+      ),
       body: Column(
         children: [
           Expanded(
             child: _buildMessageList(chatState, currentUserId, l10n),
           ),
-          _buildInputBar(chatState, l10n),
+          _buildInputBar(chatState, l10n, busy),
         ],
       ),
     );
@@ -152,13 +291,24 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
     );
   }
 
-  Widget _buildInputBar(ChatState chatState, AppLocalizations l10n) {
+  Widget _buildInputBar(ChatState chatState, AppLocalizations l10n, bool busy) {
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
+            IconButton(
+              onPressed: busy ? null : _attachImage,
+              icon: _uploadingImage
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.image_outlined),
+              tooltip: l10n.attachImage,
+            ),
             Expanded(
               child: TextField(
                 controller: _textController,
@@ -180,8 +330,8 @@ class _ChatScreenState extends ConsumerState<ChatScreen> {
             ),
             const SizedBox(width: 8),
             IconButton.filled(
-              onPressed: chatState.isSending ? null : _send,
-              icon: chatState.isSending
+              onPressed: busy ? null : _send,
+              icon: chatState.isSending && !_uploadingImage
                   ? const SizedBox(
                       width: 20,
                       height: 20,
@@ -237,14 +387,14 @@ class _MessageBubble extends StatelessWidget {
                 padding: message.body != null && message.body!.isNotEmpty
                     ? const EdgeInsets.only(bottom: 6)
                     : EdgeInsets.zero,
-                child: ClipRRect(
+                child: AppCachedImage(
+                  url: message.imageUrl!,
+                  height: 180,
+                  width: double.infinity,
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    message.imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.broken_image_outlined,
-                    ),
+                  errorWidget: Icon(
+                    Icons.broken_image_outlined,
+                    color: fgColor,
                   ),
                 ),
               ),

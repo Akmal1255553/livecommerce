@@ -1,4 +1,4 @@
-# LiveCommerce — Render Blueprint (free-tier friendly)
+# LiveCommerce — Render Blueprint (free-tier friendly web + paid VOD worker)
 # Docs: docs/24_RENDER_DEPLOY.md
 # Deploy: https://dashboard.render.com/select-repo?type=blueprint
 
@@ -46,12 +46,32 @@ services:
         value: require
       - key: CACHE_STORE
         value: file
+      # Async VOD: web enqueues; livecommerce-worker runs FFmpeg
       - key: QUEUE_CONNECTION
-        value: sync
+        value: database
+      - key: DB_QUEUE_RETRY_AFTER
+        value: "660"
       - key: SESSION_DRIVER
         value: file
       - key: FILESYSTEM_DISK
         value: local
+      # Shared object storage required for web↔worker VOD (set in Dashboard)
+      - key: STORAGE_DRIVER
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: auto
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: "true"
+      - key: AWS_URL
+        sync: false
       - key: MAIL_MAILER
         value: log
       - key: JWT_SECRET
@@ -79,3 +99,81 @@ services:
         sync: false
       - key: AGORA_APP_CERTIFICATE
         sync: false
+
+  # VOD pipeline: ProcessVideoPipelineJob + FFmpeg (Starter — not on free plan)
+  - type: worker
+    name: livecommerce-worker
+    runtime: docker
+    plan: starter
+    region: oregon
+    branch: feature/ux-polish-rc1
+    rootDir: backend
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    dockerCommand: worker
+    maxShutdownDelaySeconds: 300
+    envVars:
+      - key: APP_NAME
+        value: LiveCommerce
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: LOG_CHANNEL
+        value: stderr
+      - key: APP_KEY
+        sync: false
+      - key: APP_URL
+        sync: false
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_URL
+        fromDatabase:
+          name: livecommerce-db
+          property: connectionString
+      - key: DATABASE_URL
+        fromDatabase:
+          name: livecommerce-db
+          property: connectionString
+      - key: DB_SSLMODE
+        value: require
+      - key: CACHE_STORE
+        value: file
+      - key: QUEUE_CONNECTION
+        value: database
+      - key: DB_QUEUE_RETRY_AFTER
+        value: "660"
+      - key: SESSION_DRIVER
+        value: file
+      - key: FILESYSTEM_DISK
+        value: local
+      - key: STORAGE_DRIVER
+        sync: false
+      - key: AWS_ACCESS_KEY_ID
+        sync: false
+      - key: AWS_SECRET_ACCESS_KEY
+        sync: false
+      - key: AWS_DEFAULT_REGION
+        value: auto
+      - key: AWS_BUCKET
+        sync: false
+      - key: AWS_ENDPOINT
+        sync: false
+      - key: AWS_USE_PATH_STYLE_ENDPOINT
+        value: "true"
+      - key: AWS_URL
+        sync: false
+      - key: MAIL_MAILER
+        value: log
+      - key: JWT_SECRET
+        sync: false
+      - key: SENTRY_LARAVEL_DSN
+        sync: false
+      - key: SENTRY_TRACES_SAMPLE_RATE
+        value: "0.1"
+      - key: SENTRY_ENVIRONMENT
+        value: production
+      - key: FFMPEG_PATH
+        value: ffmpeg
+      - key: FFPROBE_PATH
+        value: ffprobe

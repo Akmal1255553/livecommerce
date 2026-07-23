@@ -14,6 +14,9 @@ class ProcessVideoPipelineJob implements ShouldQueue
 
     public int $tries = 3;
 
+    /** FFmpeg HLS (720p+480p) can take several minutes. */
+    public int $timeout = 600;
+
     /** @var list<int> */
     public array $backoff = [30, 120, 600];
 

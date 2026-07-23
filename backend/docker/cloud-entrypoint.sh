@@ -5,6 +5,8 @@ cd /app
 
 # Render / Railway inject PORT (Render default 10000)
 PORT="${PORT:-8080}"
+# web (default) | worker - set via Dockerfile CMD / Render dockerCommand
+MODE="${1:-web}"
 
 # Laravel expects DB_URL; some hosts only set DATABASE_URL
 if [ -z "$DB_URL" ] && [ -n "$DATABASE_URL" ]; then
@@ -20,6 +22,18 @@ fi
 
 php artisan package:discover --ansi --no-interaction || true
 php artisan config:clear
+
+if [ "$MODE" = "worker" ]; then
+  echo "Starting queue worker (queues: video-processing,default)"
+  # --timeout must stay below DB_QUEUE_RETRY_AFTER (see render.yaml)
+  exec php artisan queue:work "${QUEUE_CONNECTION:-database}" \
+    --queue=video-processing,default \
+    --sleep=3 \
+    --tries=3 \
+    --timeout=600 \
+    --max-time=3600
+fi
+
 php artisan migrate --force --no-interaction
 
 # Always ensure demo admin exists for /admin (idempotent)

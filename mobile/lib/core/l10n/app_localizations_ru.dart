@@ -81,6 +81,9 @@ class AppLocalizationsRu extends AppLocalizations {
   String get saveButton => 'Сохранить';
 
   @override
+  String get cancelButton => 'Отмена';
+
+  @override
   String get logoutButton => 'Выйти';
 
   @override
@@ -545,6 +548,37 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get sendMessageFailed => 'Не удалось отправить сообщение';
+
+  @override
+  String get attachImage => 'Прикрепить изображение';
+
+  @override
+  String get imageUploadFailed => 'Не удалось загрузить изображение';
+
+  @override
+  String get blockUserTitle => 'Заблокировать';
+
+  @override
+  String get blockUserConfirm =>
+      'Вы больше не сможете обмениваться сообщениями с этим пользователем.';
+
+  @override
+  String get blockUserAction => 'Заблокировать';
+
+  @override
+  String get unblockUserAction => 'Разблокировать';
+
+  @override
+  String get userBlocked => 'Пользователь заблокирован';
+
+  @override
+  String get userUnblocked => 'Пользователь разблокирован';
+
+  @override
+  String get blockUserFailed => 'Не удалось заблокировать';
+
+  @override
+  String get unblockUserFailed => 'Не удалось разблокировать';
 
   @override
   String get reportTitle => 'Пожаловаться';

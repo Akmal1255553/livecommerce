@@ -101,6 +101,14 @@ class MessagingRemoteDataSource {
     final data = response.data!['data'] as Map<String, dynamic>? ?? {};
     return data['unread_count'] as int? ?? 0;
   }
+
+  Future<void> blockUser(String userId) async {
+    await _dio.post<void>('/users/$userId/block');
+  }
+
+  Future<void> unblockUser(String userId) async {
+    await _dio.delete<void>('/users/$userId/block');
+  }
 }
 
 class MessagingRepository {
@@ -144,6 +152,10 @@ class MessagingRepository {
       _remote.markRead(conversationId);
 
   Future<int> fetchUnreadCount() => _remote.fetchUnreadCount();
+
+  Future<void> blockUser(String userId) => _remote.blockUser(userId);
+
+  Future<void> unblockUser(String userId) => _remote.unblockUser(userId);
 }
 
 final messagingRepositoryProvider = Provider<MessagingRepository>((ref) {

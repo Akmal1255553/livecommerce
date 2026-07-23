@@ -15,10 +15,16 @@ class RetryVideoProcessingStepJob implements ShouldQueue
 {
     use Queueable;
 
+    public int $tries = 3;
+
+    public int $timeout = 600;
+
     public function __construct(
         public readonly string $videoId,
         public readonly VideoProcessingStepName $step,
-    ) {}
+    ) {
+        $this->onQueue('video-processing');
+    }
 
     public function handle(VideoProcessingPipelineOrchestrator $pipeline): void
     {

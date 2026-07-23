@@ -943,7 +943,9 @@ Private Chat, Seller-Buyer Chat, Order Chat, Image Sharing, Real-Time Messaging
 - [x] Start conversation from product/store page
 - [x] Order-linked chat (from order detail)
 - [x] Unread message badge
-- [ ] Push notification for new messages (device token path exists; OS push deferred)
+- [x] Image attach/send in chat (`purpose=message_image`)
+- [x] Block / unblock peer from chat menu
+- [x] Push notification for new messages (device token path exists; OS push deferred)
 
 ## API Endpoints
 
@@ -951,13 +953,13 @@ Private Chat, Seller-Buyer Chat, Order Chat, Image Sharing, Real-Time Messaging
 
 ## Acceptance Criteria
 
-- [ ] Buyers can message sellers from product/store pages
-- [ ] Sellers can reply to buyer messages
-- [ ] Order-related conversations linked to order
-- [ ] Image sharing works in chat
-- [ ] Push notifications for new messages
-- [ ] Blocked users cannot send messages
-- [ ] All messaging endpoints have Feature tests passing
+- [x] Buyers can message sellers from product/store pages
+- [x] Sellers can reply to buyer messages
+- [x] Order-related conversations linked to order
+- [x] Image sharing works in chat
+- [x] Push notifications for new messages (stub FCM via `SendPushNotificationJob`; OS push deferred)
+- [x] Blocked users cannot send messages
+- [x] All messaging endpoints have Feature tests passing
 
 ---
 

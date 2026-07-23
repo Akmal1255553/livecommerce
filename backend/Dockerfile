@@ -3,6 +3,7 @@
 
 FROM php:8.4-cli-bookworm
 
+# ffmpeg/ffprobe required for VOD pipeline (Sprint 3.2 / ADR video processing)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \
     unzip \
@@ -12,6 +13,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpng-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    ffmpeg \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
         pdo \
@@ -45,3 +47,5 @@ ENV PORT=10000
 EXPOSE 10000
 
 ENTRYPOINT ["docker/cloud-entrypoint.sh"]
+# Override with `worker` on Render Background Worker (dockerCommand: worker)
+CMD ["web"]

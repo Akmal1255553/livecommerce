@@ -169,13 +169,17 @@ class ChatNotifier extends StateNotifier<ChatState> {
     }
   }
 
-  Future<bool> sendMessage(String body) async {
-    if (body.trim().isEmpty) return false;
+  Future<bool> sendMessage(String body, {String? imageUrl}) async {
+    final trimmed = body.trim();
+    if (trimmed.isEmpty && (imageUrl == null || imageUrl.isEmpty)) {
+      return false;
+    }
     state = state.copyWith(isSending: true, clearSendError: true);
     try {
       final message = await _repo.sendMessage(
         _conversationId,
-        body: body.trim(),
+        body: trimmed.isEmpty ? null : trimmed,
+        imageUrl: imageUrl,
       );
       state = state.copyWith(
         messages: [...state.messages, message],
