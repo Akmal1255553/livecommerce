@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CategoryResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Category;
+use App\Services\Admin\AdminService;
 use App\Services\Product\CategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -17,7 +18,15 @@ class AdminCategoryController extends Controller
 {
     public function __construct(
         private readonly CategoryService $categories,
+        private readonly AdminService $admin,
     ) {}
+
+    public function index(): JsonResponse
+    {
+        return ApiResponse::success(
+            CategoryResource::collection($this->admin->listCategories()),
+        );
+    }
 
     public function store(Request $request): JsonResponse
     {

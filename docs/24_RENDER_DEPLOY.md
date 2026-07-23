@@ -90,6 +90,23 @@ Smoke: upload → confirm → worker logs show queue work → `videos.status` be
 
 Without S3, uploads land on the web container only and the worker cannot download the raw file.
 
+### Web admin panel
+
+After deploy, open:
+
+```text
+https://YOUR-SERVICE.onrender.com/admin/
+```
+
+Static SPA is served from `backend/public/admin/`. Sign in with the seeded admin (from `AdminUserSeeder`):
+
+| Field | Value |
+|-------|--------|
+| Email | `admin@livecommerce.local` |
+| Password | `Password1!` |
+
+Run `php artisan db:seed --class=AdminUserSeeder` on the service if the user is missing. Tabs: Overview, Reports, Pending videos, Stores, Users, Categories, Audit.
+
 Mobile:
 
 ```powershell

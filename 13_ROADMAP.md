@@ -1181,32 +1181,32 @@ Admin Dashboard, Content Moderation, User Reports, Ban/Suspend System, Category 
 - [x] Moderation queue (reported/flagged content)
 - [x] Ban/suspend user endpoints
 - [x] Report content endpoint (user-facing)
-- [ ] Admin analytics overview
+- [x] Admin analytics overview (`GET /admin/overview`)
 - [x] Audit log viewer endpoint
 - [x] Feature tests: admin actions, moderation, reports
 
 ## Mobile Deliverables
 
 - [x] Report content/user button (on videos, products)
-- [ ] (Admin panel is web-only for MVP — not mobile)
+- [x] (Admin panel is web-only for MVP — not mobile)
 
 ## Web Admin Panel (Separate — MVP Scope)
 
-- [ ] Admin dashboard (users, orders, revenue overview)
-- [ ] User management (view, suspend, ban)
-- [ ] Seller verification queue
-- [ ] Content moderation queue
-- [ ] Category management
-- [ ] Audit log viewer
+- [x] Admin dashboard (users, orders, revenue overview)
+- [x] User management (view, suspend, ban)
+- [x] Seller verification queue
+- [x] Content moderation queue
+- [x] Category management
+- [x] Audit log viewer
 
 ## Acceptance Criteria
 
-- [ ] Admins can view platform overview
-- [ ] Admins can suspend/ban users
-- [ ] Moderators can review and action flagged content
-- [ ] Seller applications reviewed and approved/rejected
-- [ ] Categories managed by admin
-- [ ] All admin endpoints have Feature tests passing
+- [x] Admins can view platform overview
+- [x] Admins can suspend/ban users
+- [x] Moderators can review and action flagged content
+- [x] Seller applications reviewed and approved/rejected
+- [x] Categories managed by admin
+- [x] All admin endpoints have Feature tests passing
 - [ ] Admin panel deployed to staging
 
 ---
@@ -1224,22 +1224,22 @@ Performance Optimization, Redis Caching, Queue Optimization, CDN Tuning, Databas
 
 ## Backend Deliverables
 
-- [ ] Redis caching: feed pages, categories, trending, user profiles
+- [x] Redis caching: feed pages, categories, trending, user profiles (Cache facade; Redis when `CACHE_STORE=redis`)
 - [ ] View/like counter flush jobs optimized
 - [ ] Database query optimization (N+1 elimination, eager loading audit)
 - [ ] Read replica routing for feed and search queries
 - [ ] Laravel Horizon for queue monitoring
-- [ ] Full video transcoding pipeline (HLS 720p/480p/360p)
-- [ ] Sentry error tracking integrated
+- [x] Full video transcoding pipeline (HLS 720p/480p; worker + FFmpeg on Render)
+- [x] Sentry error tracking integrated
 - [ ] Slow query logging and alerting
 - [ ] Load test scripts (k6 or Artillery)
-- [ ] Health check with dependency status
+- [x] Health check with dependency status
 
 ## Mobile Deliverables
 
-- [ ] Feed performance optimization (prefetch, cache)
-- [ ] Image caching optimization
-- [ ] Video preloading (next video in feed)
+- [x] Feed performance optimization (prefetch, cache)
+- [x] Image caching optimization
+- [x] Video preloading (next video in feed)
 - [ ] App startup time optimization (< 2 seconds)
 - [ ] Memory leak audit and fixes
 

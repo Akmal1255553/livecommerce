@@ -200,6 +200,27 @@ test('public profile can be viewed without auth', function () {
         ->assertJsonMissingPath('data.is_following');
 });
 
+test('public profile cache invalidates after profile update', function () {
+    $auth = registerUser('cacheprofile', 'cacheprofile@example.com');
+    $userId = $auth['user_id'];
+
+    test()->getJson("/api/v1/users/{$userId}")
+        ->assertOk()
+        ->assertJsonPath('data.username', 'cacheprofile');
+
+    test()->withToken($auth['access_token'])
+        ->putJson('/api/v1/me', [
+            'display_name' => 'Cached Name',
+            'bio' => 'Fresh bio after cache',
+        ])
+        ->assertOk();
+
+    test()->getJson("/api/v1/users/{$userId}")
+        ->assertOk()
+        ->assertJsonPath('data.display_name', 'Cached Name')
+        ->assertJsonPath('data.bio', 'Fresh bio after cache');
+});
+
 test('public profile includes is_following for authenticated viewer', function () {
     $follower = registerUser('viewerfollow', 'viewerfollow@example.com');
     $target = User::factory()->create(['username' => 'vieweduser']);

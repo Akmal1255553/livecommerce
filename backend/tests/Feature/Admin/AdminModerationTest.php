@@ -158,3 +158,82 @@ test('admin cannot suspend themselves', function () {
         ->putJson("/api/v1/admin/users/{$admin['user']->id}/suspend")
         ->assertForbidden();
 });
+
+test('admin can view platform overview', function () {
+    $admin = loginAsAdmin();
+
+    test()->withToken($admin['token'])
+        ->getJson('/api/v1/admin/overview')
+        ->assertOk()
+        ->assertJsonPath('success', true)
+        ->assertJsonStructure([
+            'data' => [
+                'users_total',
+                'users_active',
+                'users_suspended',
+                'users_banned',
+                'stores_pending',
+                'stores_active',
+                'videos_pending',
+                'reports_open',
+                'orders_total',
+                'orders_paid_or_later',
+                'revenue_paid_minor',
+                'currency',
+            ],
+        ])
+        ->assertJsonPath('data.currency', 'UZS');
+});
+
+test('moderator cannot access overview audit or category list', function () {
+    $moderator = User::factory()->moderator()->create();
+
+    $token = test()->postJson('/api/v1/auth/login', [
+        'login' => $moderator->email,
+        'password' => 'password',
+    ])->assertOk()->json('data.access_token');
+
+    test()->withToken($token)
+        ->getJson('/api/v1/admin/overview')
+        ->assertForbidden();
+
+    test()->withToken($token)
+        ->getJson('/api/v1/admin/audit-logs')
+        ->assertForbidden();
+
+    test()->withToken($token)
+        ->getJson('/api/v1/admin/categories')
+        ->assertForbidden();
+});
+
+test('admin can list categories including inactive', function () {
+    $admin = loginAsAdmin();
+
+    $active = Category::factory()->create([
+        'name' => 'Active Cat',
+        'slug' => 'active-cat-admin',
+        'is_active' => true,
+    ]);
+    $inactive = Category::factory()->create([
+        'name' => 'Inactive Cat',
+        'slug' => 'inactive-cat-admin',
+        'is_active' => false,
+    ]);
+
+    $response = test()->withToken($admin['token'])
+        ->getJson('/api/v1/admin/categories')
+        ->assertOk()
+        ->assertJsonFragment(['id' => $active->id, 'is_active' => true])
+        ->assertJsonFragment(['id' => $inactive->id, 'is_active' => false]);
+
+    expect(collect($response->json('data'))->pluck('id'))->toContain($active->id, $inactive->id);
+
+    test()->withToken($admin['token'])
+        ->deleteJson("/api/v1/admin/categories/{$active->id}")
+        ->assertNoContent();
+
+    test()->withToken($admin['token'])
+        ->getJson('/api/v1/admin/categories')
+        ->assertOk()
+        ->assertJsonFragment(['id' => $active->id, 'is_active' => false]);
+});

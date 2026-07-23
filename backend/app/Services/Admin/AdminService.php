@@ -7,17 +7,21 @@ namespace App\Services\Admin;
 use App\Contracts\Repositories\RefreshTokenRepositoryInterface;
 use App\Enums\ContentReportStatus;
 use App\Enums\ContentReportTarget;
+use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Enums\StoreStatus;
-use App\Enums\UserRole;
 use App\Enums\UserStatus;
 use App\Enums\VideoStatus;
 use App\Exceptions\Domain\ForbiddenException;
 use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Logging\StructuredLogger;
+use App\Models\Category;
 use App\Models\ContentReport;
+use App\Models\Order;
 use App\Models\Store;
 use App\Models\User;
 use App\Models\Video;
+use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use App\Services\Audit\AuditService;
 use App\Services\BaseService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -197,6 +201,70 @@ class AdminService extends BaseService
             ->with('actor')
             ->orderByDesc('created_at')
             ->paginate($perPage, ['*'], 'page', $page);
+    }
+
+    /**
+     * Platform snapshot for the admin dashboard (integer minor units only).
+     *
+     * @return array{
+     *     users_total: int,
+     *     users_active: int,
+     *     users_suspended: int,
+     *     users_banned: int,
+     *     stores_pending: int,
+     *     stores_active: int,
+     *     videos_pending: int,
+     *     reports_open: int,
+     *     orders_total: int,
+     *     orders_paid_or_later: int,
+     *     revenue_paid_minor: int,
+     *     currency: string
+     * }
+     */
+    public function overview(): array
+    {
+        $paidOrLater = [
+            OrderStatus::Paid,
+            OrderStatus::Packing,
+            OrderStatus::ReadyToShip,
+            OrderStatus::Shipped,
+            OrderStatus::Delivered,
+            OrderStatus::Completed,
+            OrderStatus::RefundRequested,
+            OrderStatus::RefundApproved,
+            OrderStatus::RefundRejected,
+            OrderStatus::Refunded,
+        ];
+
+        return [
+            'users_total' => User::query()->count(),
+            'users_active' => User::query()->where('status', UserStatus::Active)->count(),
+            'users_suspended' => User::query()->where('status', UserStatus::Suspended)->count(),
+            'users_banned' => User::query()->where('status', UserStatus::Banned)->count(),
+            'stores_pending' => Store::query()->where('status', StoreStatus::Pending)->count(),
+            'stores_active' => Store::query()->where('status', StoreStatus::Active)->count(),
+            'videos_pending' => Video::query()->where('status', VideoStatus::Queued)->count(),
+            'reports_open' => ContentReport::query()->where('status', ContentReportStatus::Pending)->count(),
+            'orders_total' => Order::query()->count(),
+            'orders_paid_or_later' => Order::query()->whereIn('status', $paidOrLater)->count(),
+            'revenue_paid_minor' => (int) Order::query()
+                ->where('payment_status', PaymentStatus::Paid)
+                ->sum('total'),
+            'currency' => 'UZS',
+        ];
+    }
+
+    /**
+     * Flat category list for admin (includes inactive).
+     *
+     * @return EloquentCollection<int, Category>
+     */
+    public function listCategories(): EloquentCollection
+    {
+        return Category::query()
+            ->orderBy('sort_order')
+            ->orderBy('id')
+            ->get();
     }
 
     public function createReport(User $reporter, string $targetType, string $targetId, string $reason): ContentReport

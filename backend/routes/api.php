@@ -37,6 +37,7 @@ use App\Http\Controllers\Api\V1\VideoInteractionController;
 use App\Http\Controllers\Api\V1\VideoProductController;
 use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
 use App\Http\Controllers\Api\V1\Admin\AdminCategoryController;
+use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
 use App\Http\Controllers\Api\V1\Admin\AdminReportController;
 use App\Http\Controllers\Api\V1\Admin\AdminStoreController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
@@ -131,6 +132,7 @@ Route::prefix('v1')->group(function (): void {
         });
 
         Route::prefix('admin')->middleware('role:admin')->group(function (): void {
+            Route::get('overview', [AdminOverviewController::class, 'show']);
             Route::get('users', [AdminUserController::class, 'index']);
             Route::put('users/{id}/suspend', [AdminUserController::class, 'suspend']);
             Route::put('users/{id}/ban', [AdminUserController::class, 'ban']);
@@ -139,6 +141,7 @@ Route::prefix('v1')->group(function (): void {
             Route::put('stores/{id}/approve', [AdminStoreController::class, 'approve']);
             Route::put('stores/{id}/reject', [AdminStoreController::class, 'reject']);
             Route::get('audit-logs', [AdminAuditLogController::class, 'index']);
+            Route::get('categories', [AdminCategoryController::class, 'index']);
             Route::post('categories', [AdminCategoryController::class, 'store']);
             Route::put('categories/{id}', [AdminCategoryController::class, 'update']);
             Route::delete('categories/{id}', [AdminCategoryController::class, 'destroy']);

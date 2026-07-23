@@ -1335,6 +1335,7 @@ All admin endpoints require `role: admin` or `role: moderator` unless noted. Bas
 | PUT | `/admin/users/{id}/suspend` | Admin | Suspend user account |
 | PUT | `/admin/users/{id}/ban` | Admin | Ban user account |
 | PUT | `/admin/users/{id}/activate` | Admin | Reactivate suspended/banned user |
+| GET | `/admin/overview` | Admin | Platform snapshot (users, stores, videos, reports, orders, revenue) |
 | GET | `/admin/videos/pending` | Moderator | Moderation queue (offset) |
 | PUT | `/admin/videos/{id}/approve` | Moderator | Approve video |
 | PUT | `/admin/videos/{id}/reject` | Moderator | Reject video (status → `rejected`) |
@@ -1346,6 +1347,7 @@ All admin endpoints require `role: admin` or `role: moderator` unless noted. Bas
 | PUT | `/admin/stores/{id}/approve` | Admin | Approve seller store |
 | PUT | `/admin/stores/{id}/reject` | Admin | Reject seller application |
 | GET | `/admin/audit-logs` | Admin | View audit log entries (offset) |
+| GET | `/admin/categories` | Admin | List all categories (includes inactive) |
 | POST | `/admin/categories` | Admin | Create category |
 | PUT | `/admin/categories/{id}` | Admin | Update category |
 | DELETE | `/admin/categories/{id}` | Admin | Soft-deactivate category (`is_active=false`) |

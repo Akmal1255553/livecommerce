@@ -12,6 +12,7 @@ use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Models\User;
 use App\Models\UserProfile;
 use App\Services\BaseService;
+use App\Services\User\ProfileService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -20,6 +21,7 @@ class FollowService extends BaseService
     public function __construct(
         private readonly FollowRepositoryInterface $follows,
         private readonly UserRepositoryInterface $users,
+        private readonly ProfileService $profiles,
     ) {}
 
     public function follow(User $follower, string $targetId): void
@@ -43,6 +45,9 @@ class FollowService extends BaseService
             $this->adjustCounters($follower->id, $targetId, increment: true);
         });
 
+        $this->profiles->forgetProfileCache($follower->id);
+        $this->profiles->forgetProfileCache($targetId);
+
         event(new UserFollowed($follower->id, $targetId));
     }
 
@@ -56,17 +61,14 @@ class FollowService extends BaseService
             $this->follows->deleteFollow($follower->id, $targetId);
             $this->adjustCounters($follower->id, $targetId, increment: false);
         });
+
+        $this->profiles->forgetProfileCache($follower->id);
+        $this->profiles->forgetProfileCache($targetId);
     }
 
     public function getPublicProfile(string $userId, ?User $viewer): User
     {
-        $user = $this->users->findById($userId);
-
-        if (! $user instanceof User) {
-            throw new ResourceNotFoundException('User not found.');
-        }
-
-        $user->loadMissing('profile');
+        $user = $this->profiles->getCachedUserWithProfile($userId);
 
         if ($viewer !== null && $viewer->id !== $userId) {
             $user->setAttribute(

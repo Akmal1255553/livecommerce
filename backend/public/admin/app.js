@@ -1,6 +1,7 @@
 (() => {
   const API_BASE = `${window.location.origin}/api/v1`;
   const STORAGE_KEY = 'lc_admin_session';
+  const ADMIN_ONLY_TABS = new Set(['overview', 'stores', 'users', 'categories', 'audit']);
 
   const loginView = document.getElementById('login-view');
   const shellView = document.getElementById('shell-view');
@@ -98,11 +99,12 @@
     tabs.querySelectorAll('[data-admin-only]').forEach((el) => {
       el.classList.toggle('hidden', !isAdmin());
     });
+    activeTab = isAdmin() ? 'overview' : 'reports';
     setActiveTab(activeTab);
   }
 
   function setActiveTab(tab) {
-    if ((tab === 'users' || tab === 'stores') && !isAdmin()) {
+    if (ADMIN_ONLY_TABS.has(tab) && !isAdmin()) {
       tab = 'reports';
     }
     activeTab = tab;
@@ -115,10 +117,13 @@
   async function renderTab() {
     content.innerHTML = '<p class="muted">Loading…</p>';
     try {
-      if (activeTab === 'reports') await renderReports();
+      if (activeTab === 'overview') await renderOverview();
+      else if (activeTab === 'reports') await renderReports();
       else if (activeTab === 'videos') await renderVideos();
       else if (activeTab === 'stores') await renderStores();
       else if (activeTab === 'users') await renderUsers();
+      else if (activeTab === 'categories') await renderCategories();
+      else if (activeTab === 'audit') await renderAudit();
     } catch (error) {
       if (error.status === 401 || error.status === 403) {
         saveSession(null);
@@ -130,8 +135,44 @@
     }
   }
 
+  function formatMoney(minor, currency) {
+    const major = (Number(minor) || 0) / 100;
+    return `${major.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })} ${currency || 'UZS'}`;
+  }
+
+  async function renderOverview() {
+    const payload = await api('/admin/overview');
+    const data = payload.data || {};
+    const cards = [
+      ['Users total', data.users_total],
+      ['Users active', data.users_active],
+      ['Suspended', data.users_suspended],
+      ['Banned', data.users_banned],
+      ['Stores pending', data.stores_pending],
+      ['Stores active', data.stores_active],
+      ['Videos pending', data.videos_pending],
+      ['Open reports', data.reports_open],
+      ['Orders total', data.orders_total],
+      ['Orders paid+', data.orders_paid_or_later],
+      ['Revenue (paid)', formatMoney(data.revenue_paid_minor, data.currency)],
+    ];
+
+    content.innerHTML = `
+      <div class="stats-grid">
+        ${cards
+          .map(
+            ([label, value]) => `
+          <article class="stat-card">
+            <span class="meta">${escapeHtml(label)}</span>
+            <strong>${escapeHtml(String(value ?? 0))}</strong>
+          </article>`,
+          )
+          .join('')}
+      </div>`;
+  }
+
   async function renderReports() {
-    const payload = await api('/admin/reports?status=open&page=1');
+    const payload = await api('/admin/reports?status=pending&page=1');
     const items = payload.data || [];
     if (!items.length) {
       content.innerHTML = '<div class="empty">No open reports.</div>';
@@ -313,6 +354,123 @@
         }
       });
     });
+  }
+
+  async function renderCategories() {
+    const payload = await api('/admin/categories');
+    const items = payload.data || [];
+
+    content.innerHTML = `
+      <form id="category-form" class="card create-form">
+        <div class="card-head"><strong>Create category</strong></div>
+        <label>
+          Name
+          <input name="name" required maxlength="100" />
+        </label>
+        <label>
+          Sort order
+          <input name="sort_order" type="number" min="0" value="0" />
+        </label>
+        <div class="actions">
+          <button type="submit" class="ok">Create</button>
+        </div>
+      </form>
+      <div id="category-list"></div>`;
+
+    const listEl = document.getElementById('category-list');
+    if (!items.length) {
+      listEl.innerHTML = '<div class="empty">No categories yet.</div>';
+    } else {
+      listEl.innerHTML = items
+        .map(
+          (cat) => `
+        <article class="card" data-id="${escapeHtml(String(cat.id))}">
+          <div class="card-head">
+            <strong>${escapeHtml(cat.name)}</strong>
+            <span class="meta">${cat.is_active ? 'active' : 'inactive'} · #${escapeHtml(String(cat.sort_order ?? 0))}</span>
+          </div>
+          <p class="meta">${escapeHtml(cat.slug || '')}</p>
+          <div class="actions">
+            ${
+              cat.is_active
+                ? '<button type="button" class="warn" data-action="deactivate">Deactivate</button>'
+                : '<button type="button" class="ok" data-action="reactivate">Reactivate</button>'
+            }
+          </div>
+        </article>`,
+        )
+        .join('');
+    }
+
+    document.getElementById('category-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const submit = form.querySelector('button[type="submit"]');
+      submit.disabled = true;
+      try {
+        const name = form.name.value.trim();
+        const sortOrder = Number(form.sort_order.value || 0);
+        await api('/admin/categories', {
+          method: 'POST',
+          body: JSON.stringify({ name, sort_order: sortOrder }),
+        });
+        flash('Category created');
+        await renderCategories();
+      } catch (error) {
+        flash(error.message, true);
+        submit.disabled = false;
+      }
+    });
+
+    listEl.querySelectorAll('[data-action]').forEach((btn) => {
+      btn.addEventListener('click', async () => {
+        const id = btn.closest('.card').dataset.id;
+        const action = btn.dataset.action;
+        btn.disabled = true;
+        try {
+          if (action === 'deactivate') {
+            await api(`/admin/categories/${id}`, { method: 'DELETE' });
+            flash('Category deactivated');
+          } else {
+            await api(`/admin/categories/${id}`, {
+              method: 'PUT',
+              body: JSON.stringify({ is_active: true }),
+            });
+            flash('Category reactivated');
+          }
+          await renderCategories();
+        } catch (error) {
+          flash(error.message, true);
+          btn.disabled = false;
+        }
+      });
+    });
+  }
+
+  async function renderAudit() {
+    const payload = await api('/admin/audit-logs?page=1');
+    const items = payload.data || [];
+    if (!items.length) {
+      content.innerHTML = '<div class="empty">No audit log entries.</div>';
+      return;
+    }
+
+    content.innerHTML = items
+      .map(
+        (entry) => `
+      <article class="card">
+        <div class="card-head">
+          <strong>${escapeHtml(entry.action || '')}</strong>
+          <span class="meta">${escapeHtml(entry.created_at || '')}</span>
+        </div>
+        <p class="meta">
+          @${escapeHtml(entry.actor?.username || 'system')}
+          · ${escapeHtml(entry.entity_type || '—')}
+          · ${escapeHtml(String(entry.entity_id || '—'))}
+        </p>
+      </article>`,
+      )
+      .join('');
   }
 
   function escapeHtml(value) {
