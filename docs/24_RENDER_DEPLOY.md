@@ -41,10 +41,27 @@ GET https://YOUR-SERVICE.onrender.com/api/v1/health
 
 Without `SENTRY_DSN` / `SENTRY_LARAVEL_DSN`, Sentry stays off (safe for local + CI).
 
+### Agora (real live video)
+
+1. Create a project at [console.agora.io](https://console.agora.io) (App ID + Certificate / secured mode).
+2. In Render → Environment set:
+
+| Key | Value |
+|-----|--------|
+| `STREAMING_PROVIDER` | `agora` |
+| `AGORA_APP_ID` | from Agora console |
+| `AGORA_APP_CERTIFICATE` | from Agora console |
+
+3. **Manual Deploy** (or wait for auto-redeploy) so the web process picks up env.
+4. Test on **Android/iOS only** (Chrome shows a placeholder — Agora RTC is native).
+5. As seller: start live → room should receive non-empty `app_id` + tokens from API.
+
+If `STREAMING_PROVIDER` stays `fake` or App ID is empty, the app shows the live placeholder instead of camera.
+
 Mobile:
 
 ```powershell
-cd "d:\live Stream\mobile"
+cd "d:\liveStream\mobile"
 & "..\flutter\bin\flutter.bat" run -d chrome `
   --dart-define=API_BASE_URL=https://YOUR-SERVICE.onrender.com/api/v1
 ```

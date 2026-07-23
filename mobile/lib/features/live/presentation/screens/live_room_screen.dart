@@ -9,6 +9,7 @@ import 'package:livecommerce_mobile/features/live/domain/entities/live_session.d
 import 'package:livecommerce_mobile/features/live/presentation/providers/live_providers.dart';
 import 'package:livecommerce_mobile/features/live/presentation/widgets/live_av_surface.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/providers/seller_providers.dart';
+import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 
 class LiveRoomScreen extends ConsumerStatefulWidget {
   const LiveRoomScreen({
@@ -480,15 +481,16 @@ class _PinnedChip extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (product.thumbnail != null)
-                    ClipRRect(
+                    AppCachedImage(
+                      url: product.thumbnail!,
+                      width: 48,
+                      height: 48,
+                      fit: BoxFit.cover,
+                      memCacheWidth: 96,
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        product.thumbnail!,
-                        width: 48,
-                        height: 48,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            const Icon(Icons.shopping_bag, color: Colors.white70),
+                      errorWidget: const Icon(
+                        Icons.shopping_bag,
+                        color: Colors.white70,
                       ),
                     )
                   else

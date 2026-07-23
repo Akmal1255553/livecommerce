@@ -7,12 +7,15 @@ import 'package:livecommerce_mobile/features/commerce/presentation/widgets/produ
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
+import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_video_prefetch.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/widgets/feed_video_player.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/widgets/video_comments_sheet.dart';
 import 'package:livecommerce_mobile/features/moderation/presentation/report_sheet.dart';
+import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
+import 'package:video_player/video_player.dart';
 
 class FeedScreen extends ConsumerStatefulWidget {
   const FeedScreen({super.key});
@@ -143,6 +146,9 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         setState(() => _currentPage = index);
         if (index < feed.videos.length) {
           ref.read(feedNotifierProvider.notifier).recordView(feed.videos[index].id);
+          ref
+              .read(feedVideoPrefetchProvider)
+              .warmNext(feed.videos, index);
         }
         if (feed.hasMore && index >= feed.videos.length - 2) {
           ref.read(feedNotifierProvider.notifier).loadMore();
@@ -155,9 +161,27 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
           );
         }
 
+        final video = feed.videos[index];
+        final isActive = index == _currentPage;
+        VideoPlayerController? prefetched;
+        if (isActive &&
+            video.videoUrl != null &&
+            video.videoUrl!.isNotEmpty) {
+          prefetched =
+              ref.read(feedVideoPrefetchProvider).claim(video.videoUrl!);
+        }
+
+        // Warm next while building the first active page.
+        if (isActive && index == 0) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            ref.read(feedVideoPrefetchProvider).warmNext(feed.videos, index);
+          });
+        }
+
         return _FeedVideoPage(
-          video: feed.videos[index],
-          isActive: index == _currentPage,
+          video: video,
+          isActive: isActive,
+          prefetchedController: prefetched,
         );
       },
     );
@@ -205,10 +229,12 @@ class _FeedVideoPage extends ConsumerWidget {
   const _FeedVideoPage({
     required this.video,
     required this.isActive,
+    this.prefetchedController,
   });
 
   final FeedVideo video;
   final bool isActive;
+  final VideoPlayerController? prefetchedController;
 
   ProductCard? get _overlayProduct {
     if (video.products.isEmpty) {
@@ -272,6 +298,7 @@ class _FeedVideoPage extends ConsumerWidget {
             videoUrl: videoUrl,
             thumbnailUrl: latest.thumbnailUrl,
             isActive: isActive,
+            prefetchedController: prefetchedController,
           )
         else
           FeedThumbnailFallback(thumbnailUrl: latest.thumbnailUrl),
@@ -333,13 +360,9 @@ class _FeedVideoPage extends ConsumerWidget {
           bottom: 32,
           child: Column(
             children: [
-              CircleAvatar(
-                backgroundImage: latest.user.avatarUrl != null
-                    ? NetworkImage(latest.user.avatarUrl!)
-                    : null,
-                child: latest.user.avatarUrl == null
-                    ? Text(latest.user.username.characters.first.toUpperCase())
-                    : null,
+              AppCachedAvatar(
+                url: latest.user.avatarUrl,
+                radius: 20,
               ),
               const SizedBox(height: 20),
               _SideAction(

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\StoreStatus;
 use App\Enums\UserStatus;
+use App\Models\Category;
 use App\Models\User;
 
 function loginAsAdmin(): array
@@ -126,6 +127,28 @@ test('admin can create category', function () {
         ->assertCreated()
         ->assertJsonPath('data.name', 'Electronics')
         ->assertJsonPath('data.slug', 'electronics');
+});
+
+test('admin category mutation invalidates categories tree cache', function () {
+    $admin = loginAsAdmin();
+
+    Category::factory()->create(['name' => 'Cached Parent', 'slug' => 'cached-parent']);
+
+    test()->getJson('/api/v1/categories')
+        ->assertOk()
+        ->assertJsonFragment(['slug' => 'cached-parent']);
+
+    test()->withToken($admin['token'])
+        ->postJson('/api/v1/admin/categories', [
+            'name' => 'After Cache',
+            'slug' => 'after-cache',
+        ])
+        ->assertCreated();
+
+    test()->getJson('/api/v1/categories')
+        ->assertOk()
+        ->assertJsonFragment(['slug' => 'cached-parent'])
+        ->assertJsonFragment(['slug' => 'after-cache']);
 });
 
 test('admin cannot suspend themselves', function () {

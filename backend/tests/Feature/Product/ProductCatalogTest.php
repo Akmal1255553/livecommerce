@@ -60,6 +60,12 @@ test('categories tree returns nested children', function () {
         ->assertOk()
         ->assertJsonFragment(['slug' => 'fashion-tree'])
         ->assertJsonFragment(['slug' => 'dresses-tree']);
+
+    // Second hit must still be correct after Cache::remember warm.
+    test()->getJson('/api/v1/categories')
+        ->assertOk()
+        ->assertJsonFragment(['slug' => 'fashion-tree'])
+        ->assertJsonFragment(['slug' => 'dresses-tree']);
 });
 
 test('category products endpoint returns products in category', function () {

@@ -8,12 +8,17 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\CategoryResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Category;
+use App\Services\Product\CategoryService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
 class AdminCategoryController extends Controller
 {
+    public function __construct(
+        private readonly CategoryService $categories,
+    ) {}
+
     public function store(Request $request): JsonResponse
     {
         $data = $request->validate([
@@ -27,8 +32,7 @@ class AdminCategoryController extends Controller
         $data['slug'] ??= Str::slug($data['name']);
         $data['is_active'] = true;
 
-        /** @var Category $category */
-        $category = Category::query()->create($data);
+        $category = $this->categories->create($data);
 
         return ApiResponse::created(new CategoryResource($category));
     }
@@ -50,9 +54,9 @@ class AdminCategoryController extends Controller
             'is_active' => ['sometimes', 'boolean'],
         ]);
 
-        $category->update($data);
+        $category = $this->categories->update($category, $data);
 
-        return ApiResponse::success(new CategoryResource($category->fresh() ?? $category));
+        return ApiResponse::success(new CategoryResource($category));
     }
 
     public function destroy(string $id): JsonResponse
@@ -63,7 +67,7 @@ class AdminCategoryController extends Controller
             return ApiResponse::error('Category not found.', 404);
         }
 
-        $category->update(['is_active' => false]);
+        $this->categories->deactivate($category);
 
         return ApiResponse::noContent();
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
+import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 
 class ProductOverlayChip extends StatelessWidget {
   const ProductOverlayChip({
@@ -27,15 +28,14 @@ class ProductOverlayChip extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (product.thumbnail != null)
-                ClipRRect(
+                AppCachedImage(
+                  url: product.thumbnail!,
+                  width: 48,
+                  height: 48,
+                  fit: BoxFit.cover,
+                  memCacheWidth: 96,
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    product.thumbnail!,
-                    width: 48,
-                    height: 48,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const _ThumbPlaceholder(),
-                  ),
+                  errorWidget: const _ThumbPlaceholder(),
                 )
               else
                 const _ThumbPlaceholder(),

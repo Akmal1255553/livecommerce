@@ -13,7 +13,9 @@ const String _defaultSentryDsn =
     'https://78acd4c6ce126ae3b30007d0d3481044@o4511773106110464.ingest.us.sentry.io/4511773139599360';
 
 Future<void> bootstrap() async {
-  WidgetsFlutterBinding.ensureInitialized();
+  // Must use Sentry's binding when initializing before SentryFlutter.init,
+  // otherwise slow/frozen frame tracking is disabled.
+  SentryWidgetsFlutterBinding.ensureInitialized();
 
   final prefs = await SharedPreferences.getInstance();
 
@@ -34,7 +36,9 @@ Future<void> bootstrap() async {
     runApp(
       UncontrolledProviderScope(
         container: container,
-        child: const SentryWidget(child: LiveCommerceApp()),
+        child: SentryWidget(
+          child: const LiveCommerceApp(),
+        ),
       ),
     );
   }

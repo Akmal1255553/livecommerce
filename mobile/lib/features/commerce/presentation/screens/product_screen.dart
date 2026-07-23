@@ -7,6 +7,7 @@ import 'package:livecommerce_mobile/features/commerce/domain/entities/product_de
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/messaging/presentation/providers/messaging_providers.dart';
 import 'package:livecommerce_mobile/features/moderation/presentation/report_sheet.dart';
+import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
@@ -191,11 +192,13 @@ class _ProductBody extends StatelessWidget {
                 AspectRatio(
                   aspectRatio: 1,
                   child: product.primaryImageUrl != null
-                      ? Image.network(
-                          product.primaryImageUrl!,
+                      ? AppCachedImage(
+                          url: product.primaryImageUrl!,
                           fit: BoxFit.cover,
                           width: double.infinity,
-                          errorBuilder: (_, __, ___) => const ColoredBox(
+                          memCacheWidth: 900,
+                          placeholderColor: const Color(0xFFF0F0F0),
+                          errorWidget: const ColoredBox(
                             color: Color(0xFFF0F0F0),
                             child: Icon(Icons.image_not_supported_outlined, size: 64),
                           ),

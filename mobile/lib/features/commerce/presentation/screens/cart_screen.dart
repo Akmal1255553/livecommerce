@@ -6,6 +6,7 @@ import 'package:livecommerce_mobile/features/commerce/domain/entities/cart.dart'
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class CartScreen extends ConsumerStatefulWidget {
@@ -109,14 +110,13 @@ class _CartLineTile extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (item.product.thumbnail != null)
-          ClipRRect(
+          AppCachedImage(
+            url: item.product.thumbnail!,
+            width: 72,
+            height: 72,
+            fit: BoxFit.cover,
+            memCacheWidth: 144,
             borderRadius: BorderRadius.circular(8),
-            child: Image.network(
-              item.product.thumbnail!,
-              width: 72,
-              height: 72,
-              fit: BoxFit.cover,
-            ),
           )
         else
           Container(

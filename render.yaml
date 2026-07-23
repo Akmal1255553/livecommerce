@@ -72,3 +72,10 @@ services:
         value: "0.1"
       - key: SENTRY_ENVIRONMENT
         value: production
+      # Live streaming (Agora) — set secrets in Render Dashboard
+      - key: STREAMING_PROVIDER
+        value: agora
+      - key: AGORA_APP_ID
+        sync: false
+      - key: AGORA_APP_CERTIFICATE
+        sync: false
