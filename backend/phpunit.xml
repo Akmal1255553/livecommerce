@@ -23,6 +23,9 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
+        <env name="REDIS_CLIENT" value="predis"/>
+        <env name="REDIS_HOST" value="127.0.0.1"/>
+        <env name="REDIS_PORT" value="6379"/>
         <env name="JWT_SECRET" value="testing-jwt-secret-key-min-32-chars"/>
         <env name="JWT_TTL" value="15"/>
         <env name="JWT_REFRESH_TTL" value="43200"/>

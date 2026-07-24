@@ -60,6 +60,43 @@
   "commentsLoading": "Izohlar yuklanmoqda…",
   "commentsEmptyTitle": "Hali izohlar yo'q",
   "commentsEmptySubtitle": "Birinchi bo'lib yozing.",
+  "buyNow": "Sotib olish",
+  "shareAction": "Ulashish",
+  "moreAction": "Yana",
+  "linkCopied": "Havola nusxalandi",
+  "emojiPickerTitle": "Emoji tanlang",
+  "commentsCount": "{count} ta izoh",
+  "@commentsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "timeJustNow": "hozir",
+  "timeMinutesShort": "{count} daq",
+  "@timeMinutesShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timeHoursShort": "{count} soat",
+  "@timeHoursShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timeDaysShort": "{count} kun",
+  "@timeDaysShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timeWeeksShort": "{count} hafta",
+  "@timeWeeksShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
 
   "cartTitle": "Savat",
   "cartEmptyTitle": "Savat bo'sh",
@@ -275,5 +312,56 @@
   "reportReasonScam": "Firibgarlik",
   "reportReasonOther": "Boshqa",
   "reportSubmitted": "Shikoyat yuborildi",
-  "reportAction": "Shikoyat"
+  "reportAction": "Shikoyat",
+
+  "walletTitle": "Hamyon",
+  "walletBalance": "Mavjud",
+  "walletHeld": "Muzlatilgan",
+  "walletTotal": "Jami",
+  "walletTopUp": "To'ldirish",
+  "walletWithdraw": "Yechib olish",
+  "walletHistory": "Amaliyotlar tarixi",
+  "walletNoTransactions": "Hozircha amaliyotlar yo'q",
+  "walletNoTransactionsSubtitle": "Bir bosishda to'lash uchun hamyonni to'ldiring.",
+  "walletPendingWithdrawals": "Ko'rib chiqilayotgan yechishlar",
+  "walletTopUpTitle": "Hamyonni to'ldirish",
+  "walletWithdrawTitle": "Mablag' yechish",
+  "walletAmountLabel": "Summa",
+  "walletAmountHint": "0",
+  "walletMethodLabel": "Usul",
+  "walletCardNumberLabel": "Karta raqami",
+  "walletCardHolderLabel": "Karta egasi",
+  "walletFeeLabel": "Komissiya",
+  "walletTotalDebit": "Yechiladi",
+  "walletMinAmount": "Eng kami {amount}",
+  "@walletMinAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletMaxAmount": "Eng ko'pi {amount}",
+  "@walletMaxAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletTopUpSuccess": "Hamyon to'ldirildi",
+  "walletWithdrawSuccess": "Yechish so'rovi yaratildi",
+  "walletWithdrawCancelled": "So'rov bekor qilindi",
+  "walletCancelWithdrawal": "So'rovni bekor qilish",
+  "walletStatusRequested": "Ko'rib chiqilmoqda",
+  "walletStatusProcessing": "Yuborilmoqda",
+  "walletStatusCompleted": "Bajarildi",
+  "walletStatusRejected": "Rad etildi",
+  "walletStatusCancelled": "Bekor qilindi",
+  "walletStatusPending": "Kutilmoqda",
+  "walletStatusFailed": "Xatolik",
+  "walletTypeTopUp": "To'ldirish",
+  "walletTypeWithdrawal": "Yechish",
+  "walletTypeOrderPayment": "Buyurtma to'lovi",
+  "walletTypeRefund": "Qaytarish",
+  "walletTypePayout": "To'lov",
+  "walletTypeAdjustment": "Tuzatish",
+  "walletCardMask": "Karta •{last4}",
+  "@walletCardMask": {
+    "placeholders": { "last4": { "type": "String" } }
+  },
+  "walletInvalidAmount": "To'g'ri summa kiriting",
+  "walletInvalidCard": "To'g'ri karta raqamini kiriting"
 }

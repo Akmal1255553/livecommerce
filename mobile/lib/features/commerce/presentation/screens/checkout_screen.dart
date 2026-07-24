@@ -150,16 +150,27 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
                   const SizedBox(height: 8),
-                  SegmentedButton<String>(
-                    segments: const [
-                      ButtonSegment(value: 'click', label: Text('Click')),
-                      ButtonSegment(value: 'payme', label: Text('Payme')),
-                      ButtonSegment(value: 'uzum', label: Text('Uzum')),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final method in const [
+                        ('click', 'Click'),
+                        ('payme', 'Payme'),
+                        ('uzum', 'Uzum'),
+                        ('wallet', null),
+                      ])
+                        ChoiceChip(
+                          label: Text(
+                            method.$2 ??
+                                AppLocalizations.of(context)!.walletTitle,
+                          ),
+                          selected: _paymentMethod == method.$1,
+                          onSelected: (_) {
+                            setState(() => _paymentMethod = method.$1);
+                          },
+                        ),
                     ],
-                    selected: {_paymentMethod},
-                    onSelectionChanged: (value) {
-                      setState(() => _paymentMethod = value.first);
-                    },
                   ),
                   const SizedBox(height: 16),
                   Text(

@@ -126,12 +126,14 @@ class VideoComment {
     required this.id,
     required this.body,
     required this.username,
+    this.avatarUrl,
     this.createdAt,
   });
 
   final String id;
   final String body;
   final String username;
+  final String? avatarUrl;
   final String? createdAt;
 
   factory VideoComment.fromJson(Map<String, dynamic> json) {
@@ -140,6 +142,7 @@ class VideoComment {
       id: json['id'].toString(),
       body: json['body'] as String? ?? '',
       username: user?['username'] as String? ?? 'user',
+      avatarUrl: user?['avatar_url'] as String?,
       createdAt: json['created_at'] as String?,
     );
   }

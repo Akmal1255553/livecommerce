@@ -60,6 +60,43 @@
   "commentsLoading": "Загрузка комментариев…",
   "commentsEmptyTitle": "Пока нет комментариев",
   "commentsEmptySubtitle": "Будьте первым.",
+  "buyNow": "Купить",
+  "shareAction": "Поделиться",
+  "moreAction": "Ещё",
+  "linkCopied": "Ссылка скопирована",
+  "emojiPickerTitle": "Выберите эмодзи",
+  "commentsCount": "{count} комментариев",
+  "@commentsCount": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+
+  "timeJustNow": "сейчас",
+  "timeMinutesShort": "{count} мин",
+  "@timeMinutesShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timeHoursShort": "{count} ч",
+  "@timeHoursShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timeDaysShort": "{count} дн",
+  "@timeDaysShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "timeWeeksShort": "{count} нед",
+  "@timeWeeksShort": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
 
   "cartTitle": "Корзина",
   "cartEmptyTitle": "Корзина пуста",
@@ -275,5 +312,56 @@
   "reportReasonScam": "Мошенничество",
   "reportReasonOther": "Другое",
   "reportSubmitted": "Жалоба отправлена",
-  "reportAction": "Пожаловаться"
+  "reportAction": "Пожаловаться",
+
+  "walletTitle": "Кошелёк",
+  "walletBalance": "Доступно",
+  "walletHeld": "Заморожено",
+  "walletTotal": "Всего",
+  "walletTopUp": "Пополнить",
+  "walletWithdraw": "Вывести",
+  "walletHistory": "История операций",
+  "walletNoTransactions": "Пока нет операций",
+  "walletNoTransactionsSubtitle": "Пополните кошелёк, чтобы платить в один тап.",
+  "walletPendingWithdrawals": "Выводы в обработке",
+  "walletTopUpTitle": "Пополнение кошелька",
+  "walletWithdrawTitle": "Вывод средств",
+  "walletAmountLabel": "Сумма",
+  "walletAmountHint": "0",
+  "walletMethodLabel": "Способ",
+  "walletCardNumberLabel": "Номер карты",
+  "walletCardHolderLabel": "Владелец карты",
+  "walletFeeLabel": "Комиссия",
+  "walletTotalDebit": "Спишется",
+  "walletMinAmount": "Минимум {amount}",
+  "@walletMinAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletMaxAmount": "Максимум {amount}",
+  "@walletMaxAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletTopUpSuccess": "Кошелёк пополнен",
+  "walletWithdrawSuccess": "Заявка на вывод создана",
+  "walletWithdrawCancelled": "Заявка отменена",
+  "walletCancelWithdrawal": "Отменить заявку",
+  "walletStatusRequested": "В обработке",
+  "walletStatusProcessing": "Отправляется",
+  "walletStatusCompleted": "Выполнено",
+  "walletStatusRejected": "Отклонено",
+  "walletStatusCancelled": "Отменено",
+  "walletStatusPending": "Ожидает",
+  "walletStatusFailed": "Ошибка",
+  "walletTypeTopUp": "Пополнение",
+  "walletTypeWithdrawal": "Вывод",
+  "walletTypeOrderPayment": "Оплата заказа",
+  "walletTypeRefund": "Возврат",
+  "walletTypePayout": "Выплата",
+  "walletTypeAdjustment": "Корректировка",
+  "walletCardMask": "Карта •{last4}",
+  "@walletCardMask": {
+    "placeholders": { "last4": { "type": "String" } }
+  },
+  "walletInvalidAmount": "Введите корректную сумму",
+  "walletInvalidCard": "Введите корректный номер карты"
 }

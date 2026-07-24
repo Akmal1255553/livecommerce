@@ -20,7 +20,7 @@ class CheckoutRequest extends FormRequest
     {
         return [
             'cart_version' => ['required', 'integer', 'min:1'],
-            'payment_method' => ['required', 'string', 'in:fake,click,payme,uzum,card,local'],
+            'payment_method' => ['required', 'string', 'in:fake,click,payme,uzum,card,local,wallet'],
             'coupon_code' => ['nullable', 'string', 'max:64'],
             'notes' => ['nullable', 'string', 'max:1000'],
             'shipping_address' => ['required', 'array'],

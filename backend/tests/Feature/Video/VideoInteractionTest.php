@@ -77,6 +77,8 @@ test('like on non published video returns not found', function () {
 });
 
 test('view recorded once per session', function () {
+    ensureRedis();
+
     $video = publishedVideo();
     $sessionId = (string) Str::uuid();
 
@@ -92,6 +94,8 @@ test('view recorded once per session', function () {
 });
 
 test('flush video views job increments view count', function () {
+    ensureRedis();
+
     $video = publishedVideo();
     $sessionId = (string) Str::uuid();
 
@@ -102,8 +106,62 @@ test('flush video views job increments view count', function () {
     (new FlushVideoViewsJob)->handle();
 
     expect($video->fresh()->view_count)->toBe(1);
+    expect(Redis::get("views:pending:{$video->id}"))->toBeNull();
 });
 
+test('flush does not drop views that arrive after pending counter is claimed', function () {
+    ensureRedis();
+
+    $video = publishedVideo();
+    $videoId = (string) $video->id;
+
+    Redis::set("views:pending:{$videoId}", 3);
+    Redis::sadd('views:pending:index', $videoId);
+
+    (new FlushVideoViewsJob)->handle();
+    expect($video->fresh()->view_count)->toBe(3);
+
+    // New views after claim recreate the key; next flush must apply them (not wiped by DEL).
+    Redis::incr("views:pending:{$videoId}");
+    Redis::sadd('views:pending:index', $videoId);
+
+    (new FlushVideoViewsJob)->handle();
+
+    expect($video->fresh()->view_count)->toBe(4);
+});
+
+test('second flush is a no-op when pending is empty', function () {
+    ensureRedis();
+
+    $video = publishedVideo();
+    $sessionId = (string) Str::uuid();
+
+    test()->postJson("/api/v1/videos/{$video->id}/view", [
+        'session_id' => $sessionId,
+    ])->assertAccepted();
+
+    (new FlushVideoViewsJob)->handle();
+    (new FlushVideoViewsJob)->handle();
+
+    expect($video->fresh()->view_count)->toBe(1);
+});
+
+test('flush batches multiple videos in one run', function () {
+    ensureRedis();
+
+    $a = publishedVideo();
+    $b = publishedVideo();
+
+    Redis::set("views:pending:{$a->id}", 2);
+    Redis::set("views:pending:{$b->id}", 5);
+    Redis::sadd('views:pending:index', (string) $a->id);
+    Redis::sadd('views:pending:index', (string) $b->id);
+
+    (new FlushVideoViewsJob)->handle();
+
+    expect($a->fresh()->view_count)->toBe(2);
+    expect($b->fresh()->view_count)->toBe(5);
+});
 test('user can post top level comment', function () {
     $video = publishedVideo();
     $user = registerUser('commenter', 'commenter@example.com');

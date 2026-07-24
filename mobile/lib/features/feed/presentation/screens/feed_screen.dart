@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
+import 'package:livecommerce_mobile/core/theme/app_colors.dart';
+import 'package:livecommerce_mobile/core/theme/app_dimens.dart';
+import 'package:livecommerce_mobile/core/theme/app_theme.dart';
+import 'package:livecommerce_mobile/core/theme/app_typography.dart';
+import 'package:livecommerce_mobile/core/utils/number_format.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/widgets/product_overlay_chip.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/feed_video.dart';
 import 'package:livecommerce_mobile/features/feed/domain/entities/product_card.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_providers.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/providers/feed_video_prefetch.dart';
+import 'package:livecommerce_mobile/features/feed/presentation/widgets/double_tap_like.dart';
+import 'package:livecommerce_mobile/features/feed/presentation/widgets/feed_action_rail.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/widgets/feed_video_player.dart';
 import 'package:livecommerce_mobile/features/feed/presentation/widgets/video_comments_sheet.dart';
 import 'package:livecommerce_mobile/features/moderation/presentation/report_sheet.dart';
-import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
+import 'package:livecommerce_mobile/shared/widgets/app_bottom_nav.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/glass_panel.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 import 'package:video_player/video_player.dart';
 
@@ -51,66 +60,46 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   @override
   Widget build(BuildContext context) {
     final feed = ref.watch(feedNotifierProvider);
-    final cart = ref.watch(cartNotifierProvider);
     final l10n = AppLocalizations.of(context)!;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(l10n.appTitle),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.live_tv_outlined),
-            tooltip: l10n.liveNowTooltip,
-            onPressed: () => context.push('/live'),
-          ),
-          IconButton(
-            icon: Badge(
-              isLabelVisible: cart.itemCount > 0,
-              label: Text('${cart.itemCount}'),
-              child: const Icon(Icons.shopping_cart_outlined),
-            ),
-            onPressed: () => context.push('/cart'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.receipt_long_outlined),
-            onPressed: () => context.push('/orders'),
-          ),
-          IconButton(
-            icon: const Icon(Icons.person_outline),
-            onPressed: () => context.push('/profile'),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+    return AppTheme.immersive(
+      child: AnnotatedRegion<SystemUiOverlayStyle>(
+        value: AppTheme.immersiveOverlay,
+        child: Scaffold(
+          backgroundColor: Colors.black,
+          extendBody: true,
+          extendBodyBehindAppBar: true,
+          body: Stack(
             children: [
-              _FeedTabButton(
-                label: l10n.feedForYou,
-                selected: feed.tab == FeedTab.forYou,
-                onTap: () =>
-                    ref.read(feedNotifierProvider.notifier).switchTab(FeedTab.forYou),
+              Positioned.fill(child: _buildBody(context, feed, l10n)),
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: _FeedTopBar(
+                  tab: feed.tab,
+                  onTabChanged: (tab) =>
+                      ref.read(feedNotifierProvider.notifier).switchTab(tab),
+                ),
               ),
-              const SizedBox(width: 24),
-              _FeedTabButton(
-                label: l10n.feedFollowing,
-                selected: feed.tab == FeedTab.following,
-                onTap: () => ref
-                    .read(feedNotifierProvider.notifier)
-                    .switchTab(FeedTab.following),
+              const Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: AppBottomNav(current: AppTab.home, transparent: true),
               ),
             ],
           ),
         ),
       ),
-      body: _buildBody(context, feed, l10n),
     );
   }
 
-  Widget _buildBody(BuildContext context, FeedState feed, AppLocalizations l10n) {
+  Widget _buildBody(
+    BuildContext context,
+    FeedState feed,
+    AppLocalizations l10n,
+  ) {
     if (feed.isLoading && feed.videos.isEmpty) {
       return const FeedSkeleton();
     }
@@ -146,9 +135,7 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         setState(() => _currentPage = index);
         if (index < feed.videos.length) {
           ref.read(feedNotifierProvider.notifier).recordView(feed.videos[index].id);
-          ref
-              .read(feedVideoPrefetchProvider)
-              .warmNext(feed.videos, index);
+          ref.read(feedVideoPrefetchProvider).warmNext(feed.videos, index);
         }
         if (feed.hasMore && index >= feed.videos.length - 2) {
           ref.read(feedNotifierProvider.notifier).loadMore();
@@ -164,11 +151,8 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
         final video = feed.videos[index];
         final isActive = index == _currentPage;
         VideoPlayerController? prefetched;
-        if (isActive &&
-            video.videoUrl != null &&
-            video.videoUrl!.isNotEmpty) {
-          prefetched =
-              ref.read(feedVideoPrefetchProvider).claim(video.videoUrl!);
+        if (isActive && video.videoUrl != null && video.videoUrl!.isNotEmpty) {
+          prefetched = ref.read(feedVideoPrefetchProvider).claim(video.videoUrl!);
         }
 
         // Warm next while building the first active page.
@@ -188,6 +172,119 @@ class _FeedScreenState extends ConsumerState<FeedScreen> {
   }
 }
 
+class _FeedTopBar extends ConsumerWidget {
+  const _FeedTopBar({required this.tab, required this.onTabChanged});
+
+  final FeedTab tab;
+  final ValueChanged<FeedTab> onTabChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final cart = ref.watch(cartNotifierProvider);
+
+    return DecoratedBox(
+      decoration: const BoxDecoration(gradient: AppGradients.topScrim),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.md,
+            AppSpacing.xxl,
+          ),
+          child: Row(
+            children: [
+              GestureDetector(
+                onTap: () => context.push('/live'),
+                child: const MediaPill(
+                  label: 'LIVE',
+                  gradient: AppGradients.live,
+                  dot: true,
+                ),
+              ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    _FeedTabButton(
+                      label: l10n.feedFollowing,
+                      selected: tab == FeedTab.following,
+                      onTap: () => onTabChanged(FeedTab.following),
+                    ),
+                    const SizedBox(width: AppSpacing.xl),
+                    _FeedTabButton(
+                      label: l10n.feedForYou,
+                      selected: tab == FeedTab.forYou,
+                      onTap: () => onTabChanged(FeedTab.forYou),
+                    ),
+                  ],
+                ),
+              ),
+              _CartButton(count: cart.itemCount),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CartButton extends StatelessWidget {
+  const _CartButton({required this.count});
+
+  final int count;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/cart'),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 44,
+        height: 44,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            const Icon(
+              Icons.shopping_bag_outlined,
+              color: Colors.white,
+              size: 26,
+              shadows: [
+                Shadow(color: Color(0x73000000), blurRadius: 8),
+              ],
+            ),
+            if (count > 0)
+              Positioned(
+                top: 2,
+                right: 2,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                  constraints: const BoxConstraints(minWidth: 18),
+                  decoration: BoxDecoration(
+                    gradient: AppGradients.brand,
+                    borderRadius: AppRadius.pillAll,
+                    border: Border.all(color: Colors.black26),
+                  ),
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class _FeedTabButton extends StatelessWidget {
   const _FeedTabButton({
     required this.label,
@@ -203,21 +300,29 @@ class _FeedTabButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             label,
             style: TextStyle(
-              color: selected ? Colors.white : Colors.white54,
+              color: selected ? Colors.white : Colors.white60,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              fontSize: 16,
+              shadows: AppTypography.mediaShadow,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpacing.sm),
           AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            height: 2,
-            width: selected ? 48 : 0,
-            color: Colors.white,
+            duration: AppDuration.fast,
+            curve: AppDuration.curve,
+            height: 3,
+            width: selected ? 28 : 0,
+            decoration: const BoxDecoration(
+              gradient: AppGradients.brand,
+              borderRadius: AppRadius.pillAll,
+            ),
           ),
         ],
       ),
@@ -236,7 +341,7 @@ class _FeedVideoPage extends ConsumerWidget {
   final bool isActive;
   final VideoPlayerController? prefetchedController;
 
-  ProductCard? get _overlayProduct {
+  ProductCard? _overlayProduct(FeedVideo video) {
     if (video.products.isEmpty) {
       return null;
     }
@@ -255,32 +360,62 @@ class _FeedVideoPage extends ConsumerWidget {
     }
   }
 
+  Future<void> _likeFromDoubleTap(BuildContext context, WidgetRef ref) async {
+    final current = ref
+        .read(feedNotifierProvider)
+        .videos
+        .where((v) => v.id == video.id)
+        .firstOrNull;
+    // Double tap always likes, never unlikes.
+    if (current?.isLiked ?? false) {
+      return;
+    }
+    await _toggleLike(context, ref);
+  }
+
   Future<void> _toggleBookmark(BuildContext context, WidgetRef ref) async {
     final error =
         await ref.read(feedNotifierProvider.notifier).toggleBookmark(video.id);
-    if (error != null && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
-    } else if (context.mounted) {
-      final updated = ref
-          .read(feedNotifierProvider)
-          .videos
-          .where((v) => v.id == video.id)
-          .firstOrNull;
-      final bookmarked = updated?.isBookmarked ?? false;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(bookmarked
-              ? AppLocalizations.of(context)!.bookmarkSaved
-              : AppLocalizations.of(context)!.bookmarkRemoved),
-          duration: const Duration(milliseconds: 900),
-        ),
-      );
+    if (!context.mounted) {
+      return;
     }
+    if (error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+      return;
+    }
+    final updated = ref
+        .read(feedNotifierProvider)
+        .videos
+        .where((v) => v.id == video.id)
+        .firstOrNull;
+    final bookmarked = updated?.isBookmarked ?? false;
+    final l10n = AppLocalizations.of(context)!;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(bookmarked ? l10n.bookmarkSaved : l10n.bookmarkRemoved),
+        duration: const Duration(milliseconds: 900),
+      ),
+    );
+  }
+
+  Future<void> _share(BuildContext context) async {
+    await Clipboard.setData(
+      ClipboardData(text: 'https://livecommerce.uz/v/${video.id}'),
+    );
+    if (!context.mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.linkCopied),
+        duration: const Duration(milliseconds: 1200),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final overlayProduct = _overlayProduct;
+    final l10n = AppLocalizations.of(context)!;
     final latest = ref
             .watch(feedNotifierProvider)
             .videos
@@ -289,123 +424,70 @@ class _FeedVideoPage extends ConsumerWidget {
         video;
 
     final videoUrl = latest.videoUrl;
+    final overlayProduct = _overlayProduct(latest);
+    final bottomInset = AppBottomNav.reservedSpace(context);
 
     return Stack(
       fit: StackFit.expand,
       children: [
-        if (videoUrl != null && videoUrl.isNotEmpty)
-          FeedVideoPlayer(
-            videoUrl: videoUrl,
-            thumbnailUrl: latest.thumbnailUrl,
-            isActive: isActive,
-            prefetchedController: prefetchedController,
-          )
-        else
-          FeedThumbnailFallback(thumbnailUrl: latest.thumbnailUrl),
-        Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Colors.transparent, Colors.black54],
+        DoubleTapLike(
+          onLike: () => _likeFromDoubleTap(context, ref),
+          child: videoUrl != null && videoUrl.isNotEmpty
+              ? FeedVideoPlayer(
+                  videoUrl: videoUrl,
+                  thumbnailUrl: latest.thumbnailUrl,
+                  isActive: isActive,
+                  prefetchedController: prefetchedController,
+                )
+              : FeedThumbnailFallback(thumbnailUrl: latest.thumbnailUrl),
+        ),
+        const IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(gradient: AppGradients.bottomScrim),
+            child: SizedBox.expand(),
+          ),
+        ),
+        Positioned(
+          right: AppSpacing.sm,
+          bottom: bottomInset,
+          child: FeedActionRail(
+            avatarUrl: latest.user.avatarUrl,
+            likeCount: latest.likeCount,
+            commentCount: latest.commentCount,
+            isLiked: latest.isLiked,
+            isBookmarked: latest.isBookmarked,
+            onLike: () => _toggleLike(context, ref),
+            onComment: () => showVideoCommentsSheet(
+              context: context,
+              ref: ref,
+              videoId: latest.id,
+            ),
+            onBookmark: () => _toggleBookmark(context, ref),
+            onShare: () => _share(context),
+            onMore: () => showReportSheet(
+              context: context,
+              ref: ref,
+              targetType: 'video',
+              targetId: latest.id,
             ),
           ),
         ),
-        if (overlayProduct != null)
-          Positioned(
-            left: 16,
-            right: 96,
-            bottom: 140,
-            child: ProductOverlayChip(product: overlayProduct),
-          ),
         Positioned(
-          left: 16,
-          right: 80,
-          bottom: 32,
+          left: AppSpacing.lg,
+          right: 84,
+          bottom: bottomInset,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Text(
-                '@${latest.user.username}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
+              if (overlayProduct != null) ...[
+                ProductOverlayChip(
+                  product: overlayProduct,
+                  actionLabel: l10n.buyNow,
                 ),
-              ),
-              if (latest.title != null && latest.title!.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  latest.title!,
-                  style: const TextStyle(color: Colors.white, fontSize: 15),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
+                const SizedBox(height: AppSpacing.md),
               ],
-              if (latest.description != null &&
-                  latest.description!.isNotEmpty) ...[
-                const SizedBox(height: 4),
-                Text(
-                  latest.description!,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ],
-          ),
-        ),
-        Positioned(
-          right: 16,
-          bottom: 32,
-          child: Column(
-            children: [
-              AppCachedAvatar(
-                url: latest.user.avatarUrl,
-                radius: 20,
-              ),
-              const SizedBox(height: 20),
-              _SideAction(
-                icon: latest.isLiked ? Icons.favorite : Icons.favorite_border,
-                label: '${latest.likeCount}',
-                activeColor: latest.isLiked ? Colors.redAccent : null,
-                onTap: () => _toggleLike(context, ref),
-              ),
-              const SizedBox(height: 14),
-              _SideAction(
-                icon: Icons.chat_bubble_outline,
-                label: '${latest.commentCount}',
-                onTap: () => showVideoCommentsSheet(
-                  context: context,
-                  ref: ref,
-                  videoId: latest.id,
-                ),
-              ),
-              const SizedBox(height: 14),
-              _SideAction(
-                icon: latest.isBookmarked
-                    ? Icons.bookmark
-                    : Icons.bookmark_border,
-                label: AppLocalizations.of(context)!.saveAction,
-                activeColor: latest.isBookmarked ? Colors.amber : null,
-                onTap: () => _toggleBookmark(context, ref),
-              ),
-              const SizedBox(height: 14),
-              _SideAction(
-                icon: Icons.flag_outlined,
-                label: AppLocalizations.of(context)!.reportAction,
-                onTap: () => showReportSheet(
-                  context: context,
-                  ref: ref,
-                  targetType: 'video',
-                  targetId: latest.id,
-                ),
-              ),
-              const SizedBox(height: 14),
-              _SideAction(
-                icon: Icons.remove_red_eye_outlined,
-                label: '${latest.viewCount}',
-              ),
+              _VideoCaption(video: latest),
             ],
           ),
         ),
@@ -414,44 +496,87 @@ class _FeedVideoPage extends ConsumerWidget {
   }
 }
 
-class _SideAction extends StatelessWidget {
-  const _SideAction({
-    required this.icon,
-    required this.label,
-    this.onTap,
-    this.activeColor,
-  });
+class _VideoCaption extends StatelessWidget {
+  const _VideoCaption({required this.video});
 
-  final IconData icon;
-  final String label;
-  final VoidCallback? onTap;
-  final Color? activeColor;
+  final FeedVideo video;
 
   @override
   Widget build(BuildContext context) {
-    final child = Column(
+    final shadows = AppTypography.mediaShadow;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
       children: [
-        AnimatedScale(
-          scale: activeColor != null ? 1.08 : 1,
-          duration: const Duration(milliseconds: 160),
-          child: Icon(icon, color: activeColor ?? Colors.white, size: 28),
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Flexible(
+              child: Text(
+                '@${video.user.username}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 16,
+                  shadows: shadows,
+                ),
+              ),
+            ),
+            if (video.user.isVerified) ...[
+              const SizedBox(width: AppSpacing.xs),
+              const Icon(Icons.verified, size: 16, color: AppColors.info),
+            ],
+            const SizedBox(width: AppSpacing.sm),
+            Icon(
+              Icons.visibility_outlined,
+              size: 14,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+            const SizedBox(width: AppSpacing.xxs + 2),
+            Text(
+              formatCount(video.viewCount),
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.7),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                shadows: shadows,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 4),
-        Text(label, style: const TextStyle(color: Colors.white, fontSize: 12)),
+        if (video.title != null && video.title!.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.sm),
+          Text(
+            video.title!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              height: 1.35,
+              fontWeight: FontWeight.w500,
+              shadows: shadows,
+            ),
+          ),
+        ],
+        if (video.description != null && video.description!.isNotEmpty) ...[
+          const SizedBox(height: AppSpacing.xs),
+          Text(
+            video.description!,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.78),
+              fontSize: 13,
+              height: 1.35,
+              shadows: shadows,
+            ),
+          ),
+        ],
       ],
-    );
-
-    if (onTap == null) {
-      return child;
-    }
-
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(24),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 6),
-        child: child,
-      ),
     );
   }
 }

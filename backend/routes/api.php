@@ -2,12 +2,20 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
+use App\Http\Controllers\Api\V1\Admin\AdminCategoryController;
+use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
+use App\Http\Controllers\Api\V1\Admin\AdminReportController;
+use App\Http\Controllers\Api\V1\Admin\AdminStoreController;
+use App\Http\Controllers\Api\V1\Admin\AdminUserController;
+use App\Http\Controllers\Api\V1\Admin\AdminVideoController;
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CartController;
 use App\Http\Controllers\Api\V1\CategoryController;
 use App\Http\Controllers\Api\V1\CheckoutController;
+use App\Http\Controllers\Api\V1\ClickWebhookController;
 use App\Http\Controllers\Api\V1\ConversationController;
 use App\Http\Controllers\Api\V1\DeviceController;
 use App\Http\Controllers\Api\V1\DiscoverController;
@@ -20,28 +28,21 @@ use App\Http\Controllers\Api\V1\MediaController;
 use App\Http\Controllers\Api\V1\MetricsController;
 use App\Http\Controllers\Api\V1\NotificationController;
 use App\Http\Controllers\Api\V1\OrderController;
-use App\Http\Controllers\Api\V1\ClickWebhookController;
 use App\Http\Controllers\Api\V1\PaymentWebhookController;
 use App\Http\Controllers\Api\V1\PaymeWebhookController;
-use App\Http\Controllers\Api\V1\SandboxPaymentController;
-use App\Http\Controllers\Api\V1\UzumWebhookController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\SandboxPaymentController;
 use App\Http\Controllers\Api\V1\SellerOrderController;
 use App\Http\Controllers\Api\V1\SellerStoreController;
 use App\Http\Controllers\Api\V1\StoreController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\UzumWebhookController;
 use App\Http\Controllers\Api\V1\VideoCommentController;
 use App\Http\Controllers\Api\V1\VideoController;
 use App\Http\Controllers\Api\V1\VideoInteractionController;
 use App\Http\Controllers\Api\V1\VideoProductController;
-use App\Http\Controllers\Api\V1\Admin\AdminAuditLogController;
-use App\Http\Controllers\Api\V1\Admin\AdminCategoryController;
-use App\Http\Controllers\Api\V1\Admin\AdminOverviewController;
-use App\Http\Controllers\Api\V1\Admin\AdminReportController;
-use App\Http\Controllers\Api\V1\Admin\AdminStoreController;
-use App\Http\Controllers\Api\V1\Admin\AdminUserController;
-use App\Http\Controllers\Api\V1\Admin\AdminVideoController;
+use App\Http\Controllers\Api\V1\WalletController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function (): void {
@@ -178,6 +179,16 @@ Route::prefix('v1')->group(function (): void {
         Route::post('checkout', [CheckoutController::class, 'store'])
             ->middleware('throttle:checkout');
         Route::post('payments/sandbox/{id}/complete', [SandboxPaymentController::class, 'complete']);
+
+        Route::get('wallet', [WalletController::class, 'show']);
+        Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+        Route::post('wallet/topups', [WalletController::class, 'topUp'])
+            ->middleware('throttle:checkout');
+        Route::post('wallet/topups/{id}/confirm', [WalletController::class, 'confirmTopUp']);
+        Route::get('wallet/withdrawals', [WalletController::class, 'withdrawals']);
+        Route::post('wallet/withdrawals', [WalletController::class, 'requestWithdrawal'])
+            ->middleware('throttle:checkout');
+        Route::post('wallet/withdrawals/{id}/cancel', [WalletController::class, 'cancelWithdrawal']);
 
         Route::get('orders', [OrderController::class, 'index']);
         Route::get('orders/{id}', [OrderController::class, 'show']);

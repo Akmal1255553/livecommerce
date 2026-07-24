@@ -186,6 +186,49 @@ class AppLocalizationsRu extends AppLocalizations {
   String get commentsEmptySubtitle => 'Будьте первым.';
 
   @override
+  String get buyNow => 'Купить';
+
+  @override
+  String get shareAction => 'Поделиться';
+
+  @override
+  String get moreAction => 'Ещё';
+
+  @override
+  String get linkCopied => 'Ссылка скопирована';
+
+  @override
+  String get emojiPickerTitle => 'Выберите эмодзи';
+
+  @override
+  String commentsCount(int count) {
+    return '$count комментариев';
+  }
+
+  @override
+  String get timeJustNow => 'сейчас';
+
+  @override
+  String timeMinutesShort(int count) {
+    return '$count мин';
+  }
+
+  @override
+  String timeHoursShort(int count) {
+    return '$count ч';
+  }
+
+  @override
+  String timeDaysShort(int count) {
+    return '$count дн';
+  }
+
+  @override
+  String timeWeeksShort(int count) {
+    return '$count нед';
+  }
+
+  @override
   String get cartTitle => 'Корзина';
 
   @override
@@ -600,4 +643,134 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get reportAction => 'Пожаловаться';
+
+  @override
+  String get walletTitle => 'Кошелёк';
+
+  @override
+  String get walletBalance => 'Доступно';
+
+  @override
+  String get walletHeld => 'Заморожено';
+
+  @override
+  String get walletTotal => 'Всего';
+
+  @override
+  String get walletTopUp => 'Пополнить';
+
+  @override
+  String get walletWithdraw => 'Вывести';
+
+  @override
+  String get walletHistory => 'История операций';
+
+  @override
+  String get walletNoTransactions => 'Пока нет операций';
+
+  @override
+  String get walletNoTransactionsSubtitle =>
+      'Пополните кошелёк, чтобы платить в один тап.';
+
+  @override
+  String get walletPendingWithdrawals => 'Выводы в обработке';
+
+  @override
+  String get walletTopUpTitle => 'Пополнение кошелька';
+
+  @override
+  String get walletWithdrawTitle => 'Вывод средств';
+
+  @override
+  String get walletAmountLabel => 'Сумма';
+
+  @override
+  String get walletAmountHint => '0';
+
+  @override
+  String get walletMethodLabel => 'Способ';
+
+  @override
+  String get walletCardNumberLabel => 'Номер карты';
+
+  @override
+  String get walletCardHolderLabel => 'Владелец карты';
+
+  @override
+  String get walletFeeLabel => 'Комиссия';
+
+  @override
+  String get walletTotalDebit => 'Спишется';
+
+  @override
+  String walletMinAmount(String amount) {
+    return 'Минимум $amount';
+  }
+
+  @override
+  String walletMaxAmount(String amount) {
+    return 'Максимум $amount';
+  }
+
+  @override
+  String get walletTopUpSuccess => 'Кошелёк пополнен';
+
+  @override
+  String get walletWithdrawSuccess => 'Заявка на вывод создана';
+
+  @override
+  String get walletWithdrawCancelled => 'Заявка отменена';
+
+  @override
+  String get walletCancelWithdrawal => 'Отменить заявку';
+
+  @override
+  String get walletStatusRequested => 'В обработке';
+
+  @override
+  String get walletStatusProcessing => 'Отправляется';
+
+  @override
+  String get walletStatusCompleted => 'Выполнено';
+
+  @override
+  String get walletStatusRejected => 'Отклонено';
+
+  @override
+  String get walletStatusCancelled => 'Отменено';
+
+  @override
+  String get walletStatusPending => 'Ожидает';
+
+  @override
+  String get walletStatusFailed => 'Ошибка';
+
+  @override
+  String get walletTypeTopUp => 'Пополнение';
+
+  @override
+  String get walletTypeWithdrawal => 'Вывод';
+
+  @override
+  String get walletTypeOrderPayment => 'Оплата заказа';
+
+  @override
+  String get walletTypeRefund => 'Возврат';
+
+  @override
+  String get walletTypePayout => 'Выплата';
+
+  @override
+  String get walletTypeAdjustment => 'Корректировка';
+
+  @override
+  String walletCardMask(String last4) {
+    return 'Карта •$last4';
+  }
+
+  @override
+  String get walletInvalidAmount => 'Введите корректную сумму';
+
+  @override
+  String get walletInvalidCard => 'Введите корректный номер карты';
 }

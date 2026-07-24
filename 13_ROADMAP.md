@@ -1225,7 +1225,7 @@ Performance Optimization, Redis Caching, Queue Optimization, CDN Tuning, Databas
 ## Backend Deliverables
 
 - [x] Redis caching: feed pages, categories, trending, user profiles (Cache facade; Redis when `CACHE_STORE=redis`)
-- [ ] View/like counter flush jobs optimized
+- [x] View/like counter flush jobs optimized (atomic Redis claim for views; likes remain sync)
 - [ ] Database query optimization (N+1 elimination, eager loading audit)
 - [ ] Read replica routing for feed and search queries
 - [ ] Laravel Horizon for queue monitoring

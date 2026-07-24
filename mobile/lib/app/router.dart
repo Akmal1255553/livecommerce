@@ -33,6 +33,7 @@ import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_orders_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_product_form_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_products_screen.dart';
+import 'package:livecommerce_mobile/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:livecommerce_mobile/shared/navigation/page_transitions.dart';
 
 class AppRouter {
@@ -188,6 +189,13 @@ class AppRouter {
           pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
             key: state.pageKey,
             child: const OrdersScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/wallet',
+          pageBuilder: (context, state) => AppPageTransitions.fadeSlide(
+            key: state.pageKey,
+            child: const WalletScreen(),
           ),
         ),
         GoRoute(

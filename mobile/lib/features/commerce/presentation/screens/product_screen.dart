@@ -1,14 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:intl/intl.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
+import 'package:livecommerce_mobile/core/theme/app_colors.dart';
+import 'package:livecommerce_mobile/core/theme/app_dimens.dart';
+import 'package:livecommerce_mobile/core/utils/number_format.dart';
 import 'package:livecommerce_mobile/features/commerce/domain/entities/product_detail.dart';
 import 'package:livecommerce_mobile/features/commerce/presentation/providers/commerce_providers.dart';
 import 'package:livecommerce_mobile/features/messaging/presentation/providers/messaging_providers.dart';
 import 'package:livecommerce_mobile/features/moderation/presentation/report_sheet.dart';
 import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:livecommerce_mobile/shared/widgets/gradient_button.dart';
 import 'package:livecommerce_mobile/shared/widgets/skeleton.dart';
 
 class ProductScreen extends ConsumerStatefulWidget {
@@ -178,9 +181,10 @@ class _ProductBody extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final priceText = NumberFormat('#,###').format(product.price.toInt());
+    final palette = AppPalette.of(context);
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
+    final priceText = formatPrice(product.price, product.currency);
 
     return Column(
       children: [
@@ -197,21 +201,29 @@ class _ProductBody extends StatelessWidget {
                           fit: BoxFit.cover,
                           width: double.infinity,
                           memCacheWidth: 900,
-                          placeholderColor: const Color(0xFFF0F0F0),
-                          errorWidget: const ColoredBox(
-                            color: Color(0xFFF0F0F0),
-                            child: Icon(Icons.image_not_supported_outlined, size: 64),
+                          placeholderColor: palette.surfaceHigh,
+                          errorWidget: ColoredBox(
+                            color: palette.surfaceHigh,
+                            child: Icon(
+                              Icons.image_not_supported_outlined,
+                              size: 64,
+                              color: palette.textTertiary,
+                            ),
                           ),
                         )
-                      : const ColoredBox(
-                          color: Color(0xFFF0F0F0),
+                      : ColoredBox(
+                          color: palette.surfaceHigh,
                           child: Center(
-                            child: Icon(Icons.shopping_bag_outlined, size: 64),
+                            child: Icon(
+                              Icons.shopping_bag_outlined,
+                              size: 64,
+                              color: palette.textTertiary,
+                            ),
                           ),
                         ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpacing.lg),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -219,39 +231,43 @@ class _ProductBody extends StatelessWidget {
                         Text(
                           product.storeName!,
                           style: theme.textTheme.labelLarge?.copyWith(
-                            color: theme.colorScheme.primary,
+                            color: palette.brand,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
                         product.title,
                         style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: AppSpacing.sm),
                       Text(
-                        '$priceText ${product.currency}',
+                        priceText,
                         style: theme.textTheme.titleLarge?.copyWith(
-                          color: theme.colorScheme.error,
-                          fontWeight: FontWeight.w700,
+                          color: palette.brand,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
                       if (product.description != null &&
                           product.description!.isNotEmpty) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: AppSpacing.lg),
                         Text(
                           product.description!,
-                          style: theme.textTheme.bodyMedium,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: palette.textSecondary,
+                            height: 1.45,
+                          ),
                         ),
                       ],
                       if (product.variants.isNotEmpty) ...[
-                        const SizedBox(height: 20),
+                        const SizedBox(height: AppSpacing.xl),
                         Text(l10n.variants, style: theme.textTheme.titleMedium),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: AppSpacing.sm),
                         Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
+                          spacing: AppSpacing.sm,
+                          runSpacing: AppSpacing.sm,
                           children: product.variants.map((variant) {
                             final selected = selectedVariantId == variant.id;
                             return ChoiceChip(
@@ -262,21 +278,31 @@ class _ProductBody extends StatelessWidget {
                           }).toList(),
                         ),
                       ],
-                      const SizedBox(height: 20),
+                      const SizedBox(height: AppSpacing.xl),
                       Row(
                         children: [
                           Text(l10n.quantity, style: theme.textTheme.titleMedium),
                           const Spacer(),
-                          IconButton(
-                            onPressed: quantity > 1
+                          _QtyButton(
+                            icon: Icons.remove_rounded,
+                            onTap: quantity > 1
                                 ? () => onQuantityChanged(quantity - 1)
                                 : null,
-                            icon: const Icon(Icons.remove_circle_outline),
                           ),
-                          Text('$quantity', style: theme.textTheme.titleMedium),
-                          IconButton(
-                            onPressed: () => onQuantityChanged(quantity + 1),
-                            icon: const Icon(Icons.add_circle_outline),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: AppSpacing.md,
+                            ),
+                            child: Text(
+                              '$quantity',
+                              style: theme.textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                          _QtyButton(
+                            icon: Icons.add_rounded,
+                            onTap: () => onQuantityChanged(quantity + 1),
                           ),
                         ],
                       ),
@@ -287,43 +313,78 @@ class _ProductBody extends StatelessWidget {
             ),
           ),
         ),
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                FilledButton(
-                  onPressed: product.isPurchasable && !isAdding ? onAddToCart : null,
-                  child: isAdding
-                      ? const SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : Text(
-                          product.isPurchasable ? l10n.addToCart : l10n.outOfStock,
-                        ),
-                ),
-                if (onMessageSeller != null) ...[
-                  const SizedBox(height: 8),
-                  OutlinedButton(
-                    onPressed: isMessaging ? null : onMessageSeller,
-                    child: isMessaging
-                        ? const SizedBox(
-                            height: 18,
-                            width: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : Text(l10n.messageSeller),
+        Container(
+          decoration: BoxDecoration(
+            color: palette.surface,
+            border: Border(top: BorderSide(color: palette.outline)),
+          ),
+          child: SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  GradientButton(
+                    label: product.isPurchasable
+                        ? l10n.addToCart
+                        : l10n.outOfStock,
+                    icon: Icons.shopping_bag_outlined,
+                    busy: isAdding,
+                    onPressed: product.isPurchasable && !isAdding
+                        ? onAddToCart
+                        : null,
                   ),
+                  if (onMessageSeller != null) ...[
+                    const SizedBox(height: AppSpacing.sm),
+                    OutlinedButton.icon(
+                      onPressed: isMessaging ? null : onMessageSeller,
+                      icon: isMessaging
+                          ? const SizedBox(
+                              height: 16,
+                              width: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.chat_bubble_outline_rounded),
+                      label: Text(l10n.messageSeller),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
       ],
+    );
+  }
+}
+
+class _QtyButton extends StatelessWidget {
+  const _QtyButton({required this.icon, this.onTap});
+
+  final IconData icon;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+
+    return Material(
+      color: palette.surfaceHigh,
+      borderRadius: AppRadius.pillAll,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.pillAll,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(
+            icon,
+            size: 18,
+            color: onTap == null ? palette.textTertiary : palette.textPrimary,
+          ),
+        ),
+      ),
     );
   }
 }

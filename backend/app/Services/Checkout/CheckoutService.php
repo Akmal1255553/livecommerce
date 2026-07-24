@@ -12,6 +12,7 @@ use App\Contracts\Services\OrderServiceInterface;
 use App\Contracts\Services\PaymentGatewayInterface;
 use App\Contracts\Services\PricingServiceInterface;
 use App\Contracts\Services\ShippingCalculatorInterface;
+use App\Contracts\Services\WalletServiceInterface;
 use App\DTOs\Checkout\CheckoutData;
 use App\DTOs\Checkout\CheckoutResult;
 use App\DTOs\Order\CreateOrderData;
@@ -45,9 +46,13 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
         private readonly OrderServiceInterface $orders,
         private readonly InventoryServiceInterface $inventory,
         private readonly PaymentGatewayInterface $paymentGateway,
+        private readonly WalletServiceInterface $wallet,
     ) {
         parent::__construct($logger);
     }
+
+    /** Wallet balance settles instantly, so it bypasses the redirect gateway. */
+    private const WALLET_METHOD = 'wallet';
 
     public function checkout(CheckoutData $data): CheckoutResult
     {
@@ -146,6 +151,10 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
 
         $order = $this->orders->markAwaitingPayment($order);
 
+        if ($data->paymentMethod === self::WALLET_METHOD) {
+            return $this->settleWithWallet($data, $order, $reservationGroupId, $claim);
+        }
+
         $payment = $this->paymentGateway->initiate($order);
 
         if (! $payment->success) {
@@ -183,6 +192,52 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
         PaymentSucceeded::dispatch($order, $payment->transactionId);
 
         $result = new CheckoutResult($order->fresh(['items.product', 'transitions', 'store', 'activeRefund']), $payment->paymentUrl);
+
+        $this->completeIdempotency($claim, $result);
+
+        return $result;
+    }
+
+    private function settleWithWallet(
+        CheckoutData $data,
+        Order $order,
+        string $reservationGroupId,
+        CheckoutIdempotencyKey $claim,
+    ): CheckoutResult {
+        try {
+            $transaction = $this->wallet->payOrder(
+                $data->userId,
+                $order->id,
+                (int) $order->total,
+                (string) $order->currency,
+            );
+        } catch (\Throwable $e) {
+            $this->inventory->releaseReservation($reservationGroupId);
+            $this->orders->cancelForBuyer(
+                $data->userId,
+                $order->id,
+                null,
+                'Insufficient wallet balance',
+            );
+            PaymentFailed::dispatch($order, 'Insufficient wallet balance');
+            $this->releaseIdempotencyClaim($claim);
+
+            throw $e;
+        }
+
+        $order->payment_provider = self::WALLET_METHOD;
+        $order->payment_transaction_id = $transaction->id;
+        $order->payment_reference = $transaction->reference;
+        $order->save();
+
+        $order = $this->orders->markPaid($order, $transaction->id);
+        $this->inventory->confirmReservation($reservationGroupId);
+        PaymentSucceeded::dispatch($order, $transaction->id);
+
+        $result = new CheckoutResult(
+            $order->fresh(['items.product', 'transitions', 'store', 'activeRefund']),
+            null,
+        );
 
         $this->completeIdempotency($claim, $result);
 

@@ -7,8 +7,8 @@ namespace App\Providers;
 use App\Contracts\Recommendation\EngagementEventRepositoryInterface;
 use App\Contracts\Recommendation\RecommendationServiceInterface;
 use App\Contracts\Recommendation\VideoEngagementRollupRepositoryInterface;
-use App\Contracts\Repositories\BookmarkRepositoryInterface;
 use App\Contracts\Repositories\BlockRepositoryInterface;
+use App\Contracts\Repositories\BookmarkRepositoryInterface;
 use App\Contracts\Repositories\BrandRepositoryInterface;
 use App\Contracts\Repositories\CartRepositoryInterface;
 use App\Contracts\Repositories\CategoryRepositoryInterface;
@@ -47,6 +47,7 @@ use App\Contracts\Services\OrderNumberGeneratorInterface;
 use App\Contracts\Services\OrderServiceInterface;
 use App\Contracts\Services\OrderStateMachineInterface;
 use App\Contracts\Services\PaymentGatewayInterface;
+use App\Contracts\Services\PaymentWebhookProcessorInterface;
 use App\Contracts\Services\PricingServiceInterface;
 use App\Contracts\Services\PushNotificationInterface;
 use App\Contracts\Services\ShippingCalculatorInterface;
@@ -60,6 +61,7 @@ use App\Contracts\Services\VideoInteractionServiceInterface;
 use App\Contracts\Services\VideoStateMachineInterface;
 use App\Contracts\Services\VideoUploadServiceInterface;
 use App\Contracts\Services\ViewerMetricsServiceInterface;
+use App\Contracts\Services\WalletServiceInterface;
 use App\Contracts\VideoProcessing\FfmpegTranscoderInterface;
 use App\Events\CommentCreated;
 use App\Events\LiveSessionStarted;
@@ -81,8 +83,9 @@ use App\Listeners\NotifyOnLiveStarted;
 use App\Listeners\NotifyOnMessageSent;
 use App\Listeners\NotifyOnVideoLiked;
 use App\Listeners\RecordOrderAnalytics;
-use App\Repositories\Eloquent\BookmarkRepository;
+use App\Listeners\ReleaseInventoryOnOrderCancelled;
 use App\Repositories\Eloquent\BlockRepository;
+use App\Repositories\Eloquent\BookmarkRepository;
 use App\Repositories\Eloquent\BrandRepository;
 use App\Repositories\Eloquent\CartRepository;
 use App\Repositories\Eloquent\CategoryRepository;
@@ -126,14 +129,12 @@ use App\Services\Order\DateSequenceOrderNumberGenerator;
 use App\Services\Order\OrderService;
 use App\Services\Order\OrderStateMachine;
 use App\Services\Order\ShortCodeOrderNumberGenerator;
-use App\Contracts\Services\PaymentWebhookProcessorInterface;
-use App\Listeners\ReleaseInventoryOnOrderCancelled;
 use App\Services\Payment\ClickPaymentGateway;
 use App\Services\Payment\FakePaymentGateway;
 use App\Services\Payment\LocalPaymentGateway;
+use App\Services\Payment\PaymentWebhookProcessor;
 use App\Services\Payment\PaymePaymentGateway;
 use App\Services\Payment\UzumPaymentGateway;
-use App\Services\Payment\PaymentWebhookProcessor;
 use App\Services\Pricing\ProductPricingService;
 use App\Services\Recommendation\RecommendationService;
 use App\Services\Shipping\FixedShippingCalculator;
@@ -149,6 +150,7 @@ use App\Services\Video\VideoCommerceService;
 use App\Services\Video\VideoInteractionService;
 use App\Services\Video\VideoStateMachine;
 use App\Services\Video\VideoUploadService;
+use App\Services\Wallet\WalletService;
 use App\Storage\Drivers\LocalStorageDriver;
 use App\Storage\Drivers\S3StorageDriver;
 use Illuminate\Support\Facades\Event;
@@ -211,6 +213,7 @@ class RepositoryServiceProvider extends ServiceProvider
         MediaAssetServiceInterface::class => MediaAssetService::class,
         VideoStateMachineInterface::class => VideoStateMachine::class,
         RecommendationServiceInterface::class => RecommendationService::class,
+        WalletServiceInterface::class => WalletService::class,
         SmsProviderInterface::class => StubSmsProvider::class,
         PushNotificationInterface::class => StubFcmPushNotification::class,
     ];

@@ -446,6 +446,72 @@ abstract class AppLocalizations {
   /// **'Birinchi bo\'lib yozing.'**
   String get commentsEmptySubtitle;
 
+  /// No description provided for @buyNow.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sotib olish'**
+  String get buyNow;
+
+  /// No description provided for @shareAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ulashish'**
+  String get shareAction;
+
+  /// No description provided for @moreAction.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yana'**
+  String get moreAction;
+
+  /// No description provided for @linkCopied.
+  ///
+  /// In uz, this message translates to:
+  /// **'Havola nusxalandi'**
+  String get linkCopied;
+
+  /// No description provided for @emojiPickerTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Emoji tanlang'**
+  String get emojiPickerTitle;
+
+  /// No description provided for @commentsCount.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} ta izoh'**
+  String commentsCount(int count);
+
+  /// No description provided for @timeJustNow.
+  ///
+  /// In uz, this message translates to:
+  /// **'hozir'**
+  String get timeJustNow;
+
+  /// No description provided for @timeMinutesShort.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} daq'**
+  String timeMinutesShort(int count);
+
+  /// No description provided for @timeHoursShort.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} soat'**
+  String timeHoursShort(int count);
+
+  /// No description provided for @timeDaysShort.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} kun'**
+  String timeDaysShort(int count);
+
+  /// No description provided for @timeWeeksShort.
+  ///
+  /// In uz, this message translates to:
+  /// **'{count} hafta'**
+  String timeWeeksShort(int count);
+
   /// No description provided for @cartTitle.
   ///
   /// In uz, this message translates to:
@@ -1201,6 +1267,252 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'Shikoyat'**
   String get reportAction;
+
+  /// No description provided for @walletTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hamyon'**
+  String get walletTitle;
+
+  /// No description provided for @walletBalance.
+  ///
+  /// In uz, this message translates to:
+  /// **'Mavjud'**
+  String get walletBalance;
+
+  /// No description provided for @walletHeld.
+  ///
+  /// In uz, this message translates to:
+  /// **'Muzlatilgan'**
+  String get walletHeld;
+
+  /// No description provided for @walletTotal.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jami'**
+  String get walletTotal;
+
+  /// No description provided for @walletTopUp.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'ldirish'**
+  String get walletTopUp;
+
+  /// No description provided for @walletWithdraw.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yechib olish'**
+  String get walletWithdraw;
+
+  /// No description provided for @walletHistory.
+  ///
+  /// In uz, this message translates to:
+  /// **'Amaliyotlar tarixi'**
+  String get walletHistory;
+
+  /// No description provided for @walletNoTransactions.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hozircha amaliyotlar yo\'q'**
+  String get walletNoTransactions;
+
+  /// No description provided for @walletNoTransactionsSubtitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bir bosishda to\'lash uchun hamyonni to\'ldiring.'**
+  String get walletNoTransactionsSubtitle;
+
+  /// No description provided for @walletPendingWithdrawals.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ko\'rib chiqilayotgan yechishlar'**
+  String get walletPendingWithdrawals;
+
+  /// No description provided for @walletTopUpTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hamyonni to\'ldirish'**
+  String get walletTopUpTitle;
+
+  /// No description provided for @walletWithdrawTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Mablag\' yechish'**
+  String get walletWithdrawTitle;
+
+  /// No description provided for @walletAmountLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Summa'**
+  String get walletAmountLabel;
+
+  /// No description provided for @walletAmountHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'0'**
+  String get walletAmountHint;
+
+  /// No description provided for @walletMethodLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Usul'**
+  String get walletMethodLabel;
+
+  /// No description provided for @walletCardNumberLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Karta raqami'**
+  String get walletCardNumberLabel;
+
+  /// No description provided for @walletCardHolderLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Karta egasi'**
+  String get walletCardHolderLabel;
+
+  /// No description provided for @walletFeeLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Komissiya'**
+  String get walletFeeLabel;
+
+  /// No description provided for @walletTotalDebit.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yechiladi'**
+  String get walletTotalDebit;
+
+  /// No description provided for @walletMinAmount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Eng kami {amount}'**
+  String walletMinAmount(String amount);
+
+  /// No description provided for @walletMaxAmount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Eng ko\'pi {amount}'**
+  String walletMaxAmount(String amount);
+
+  /// No description provided for @walletTopUpSuccess.
+  ///
+  /// In uz, this message translates to:
+  /// **'Hamyon to\'ldirildi'**
+  String get walletTopUpSuccess;
+
+  /// No description provided for @walletWithdrawSuccess.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yechish so\'rovi yaratildi'**
+  String get walletWithdrawSuccess;
+
+  /// No description provided for @walletWithdrawCancelled.
+  ///
+  /// In uz, this message translates to:
+  /// **'So\'rov bekor qilindi'**
+  String get walletWithdrawCancelled;
+
+  /// No description provided for @walletCancelWithdrawal.
+  ///
+  /// In uz, this message translates to:
+  /// **'So\'rovni bekor qilish'**
+  String get walletCancelWithdrawal;
+
+  /// No description provided for @walletStatusRequested.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ko\'rib chiqilmoqda'**
+  String get walletStatusRequested;
+
+  /// No description provided for @walletStatusProcessing.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuborilmoqda'**
+  String get walletStatusProcessing;
+
+  /// No description provided for @walletStatusCompleted.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bajarildi'**
+  String get walletStatusCompleted;
+
+  /// No description provided for @walletStatusRejected.
+  ///
+  /// In uz, this message translates to:
+  /// **'Rad etildi'**
+  String get walletStatusRejected;
+
+  /// No description provided for @walletStatusCancelled.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilindi'**
+  String get walletStatusCancelled;
+
+  /// No description provided for @walletStatusPending.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kutilmoqda'**
+  String get walletStatusPending;
+
+  /// No description provided for @walletStatusFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Xatolik'**
+  String get walletStatusFailed;
+
+  /// No description provided for @walletTypeTopUp.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'ldirish'**
+  String get walletTypeTopUp;
+
+  /// No description provided for @walletTypeWithdrawal.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yechish'**
+  String get walletTypeWithdrawal;
+
+  /// No description provided for @walletTypeOrderPayment.
+  ///
+  /// In uz, this message translates to:
+  /// **'Buyurtma to\'lovi'**
+  String get walletTypeOrderPayment;
+
+  /// No description provided for @walletTypeRefund.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qaytarish'**
+  String get walletTypeRefund;
+
+  /// No description provided for @walletTypePayout.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov'**
+  String get walletTypePayout;
+
+  /// No description provided for @walletTypeAdjustment.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tuzatish'**
+  String get walletTypeAdjustment;
+
+  /// No description provided for @walletCardMask.
+  ///
+  /// In uz, this message translates to:
+  /// **'Karta •{last4}'**
+  String walletCardMask(String last4);
+
+  /// No description provided for @walletInvalidAmount.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'g\'ri summa kiriting'**
+  String get walletInvalidAmount;
+
+  /// No description provided for @walletInvalidCard.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'g\'ri karta raqamini kiriting'**
+  String get walletInvalidCard;
 }
 
 class _AppLocalizationsDelegate

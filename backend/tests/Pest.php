@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Models\Video;
 use App\ValueObjects\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 use Tests\TestCase;
 
@@ -46,6 +47,25 @@ function registerUser(string $username, string $email): array
 function analyticsSession(): string
 {
     return (string) Str::uuid();
+}
+
+function ensureRedis(): void
+{
+    $host = (string) config('database.redis.default.host', '127.0.0.1');
+    $port = (int) config('database.redis.default.port', 6379);
+    $socket = @fsockopen($host, $port, $errno, $errstr, 0.25);
+
+    if ($socket === false) {
+        test()->markTestSkipped("Redis is required at {$host}:{$port}");
+    }
+
+    fclose($socket);
+
+    try {
+        Redis::connection()->command('ping');
+    } catch (Throwable $e) {
+        test()->markTestSkipped('Redis is required for this test: '.$e->getMessage());
+    }
 }
 
 function publishedVideo(?User $owner = null): Video

@@ -186,6 +186,49 @@ class AppLocalizationsUz extends AppLocalizations {
   String get commentsEmptySubtitle => 'Birinchi bo\'lib yozing.';
 
   @override
+  String get buyNow => 'Sotib olish';
+
+  @override
+  String get shareAction => 'Ulashish';
+
+  @override
+  String get moreAction => 'Yana';
+
+  @override
+  String get linkCopied => 'Havola nusxalandi';
+
+  @override
+  String get emojiPickerTitle => 'Emoji tanlang';
+
+  @override
+  String commentsCount(int count) {
+    return '$count ta izoh';
+  }
+
+  @override
+  String get timeJustNow => 'hozir';
+
+  @override
+  String timeMinutesShort(int count) {
+    return '$count daq';
+  }
+
+  @override
+  String timeHoursShort(int count) {
+    return '$count soat';
+  }
+
+  @override
+  String timeDaysShort(int count) {
+    return '$count kun';
+  }
+
+  @override
+  String timeWeeksShort(int count) {
+    return '$count hafta';
+  }
+
+  @override
   String get cartTitle => 'Savat';
 
   @override
@@ -603,4 +646,134 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get reportAction => 'Shikoyat';
+
+  @override
+  String get walletTitle => 'Hamyon';
+
+  @override
+  String get walletBalance => 'Mavjud';
+
+  @override
+  String get walletHeld => 'Muzlatilgan';
+
+  @override
+  String get walletTotal => 'Jami';
+
+  @override
+  String get walletTopUp => 'To\'ldirish';
+
+  @override
+  String get walletWithdraw => 'Yechib olish';
+
+  @override
+  String get walletHistory => 'Amaliyotlar tarixi';
+
+  @override
+  String get walletNoTransactions => 'Hozircha amaliyotlar yo\'q';
+
+  @override
+  String get walletNoTransactionsSubtitle =>
+      'Bir bosishda to\'lash uchun hamyonni to\'ldiring.';
+
+  @override
+  String get walletPendingWithdrawals => 'Ko\'rib chiqilayotgan yechishlar';
+
+  @override
+  String get walletTopUpTitle => 'Hamyonni to\'ldirish';
+
+  @override
+  String get walletWithdrawTitle => 'Mablag\' yechish';
+
+  @override
+  String get walletAmountLabel => 'Summa';
+
+  @override
+  String get walletAmountHint => '0';
+
+  @override
+  String get walletMethodLabel => 'Usul';
+
+  @override
+  String get walletCardNumberLabel => 'Karta raqami';
+
+  @override
+  String get walletCardHolderLabel => 'Karta egasi';
+
+  @override
+  String get walletFeeLabel => 'Komissiya';
+
+  @override
+  String get walletTotalDebit => 'Yechiladi';
+
+  @override
+  String walletMinAmount(String amount) {
+    return 'Eng kami $amount';
+  }
+
+  @override
+  String walletMaxAmount(String amount) {
+    return 'Eng ko\'pi $amount';
+  }
+
+  @override
+  String get walletTopUpSuccess => 'Hamyon to\'ldirildi';
+
+  @override
+  String get walletWithdrawSuccess => 'Yechish so\'rovi yaratildi';
+
+  @override
+  String get walletWithdrawCancelled => 'So\'rov bekor qilindi';
+
+  @override
+  String get walletCancelWithdrawal => 'So\'rovni bekor qilish';
+
+  @override
+  String get walletStatusRequested => 'Ko\'rib chiqilmoqda';
+
+  @override
+  String get walletStatusProcessing => 'Yuborilmoqda';
+
+  @override
+  String get walletStatusCompleted => 'Bajarildi';
+
+  @override
+  String get walletStatusRejected => 'Rad etildi';
+
+  @override
+  String get walletStatusCancelled => 'Bekor qilindi';
+
+  @override
+  String get walletStatusPending => 'Kutilmoqda';
+
+  @override
+  String get walletStatusFailed => 'Xatolik';
+
+  @override
+  String get walletTypeTopUp => 'To\'ldirish';
+
+  @override
+  String get walletTypeWithdrawal => 'Yechish';
+
+  @override
+  String get walletTypeOrderPayment => 'Buyurtma to\'lovi';
+
+  @override
+  String get walletTypeRefund => 'Qaytarish';
+
+  @override
+  String get walletTypePayout => 'To\'lov';
+
+  @override
+  String get walletTypeAdjustment => 'Tuzatish';
+
+  @override
+  String walletCardMask(String last4) {
+    return 'Karta •$last4';
+  }
+
+  @override
+  String get walletInvalidAmount => 'To\'g\'ri summa kiriting';
+
+  @override
+  String get walletInvalidCard => 'To\'g\'ri karta raqamini kiriting';
 }
