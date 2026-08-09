@@ -9,6 +9,7 @@ use App\Services\Payment\CardPaymentGateway;
 use App\Services\Payment\ClickPaymentGateway;
 use App\Services\Payment\PaymePaymentGateway;
 use App\Services\Payment\UzumPaymentGateway;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
 function orderIntent(int $total): PaymentIntent
@@ -103,6 +104,44 @@ test('bitcoin sandbox initiate returns crypto fields without api key', function 
         ->and($result->cryptoAmount)->toBe('0.00005000')
         ->and($result->cryptoCurrency)->toBe('BTC')
         ->and($result->qrPayload)->toBe('bitcoin:bc1qtestaddress?amount=0.00005000');
+});
+
+test('bitcoin live initiate converts UZS to USD for NOWPayments', function () {
+    config([
+        'payment.bitcoin.api_key' => 'test-api-key',
+        'payment.bitcoin.api_url' => 'https://api.nowpayments.io/v1',
+        'payment.bitcoin.ipn_callback_url' => 'https://example.test/api/v1/webhooks/bitcoin',
+        'payment.bitcoin.uzs_per_usd' => 10_000,
+        'payment.bitcoin.sandbox_rate_uzs_per_btc' => 1_000_000_000,
+    ]);
+
+    Http::fake([
+        'api.coingecko.com/*' => Http::response(['bitcoin' => ['usd' => 100_000]], 200),
+        'api.nowpayments.io/v1/payment' => Http::response([
+            'payment_id' => 'np-123',
+            'pay_address' => 'bc1qliveaddress',
+            'pay_amount' => 0.00025,
+        ], 201),
+    ]);
+
+    $result = app(BitcoinPaymentGateway::class)->initiate(orderIntent(250_000));
+
+    expect($result->success)->toBeTrue()
+        ->and($result->sandbox)->toBeFalse()
+        ->and($result->cryptoAddress)->toBe('bc1qliveaddress')
+        ->and($result->transactionId)->toBe('np-123');
+
+    Http::assertSent(function ($request) {
+        if (! str_contains($request->url(), '/payment')) {
+            return false;
+        }
+
+        $data = $request->data();
+
+        return (float) $data['price_amount'] === 25.0
+            && $data['price_currency'] === 'usd'
+            && $data['pay_currency'] === 'btc';
+    });
 });
 
 test('card gateway returns sandbox confirm url', function () {

@@ -8,11 +8,16 @@ use App\Contracts\Services\PaymentGatewayInterface;
 use App\DTOs\Payment\PaymentInitiationResult;
 use App\DTOs\Payment\PaymentIntent;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 /**
  * Bitcoin top-up / checkout via NOWPayments-style API.
  * Without BITCOIN_API_KEY, returns a sandbox address + fixed UZS/BTC rate.
+ *
+ * NOWPayments fiat list does not include UZS — invoices are priced in USD
+ * (converted from UZS). Wallet/order amounts stay in UZS; webhooks resolve
+ * the charged amount from our reference, not from IPN fiat fields.
  */
 class BitcoinPaymentGateway implements PaymentGatewayInterface
 {
@@ -100,24 +105,73 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
             return $configured;
         }
 
+        $rates = $this->coingeckoBtcRates();
+        if ($rates['uzs'] > 0) {
+            return $rates['uzs'];
+        }
+
+        if ($rates['usd'] > 0) {
+            $uzsPerUsd = $this->uzsPerUsd($rates['usd']);
+            if ($uzsPerUsd > 0) {
+                return $rates['usd'] * $uzsPerUsd;
+            }
+        }
+
+        return $configured;
+    }
+
+    /**
+     * Convert UZS (integer soms) to a USD amount NOWPayments will accept.
+     */
+    private function amountInUsd(int $amountUzs): float
+    {
+        $uzsPerUsd = $this->uzsPerUsd();
+        if ($uzsPerUsd <= 0) {
+            return 0.0;
+        }
+
+        return round($amountUzs / $uzsPerUsd, 2);
+    }
+
+    private function uzsPerUsd(?float $btcUsd = null): float
+    {
+        $configured = (float) config('payment.bitcoin.uzs_per_usd', 12_500);
+        $rates = $this->coingeckoBtcRates();
+
+        if ($rates['uzs'] > 0 && $rates['usd'] > 0) {
+            return $rates['uzs'] / $rates['usd'];
+        }
+
+        if ($btcUsd !== null && $btcUsd > 0 && $rates['uzs'] > 0) {
+            return $rates['uzs'] / $btcUsd;
+        }
+
+        return $configured > 0 ? $configured : 12_500.0;
+    }
+
+    /**
+     * @return array{usd: float, uzs: float}
+     */
+    private function coingeckoBtcRates(): array
+    {
         try {
             $response = Http::timeout(5)
                 ->get('https://api.coingecko.com/api/v3/simple/price', [
                     'ids' => 'bitcoin',
-                    'vs_currencies' => 'uzs',
+                    'vs_currencies' => 'usd,uzs',
                 ]);
 
             if ($response->successful()) {
-                $rate = (float) data_get($response->json(), 'bitcoin.uzs', 0);
-                if ($rate > 0) {
-                    return $rate;
-                }
+                return [
+                    'usd' => (float) data_get($response->json(), 'bitcoin.usd', 0),
+                    'uzs' => (float) data_get($response->json(), 'bitcoin.uzs', 0),
+                ];
             }
         } catch (\Throwable) {
-            // Fall through to configured sandbox rate.
+            // Fall through.
         }
 
-        return $configured;
+        return ['usd' => 0.0, 'uzs' => 0.0];
     }
 
     private function createNowPaymentsInvoice(
@@ -130,6 +184,19 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
         $baseUrl = rtrim((string) config('payment.bitcoin.api_url', 'https://api.nowpayments.io/v1'), '/');
         $ipnCallback = (string) config('payment.bitcoin.ipn_callback_url', url('/api/v1/webhooks/bitcoin'));
 
+        $fiatCurrency = strtolower($intent->currency);
+        $priceAmount = $intent->amount;
+
+        // NOWPayments does not accept UZS — invoice in USD, settle amount from our reference on IPN.
+        if ($fiatCurrency === 'uzs') {
+            $usd = $this->amountInUsd($intent->amount);
+            if ($usd < 0.01) {
+                return PaymentInitiationResult::failed('Top-up amount is below the Bitcoin minimum.');
+            }
+            $priceAmount = $usd;
+            $fiatCurrency = 'usd';
+        }
+
         try {
             $response = Http::timeout(15)
                 ->withHeaders([
@@ -137,8 +204,8 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
                     'Content-Type' => 'application/json',
                 ])
                 ->post($baseUrl.'/payment', [
-                    'price_amount' => $intent->amount,
-                    'price_currency' => strtolower($intent->currency),
+                    'price_amount' => $priceAmount,
+                    'price_currency' => $fiatCurrency,
                     'pay_currency' => 'btc',
                     'order_id' => $intent->reference,
                     'order_description' => $intent->description,
@@ -149,8 +216,22 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
         }
 
         if (! $response->successful()) {
+            $providerMessage = (string) (
+                data_get($response->json(), 'message')
+                ?? data_get($response->json(), 'error')
+                ?? Str::limit($response->body(), 200)
+            );
+
+            Log::warning('payment.bitcoin.invoice.rejected', [
+                'status' => $response->status(),
+                'body' => $response->json() ?? $response->body(),
+                'price_amount' => $priceAmount,
+                'price_currency' => $fiatCurrency,
+            ]);
+
             return PaymentInitiationResult::failed(
-                'Bitcoin provider rejected the invoice (HTTP '.$response->status().').',
+                'Bitcoin provider rejected the invoice (HTTP '.$response->status().')'
+                .($providerMessage !== '' ? ': '.$providerMessage : '.'),
             );
         }
 

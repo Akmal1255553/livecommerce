@@ -105,8 +105,9 @@ it('credits the wallet when the bitcoin webhook confirms payment', function (): 
         'payment_status' => 'finished',
         'payment_id' => 'np-'.$topUpId,
         'order_id' => 'wt-'.$topUpId,
-        'price_amount' => 200000,
-        'price_currency' => 'uzs',
+        // Provider may echo USD invoice amount — ledger amount still comes from our subject.
+        'price_amount' => 16.0,
+        'price_currency' => 'usd',
     ])->assertOk();
 
     test()->withToken($user['access_token'])

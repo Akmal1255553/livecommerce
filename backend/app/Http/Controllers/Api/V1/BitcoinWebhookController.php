@@ -8,6 +8,7 @@ use App\Contracts\Services\PaymentWebhookProcessorInterface;
 use App\DTOs\Payment\PaymentWebhookData;
 use App\Http\Controllers\Controller;
 use App\Services\Payment\BitcoinPaymentGateway;
+use App\Services\Payment\PaymentSubjectLookup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -18,6 +19,7 @@ class BitcoinWebhookController extends Controller
     public function __construct(
         private readonly BitcoinPaymentGateway $bitcoin,
         private readonly PaymentWebhookProcessorInterface $processor,
+        private readonly PaymentSubjectLookup $subjects,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -57,8 +59,13 @@ class BitcoinWebhookController extends Controller
 
         $orderId = (string) ($payload['order_id'] ?? $payload['orderId'] ?? '');
         $transactionId = (string) ($payload['payment_id'] ?? $payload['transaction_id'] ?? '');
-        $amount = (int) round((float) ($payload['price_amount'] ?? $payload['amount'] ?? 0));
-        $currency = strtoupper((string) ($payload['price_currency'] ?? $payload['currency'] ?? 'UZS'));
+
+        // Invoice fiat may be USD while our ledger is UZS — prefer the subject we created.
+        $subject = $orderId !== '' ? $this->subjects->find($orderId) : null;
+        $amount = $subject?->amount
+            ?? (int) round((float) ($payload['price_amount'] ?? $payload['amount'] ?? 0));
+        $currency = $subject?->currency
+            ?? strtoupper((string) ($payload['price_currency'] ?? $payload['currency'] ?? 'UZS'));
 
         return new PaymentWebhookData(
             event: $success ? 'payment.success' : 'payment.failed',
