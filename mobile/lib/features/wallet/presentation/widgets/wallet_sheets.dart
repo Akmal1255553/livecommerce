@@ -43,8 +43,9 @@ Future<TopUpOutcome?> showBitcoinPaymentDialog(
   );
 }
 
-/// Presets keep the common amounts one tap away instead of typing six zeros.
+/// Card top-ups allow smaller amounts; BTC network floors need larger presets.
 const _topUpPresets = <int>[50000, 100000, 250000, 500000, 1000000];
+const _bitcoinTopUpPresets = <int>[250000, 500000, 1000000, 2000000, 5000000];
 
 class _SheetShell extends StatelessWidget {
   const _SheetShell({required this.title, required this.children});
@@ -227,9 +228,17 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
 
   int get _amount => int.tryParse(_amountController.text.trim()) ?? 0;
 
-  bool get _isValid =>
-      _amount >= widget.wallet.limits.topUpMin &&
-      _amount <= widget.wallet.limits.topUpMax;
+  bool get _isValid {
+    final withinWalletLimits = _amount >= widget.wallet.limits.topUpMin &&
+        _amount <= widget.wallet.limits.topUpMax;
+    if (!withinWalletLimits) {
+      return false;
+    }
+    if (_method == 'bitcoin' && _quote != null && !_quote!.meetsMinimum) {
+      return false;
+    }
+    return true;
+  }
 
   bool get _canSubmit {
     if (!_isValid) return false;
@@ -300,7 +309,9 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
         ),
         const SizedBox(height: AppSpacing.sm),
         _LimitsHint(
-          min: limits.topUpMin,
+          min: _method == 'bitcoin' && (_quote?.minAmount ?? 0) > 0
+              ? _quote!.minAmount
+              : limits.topUpMin,
           max: limits.topUpMax,
           currency: widget.wallet.currency,
         ),
@@ -309,7 +320,8 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
           spacing: AppSpacing.sm,
           runSpacing: AppSpacing.sm,
           children: [
-            for (final preset in _topUpPresets)
+            for (final preset
+                in _method == 'bitcoin' ? _bitcoinTopUpPresets : _topUpPresets)
               _PresetChip(
                 label: formatPrice(preset, widget.wallet.currency),
                 selected: _amount == preset,
@@ -353,7 +365,7 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
             ),
           ],
         ),
-        if (_method == 'bitcoin' && _quote != null && _isValid) ...[
+        if (_method == 'bitcoin' && _quote != null && _amount > 0) ...[
           const SizedBox(height: AppSpacing.lg),
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
@@ -362,9 +374,13 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
               borderRadius: AppRadius.smAll,
             ),
             child: Text(
-              l10n.walletBitcoinApprox(
-                '${_quote!.cryptoAmount} ${_quote!.cryptoCurrency}',
-              ),
+              _quote!.meetsMinimum
+                  ? l10n.walletBitcoinApprox(
+                      '${_quote!.cryptoAmount} ${_quote!.cryptoCurrency}',
+                    )
+                  : l10n.walletBitcoinMinHint(
+                      formatPrice(_quote!.minAmount, widget.wallet.currency),
+                    ),
               style: Theme.of(context).textTheme.titleSmall?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),

@@ -1556,6 +1556,12 @@ abstract class AppLocalizations {
   /// **'≈ {amount}'**
   String walletBitcoinApprox(String amount);
 
+  /// No description provided for @walletBitcoinMinHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bitcoin uchun minimum: {amount}'**
+  String walletBitcoinMinHint(String amount);
+
   /// No description provided for @walletChargeAmount.
   ///
   /// In uz, this message translates to:

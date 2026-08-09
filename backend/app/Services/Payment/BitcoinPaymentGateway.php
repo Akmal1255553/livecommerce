@@ -78,7 +78,15 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
     /**
      * Quote UZS → BTC without creating an invoice.
      *
-     * @return array{crypto_amount: string, crypto_currency: string, exchange_rate: float, amount: int, currency: string}
+     * @return array{
+     *   crypto_amount: string,
+     *   crypto_currency: string,
+     *   exchange_rate: float,
+     *   amount: int,
+     *   currency: string,
+     *   min_amount: int,
+     *   meets_minimum: bool
+     * }
      */
     public function quote(int $amountUzs): array
     {
@@ -86,6 +94,7 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
         $btcAmount = $rate > 0
             ? number_format($amountUzs / $rate, 8, '.', '')
             : '0';
+        $minUzs = $this->minAmountUzs();
 
         return [
             'amount' => $amountUzs,
@@ -93,7 +102,68 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
             'crypto_amount' => $btcAmount,
             'crypto_currency' => 'BTC',
             'exchange_rate' => $rate,
+            'min_amount' => $minUzs,
+            'meets_minimum' => $amountUzs >= $minUzs,
         ];
+    }
+
+    /** Lowest UZS top-up that should clear the NOWPayments BTC minimum. */
+    public function minAmountUzs(): int
+    {
+        $uzsPerUsd = $this->uzsPerUsd();
+        $minUsd = $this->resolvedMinUsd();
+
+        return (int) max(1, (int) ceil($minUsd * $uzsPerUsd));
+    }
+
+    private function resolvedMinUsd(): float
+    {
+        $configured = (float) config('payment.bitcoin.min_usd', 20);
+        $apiKey = (string) config('payment.bitcoin.api_key', '');
+        if ($apiKey === '') {
+            return $configured > 0 ? $configured : 20.0;
+        }
+
+        $providerMin = $this->providerMinUsd($apiKey);
+
+        return max($configured > 0 ? $configured : 20.0, $providerMin);
+    }
+
+    private function providerMinUsd(string $apiKey): float
+    {
+        $baseUrl = rtrim((string) config('payment.bitcoin.api_url', 'https://api.nowpayments.io/v1'), '/');
+
+        try {
+            $response = Http::timeout(8)
+                ->withHeaders(['x-api-key' => $apiKey])
+                ->get($baseUrl.'/min-amount', [
+                    'currency_from' => 'usd',
+                    'currency_to' => 'btc',
+                ]);
+
+            if (! $response->successful()) {
+                return 0.0;
+            }
+
+            $minAmount = (float) data_get($response->json(), 'min_amount', 0);
+            if ($minAmount <= 0) {
+                return 0.0;
+            }
+
+            // Values < 1 are almost always BTC; larger values are USD floors.
+            if ($minAmount < 1.0) {
+                $btcUsd = $this->coingeckoBtcRates()['usd'];
+                if ($btcUsd <= 0) {
+                    $btcUsd = 65_000.0;
+                }
+
+                return round($minAmount * $btcUsd * 1.1, 2);
+            }
+
+            return round($minAmount * 1.1, 2);
+        } catch (\Throwable) {
+            return 0.0;
+        }
     }
 
     private function uzsPerBtc(): float
@@ -190,8 +260,13 @@ class BitcoinPaymentGateway implements PaymentGatewayInterface
         // NOWPayments does not accept UZS — invoice in USD, settle amount from our reference on IPN.
         if ($fiatCurrency === 'uzs') {
             $usd = $this->amountInUsd($intent->amount);
-            if ($usd < 0.01) {
-                return PaymentInitiationResult::failed('Top-up amount is below the Bitcoin minimum.');
+            $minUsd = $this->resolvedMinUsd();
+            if ($usd < $minUsd) {
+                $minUzs = $this->minAmountUzs();
+
+                return PaymentInitiationResult::failed(
+                    'Bitcoin top-up minimum is about '.number_format($minUzs, 0, '.', ' ').' UZS (provider BTC minimum).',
+                );
             }
             $priceAmount = $usd;
             $fiatCurrency = 'usd';

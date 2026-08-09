@@ -211,12 +211,16 @@ class BitcoinQuote {
     required this.cryptoAmount,
     required this.cryptoCurrency,
     required this.exchangeRate,
+    this.minAmount = 0,
+    this.meetsMinimum = true,
   });
 
   final int amount;
   final String cryptoAmount;
   final String cryptoCurrency;
   final double exchangeRate;
+  final int minAmount;
+  final bool meetsMinimum;
 
   factory BitcoinQuote.fromJson(Map<String, dynamic> json) {
     return BitcoinQuote(
@@ -224,6 +228,8 @@ class BitcoinQuote {
       cryptoAmount: json['crypto_amount'] as String? ?? '0',
       cryptoCurrency: json['crypto_currency'] as String? ?? 'BTC',
       exchangeRate: (json['exchange_rate'] as num?)?.toDouble() ?? 0,
+      minAmount: (json['min_amount'] as num?)?.toInt() ?? 0,
+      meetsMinimum: json['meets_minimum'] as bool? ?? true,
     );
   }
 }

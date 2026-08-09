@@ -374,6 +374,10 @@
   "@walletBitcoinApprox": {
     "placeholders": { "amount": { "type": "String" } }
   },
+  "walletBitcoinMinHint": "Bitcoin uchun minimum: {amount}",
+  "@walletBitcoinMinHint": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
   "walletChargeAmount": "Yechiladi: {amount}",
   "@walletChargeAmount": {
     "placeholders": { "amount": { "type": "String" } }

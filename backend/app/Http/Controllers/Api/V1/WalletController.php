@@ -86,6 +86,8 @@ class WalletController extends Controller
                 'crypto_amount' => '0',
                 'crypto_currency' => 'BTC',
                 'exchange_rate' => 0.0,
+                'min_amount' => $this->bitcoin->minAmountUzs(),
+                'meets_minimum' => false,
             ]);
         }
 

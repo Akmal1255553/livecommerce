@@ -112,11 +112,13 @@ test('bitcoin live initiate converts UZS to USD for NOWPayments', function () {
         'payment.bitcoin.api_url' => 'https://api.nowpayments.io/v1',
         'payment.bitcoin.ipn_callback_url' => 'https://example.test/api/v1/webhooks/bitcoin',
         'payment.bitcoin.uzs_per_usd' => 10_000,
+        'payment.bitcoin.min_usd' => 20,
         'payment.bitcoin.sandbox_rate_uzs_per_btc' => 1_000_000_000,
     ]);
 
     Http::fake([
         'api.coingecko.com/*' => Http::response(['bitcoin' => ['usd' => 100_000]], 200),
+        'api.nowpayments.io/v1/min-amount*' => Http::response(['min_amount' => 0.00015], 200),
         'api.nowpayments.io/v1/payment' => Http::response([
             'payment_id' => 'np-123',
             'pay_address' => 'bc1qliveaddress',
@@ -142,6 +144,43 @@ test('bitcoin live initiate converts UZS to USD for NOWPayments', function () {
             && $data['price_currency'] === 'usd'
             && $data['pay_currency'] === 'btc';
     });
+});
+
+test('bitcoin live initiate rejects amounts below BTC network minimum', function () {
+    config([
+        'payment.bitcoin.api_key' => 'test-api-key',
+        'payment.bitcoin.api_url' => 'https://api.nowpayments.io/v1',
+        'payment.bitcoin.uzs_per_usd' => 10_000,
+        'payment.bitcoin.min_usd' => 20,
+        'payment.bitcoin.sandbox_rate_uzs_per_btc' => 1_000_000_000,
+    ]);
+
+    Http::fake([
+        'api.coingecko.com/*' => Http::response(['bitcoin' => ['usd' => 100_000]], 200),
+        'api.nowpayments.io/v1/min-amount*' => Http::response(['min_amount' => 0.00015], 200),
+    ]);
+
+    $result = app(BitcoinPaymentGateway::class)->initiate(orderIntent(50_000));
+
+    expect($result->success)->toBeFalse()
+        ->and($result->failureReason)->toContain('minimum');
+});
+
+test('bitcoin quote includes minimum floor', function () {
+    config([
+        'payment.bitcoin.api_key' => '',
+        'payment.bitcoin.min_usd' => 20,
+        'payment.bitcoin.uzs_per_usd' => 12_500,
+        'payment.bitcoin.sandbox_rate_uzs_per_btc' => 1_000_000_000,
+    ]);
+
+    $quote = app(BitcoinPaymentGateway::class)->quote(50_000);
+
+    expect($quote['min_amount'])->toBe(250_000)
+        ->and($quote['meets_minimum'])->toBeFalse();
+
+    $ok = app(BitcoinPaymentGateway::class)->quote(250_000);
+    expect($ok['meets_minimum'])->toBeTrue();
 });
 
 test('card gateway returns sandbox confirm url', function () {

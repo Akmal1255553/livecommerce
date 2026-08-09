@@ -802,6 +802,11 @@ class AppLocalizationsUz extends AppLocalizations {
   }
 
   @override
+  String walletBitcoinMinHint(String amount) {
+    return 'Bitcoin uchun minimum: $amount';
+  }
+
+  @override
   String walletChargeAmount(String amount) {
     return 'Yechiladi: $amount';
   }

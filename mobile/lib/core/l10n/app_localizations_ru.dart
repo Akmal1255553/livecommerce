@@ -799,6 +799,11 @@ class AppLocalizationsRu extends AppLocalizations {
   }
 
   @override
+  String walletBitcoinMinHint(String amount) {
+    return 'Минимум для Bitcoin: $amount';
+  }
+
+  @override
   String walletChargeAmount(String amount) {
     return 'К списанию: $amount';
   }

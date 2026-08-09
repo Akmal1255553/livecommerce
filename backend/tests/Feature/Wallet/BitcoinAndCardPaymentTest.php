@@ -83,6 +83,11 @@ it('initiates a sandbox bitcoin top-up with address and qr payload', function ()
 });
 
 it('returns a live bitcoin quote without creating a top-up', function (): void {
+    config([
+        'payment.bitcoin.min_usd' => 20,
+        'payment.bitcoin.uzs_per_usd' => 12_500,
+    ]);
+
     $user = btcUser();
 
     test()->withToken($user['access_token'])
@@ -90,7 +95,14 @@ it('returns a live bitcoin quote without creating a top-up', function (): void {
         ->assertOk()
         ->assertJsonPath('data.crypto_amount', '0.00025000')
         ->assertJsonPath('data.crypto_currency', 'BTC')
-        ->assertJsonPath('data.exchange_rate', 1000000000);
+        ->assertJsonPath('data.exchange_rate', 1000000000)
+        ->assertJsonPath('data.min_amount', 250000)
+        ->assertJsonPath('data.meets_minimum', true);
+
+    test()->withToken($user['access_token'])
+        ->getJson('/api/v1/wallet/bitcoin-quote?amount=50000')
+        ->assertOk()
+        ->assertJsonPath('data.meets_minimum', false);
 });
 
 it('credits the wallet when the bitcoin webhook confirms payment', function (): void {

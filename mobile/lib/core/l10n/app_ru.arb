@@ -374,6 +374,10 @@
   "@walletBitcoinApprox": {
     "placeholders": { "amount": { "type": "String" } }
   },
+  "walletBitcoinMinHint": "Минимум для Bitcoin: {amount}",
+  "@walletBitcoinMinHint": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
   "walletChargeAmount": "К списанию: {amount}",
   "@walletChargeAmount": {
     "placeholders": { "amount": { "type": "String" } }
