@@ -8,12 +8,16 @@ use App\Contracts\Services\WalletServiceInterface;
 use App\DTOs\Wallet\TopUpData;
 use App\DTOs\Wallet\WithdrawalData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Wallet\StorePaymentCardRequest;
 use App\Http\Requests\Wallet\TopUpRequest;
 use App\Http\Requests\Wallet\WithdrawalRequest;
+use App\Http\Resources\UserPaymentCardResource;
 use App\Http\Resources\WalletResource;
 use App\Http\Resources\WalletTransactionResource;
 use App\Http\Resources\WalletWithdrawalResource;
 use App\Http\Responses\ApiResponse;
+use App\Services\Payment\BitcoinPaymentGateway;
+use App\Services\Wallet\PaymentCardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -21,6 +25,8 @@ class WalletController extends Controller
 {
     public function __construct(
         private readonly WalletServiceInterface $wallet,
+        private readonly PaymentCardService $cards,
+        private readonly BitcoinPaymentGateway $bitcoin,
     ) {}
 
     public function show(Request $request): JsonResponse
@@ -53,13 +59,67 @@ class WalletController extends Controller
                 amount: (int) $request->integer('amount'),
                 method: $request->string('method')->toString(),
                 reference: $request->input('reference'),
+                paymentMethodId: $request->input('payment_method_id'),
             ),
         );
 
         return ApiResponse::created([
             'transaction' => new WalletTransactionResource($result->transaction),
             'payment_url' => $result->paymentUrl,
+            'crypto_address' => $result->cryptoAddress,
+            'crypto_amount' => $result->cryptoAmount,
+            'crypto_currency' => $result->cryptoCurrency,
+            'exchange_rate' => $result->exchangeRate,
+            'expires_at' => $result->expiresAt,
+            'qr_payload' => $result->qrPayload,
         ]);
+    }
+
+    public function bitcoinQuote(Request $request): JsonResponse
+    {
+        $amount = (int) $request->query('amount', 0);
+
+        if ($amount < 1) {
+            return ApiResponse::success([
+                'amount' => 0,
+                'currency' => 'UZS',
+                'crypto_amount' => '0',
+                'crypto_currency' => 'BTC',
+                'exchange_rate' => 0.0,
+            ]);
+        }
+
+        return ApiResponse::success($this->bitcoin->quote($amount));
+    }
+
+    public function cards(Request $request): JsonResponse
+    {
+        return ApiResponse::success(
+            UserPaymentCardResource::collection(
+                $this->cards->listFor($request->user()->id),
+            ),
+        );
+    }
+
+    public function storeCard(StorePaymentCardRequest $request): JsonResponse
+    {
+        $card = $this->cards->store(
+            $request->user()->id,
+            $request->string('card_number')->toString(),
+            $request->string('holder_name')->toString(),
+            (int) $request->integer('exp_month'),
+            (int) $request->integer('exp_year'),
+            $request->boolean('is_default', false),
+        );
+
+        return ApiResponse::created(new UserPaymentCardResource($card));
+    }
+
+    public function destroyCard(Request $request, string $id): JsonResponse
+    {
+        $this->cards->delete($request->user()->id, $id);
+
+        return ApiResponse::success(['deleted' => true]);
     }
 
     /** Sandbox confirmation stands in for a provider callback until one exists. */

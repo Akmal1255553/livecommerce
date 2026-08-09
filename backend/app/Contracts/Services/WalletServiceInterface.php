@@ -55,6 +55,30 @@ interface WalletServiceInterface
     /** Settles a pending top-up; safe to call twice with the same outcome. */
     public function completeTopUp(string $userId, string $transactionId, bool $success): WalletTransaction;
 
+    /**
+     * Credits a top-up confirmed by a payment provider.
+     *
+     * Runs without a user context — the webhook only carries the payment reference.
+     * Amount and currency are checked against the pending transaction, so a provider
+     * cannot credit more than the user asked for.
+     *
+     * @param  string  $reference  merchant transaction id echoed back by the provider
+     *
+     * @throws ValidationException when the webhook disagrees with the pending top-up
+     */
+    public function creditTopUpFromGateway(
+        string $reference,
+        string $gatewayTransactionId,
+        int $amount,
+        string $currency,
+    ): WalletTransaction;
+
+    /** Marks a top-up failed after the provider declined it. */
+    public function failTopUpFromGateway(string $reference, ?string $reason = null): WalletTransaction;
+
+    /** Amount a provider is expected to charge for a pending top-up, or null if unknown. */
+    public function pendingTopUpFor(string $reference): ?WalletTransaction;
+
     public function requestWithdrawal(string $userId, WithdrawalData $data): WalletWithdrawal;
 
     public function cancelWithdrawal(string $userId, string $withdrawalId): WalletWithdrawal;

@@ -21,7 +21,7 @@ function walletUser(): array
 function fundWallet(array $user, int $amount): void
 {
     $transactionId = test()->withToken($user['access_token'])
-        ->postJson('/api/v1/wallet/topups', ['amount' => $amount, 'method' => 'click'])
+        ->postJson('/api/v1/wallet/topups', ['amount' => $amount, 'method' => 'bitcoin'])
         ->assertCreated()
         ->json('data.transaction.id');
 
@@ -47,7 +47,7 @@ it('credits the wallet only after the top-up is confirmed', function (): void {
     $user = walletUser();
 
     $response = test()->withToken($user['access_token'])
-        ->postJson('/api/v1/wallet/topups', ['amount' => 500000, 'method' => 'click'])
+        ->postJson('/api/v1/wallet/topups', ['amount' => 500000, 'method' => 'bitcoin'])
         ->assertCreated()
         ->assertJsonPath('data.transaction.status', 'pending');
 
@@ -72,7 +72,7 @@ it('does not double credit when the top-up is confirmed twice', function (): voi
     $user = walletUser();
 
     $transactionId = test()->withToken($user['access_token'])
-        ->postJson('/api/v1/wallet/topups', ['amount' => 100000, 'method' => 'payme'])
+        ->postJson('/api/v1/wallet/topups', ['amount' => 100000, 'method' => 'bitcoin'])
         ->assertCreated()
         ->json('data.transaction.id');
 
@@ -91,7 +91,7 @@ it('rejects a top-up below the configured minimum', function (): void {
     $user = walletUser();
 
     test()->withToken($user['access_token'])
-        ->postJson('/api/v1/wallet/topups', ['amount' => 1, 'method' => 'click'])
+        ->postJson('/api/v1/wallet/topups', ['amount' => 1, 'method' => 'bitcoin'])
         ->assertStatus(422);
 });
 

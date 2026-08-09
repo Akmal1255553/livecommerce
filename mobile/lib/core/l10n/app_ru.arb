@@ -342,6 +342,10 @@
     "placeholders": { "amount": { "type": "String" } }
   },
   "walletTopUpSuccess": "Кошелёк пополнен",
+  "walletTopUpWaiting": "Ждём подтверждения оплаты…",
+  "walletTopUpPending": "Оплата ещё не подтверждена. Баланс обновится, как только придёт подтверждение.",
+  "walletTopUpFailed": "Оплата не прошла",
+  "walletTopUpOpenFailed": "Не удалось открыть страницу оплаты",
   "walletWithdrawSuccess": "Заявка на вывод создана",
   "walletWithdrawCancelled": "Заявка отменена",
   "walletCancelWithdrawal": "Отменить заявку",
@@ -363,5 +367,36 @@
     "placeholders": { "last4": { "type": "String" } }
   },
   "walletInvalidAmount": "Введите корректную сумму",
-  "walletInvalidCard": "Введите корректный номер карты"
+  "walletInvalidCard": "Введите корректный номер карты",
+  "walletMethodBitcoin": "Bitcoin",
+  "walletMethodCard": "Карта",
+  "walletBitcoinApprox": "≈ {amount}",
+  "@walletBitcoinApprox": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletChargeAmount": "К списанию: {amount}",
+  "@walletChargeAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletChargeFromCard": "С карты •••• {last4} будет списано {amount}",
+  "@walletChargeFromCard": {
+    "placeholders": {
+      "last4": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "walletAddCard": "Добавить карту",
+  "walletSaveCard": "Сохранить",
+  "walletCancelAddCard": "Отмена",
+  "walletCardExpMonth": "Месяц",
+  "walletCardExpYear": "Год",
+  "walletBitcoinPayTitle": "Оплата Bitcoin",
+  "walletCopyAddress": "Копировать адрес",
+  "walletAddressCopied": "Адрес скопирован",
+  "walletBitcoinConfirmPaid": "Я оплатил",
+  "walletBitcoinClose": "Закрыть",
+  "walletBitcoinExpires": "Действует до {time}",
+  "@walletBitcoinExpires": {
+    "placeholders": { "time": { "type": "String" } }
+  }
 }

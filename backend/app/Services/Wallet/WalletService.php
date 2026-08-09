@@ -6,6 +6,7 @@ namespace App\Services\Wallet;
 
 use App\Contracts\Services\WalletServiceInterface;
 use App\DTOs\Pagination\CursorPaginationData;
+use App\DTOs\Payment\PaymentIntent;
 use App\DTOs\Wallet\TopUpData;
 use App\DTOs\Wallet\TopUpResult;
 use App\DTOs\Wallet\WithdrawalData;
@@ -14,10 +15,14 @@ use App\Enums\WalletTransactionType;
 use App\Enums\WithdrawalStatus;
 use App\Exceptions\Domain\ConflictException;
 use App\Exceptions\Domain\ResourceNotFoundException;
+use App\Exceptions\PaymentFailedException;
+use App\Logging\StructuredLogger;
 use App\Models\Wallet;
 use App\Models\WalletTransaction;
 use App\Models\WalletWithdrawal;
 use App\Services\BaseService;
+use App\Services\Payment\PaymentGatewayResolver;
+use App\Services\Wallet\PaymentCardService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -32,6 +37,14 @@ use Illuminate\Validation\ValidationException;
  */
 class WalletService extends BaseService implements WalletServiceInterface
 {
+    public function __construct(
+        StructuredLogger $logger,
+        private readonly PaymentGatewayResolver $gateways,
+        private readonly PaymentCardService $cards,
+    ) {
+        parent::__construct($logger);
+    }
+
     public function walletFor(string $userId): Wallet
     {
         $wallet = Wallet::query()->where('user_id', $userId)->first();
@@ -119,6 +132,20 @@ class WalletService extends BaseService implements WalletServiceInterface
             ]);
         }
 
+        if ($data->method === 'card') {
+            if ($data->paymentMethodId === null || $data->paymentMethodId === '') {
+                throw ValidationException::withMessages([
+                    'payment_method_id' => ['A saved card is required for card top-up.'],
+                ]);
+            }
+
+            if ($this->cards->findOwned($userId, $data->paymentMethodId) === null) {
+                throw ValidationException::withMessages([
+                    'payment_method_id' => ['Payment card not found.'],
+                ]);
+            }
+        }
+
         $wallet = $this->walletFor($userId);
         $reference = $data->reference ?? 'topup-'.Str::uuid()->toString();
 
@@ -137,9 +164,12 @@ class WalletService extends BaseService implements WalletServiceInterface
             'method' => $data->method,
             'reference' => $reference,
             'description' => 'Wallet top-up',
+            'metadata' => $data->paymentMethodId !== null
+                ? ['payment_method_id' => $data->paymentMethodId]
+                : null,
         ]);
 
-        return new TopUpResult($transaction, $this->topUpPaymentUrl($transaction));
+        return $this->initiateTopUpPayment($transaction);
     }
 
     public function completeTopUp(string $userId, string $transactionId, bool $success): WalletTransaction
@@ -184,6 +214,109 @@ class WalletService extends BaseService implements WalletServiceInterface
                 'transaction_id' => $transaction->id,
                 'amount' => $transaction->amount,
             ]);
+
+            return $transaction;
+        });
+    }
+
+    public function pendingTopUpFor(string $reference): ?WalletTransaction
+    {
+        if (! PaymentIntent::isWalletTopUpReference($reference)) {
+            return null;
+        }
+
+        $transactionId = PaymentIntent::walletTransactionIdFrom($reference);
+
+        if (! Str::isUuid($transactionId)) {
+            return null;
+        }
+
+        return WalletTransaction::query()
+            ->where('type', WalletTransactionType::TopUp)
+            ->find($transactionId);
+    }
+
+    public function creditTopUpFromGateway(
+        string $reference,
+        string $gatewayTransactionId,
+        int $amount,
+        string $currency,
+    ): WalletTransaction {
+        $pending = $this->pendingTopUpFor($reference);
+
+        if ($pending === null) {
+            throw new ResourceNotFoundException('Top-up not found.');
+        }
+
+        return DB::transaction(function () use ($pending, $gatewayTransactionId, $amount, $currency): WalletTransaction {
+            // Wallet before transaction — same lock order as every other writer here.
+            $wallet = Wallet::query()->lockForUpdate()->findOrFail($pending->wallet_id);
+            $transaction = WalletTransaction::query()->lockForUpdate()->findOrFail($pending->id);
+
+            if ($transaction->status->isFinal()) {
+                return $transaction;
+            }
+
+            if ($transaction->amount !== $amount) {
+                throw ValidationException::withMessages([
+                    'amount' => ['Callback amount does not match the top-up.'],
+                ]);
+            }
+
+            if ($currency !== '' && strtoupper($currency) !== strtoupper($transaction->currency)) {
+                throw ValidationException::withMessages([
+                    'currency' => ['Callback currency does not match the top-up.'],
+                ]);
+            }
+
+            $wallet->available_balance += $transaction->amount;
+            $wallet->save();
+
+            $transaction->status = WalletTransactionStatus::Completed;
+            $transaction->balance_after = $wallet->available_balance;
+            $transaction->completed_at = now();
+            $transaction->metadata = array_merge($transaction->metadata ?? [], [
+                'gateway_transaction_id' => $gatewayTransactionId,
+            ]);
+            $transaction->save();
+
+            $this->logger->info('wallet.topup.completed', [
+                'wallet_id' => $wallet->id,
+                'transaction_id' => $transaction->id,
+                'amount' => $transaction->amount,
+                'source' => 'gateway',
+                'gateway_transaction_id' => $gatewayTransactionId,
+            ]);
+
+            return $transaction;
+        });
+    }
+
+    public function failTopUpFromGateway(string $reference, ?string $reason = null): WalletTransaction
+    {
+        $pending = $this->pendingTopUpFor($reference);
+
+        if ($pending === null) {
+            throw new ResourceNotFoundException('Top-up not found.');
+        }
+
+        return DB::transaction(function () use ($pending, $reason): WalletTransaction {
+            $transaction = WalletTransaction::query()->lockForUpdate()->findOrFail($pending->id);
+
+            if ($transaction->status->isFinal()) {
+                return $transaction;
+            }
+
+            $transaction->status = WalletTransactionStatus::Failed;
+            $transaction->completed_at = now();
+
+            if ($reason !== null) {
+                $transaction->metadata = array_merge($transaction->metadata ?? [], [
+                    'failure_reason' => $reason,
+                ]);
+            }
+
+            $transaction->save();
 
             return $transaction;
         });
@@ -486,12 +619,62 @@ class WalletService extends BaseService implements WalletServiceInterface
         return (int) ceil($amount * $percent / 100);
     }
 
-    private function topUpPaymentUrl(WalletTransaction $transaction): ?string
+    /**
+     * Hands the top-up to the method-specific provider and returns checkout details.
+     *
+     * Drivers without a redirect (fake, and providers still missing credentials)
+     * return no URL; sandbox confirmation then stands in for the provider callback,
+     * and outside sandbox the caller gets nothing to open rather than free money.
+     */
+    private function initiateTopUpPayment(WalletTransaction $transaction): TopUpResult
     {
         if ($transaction->status->isFinal()) {
-            return null;
+            return new TopUpResult($transaction, null);
         }
 
-        return url('/api/v1/wallet/topups/'.$transaction->id.'/confirm');
+        $gateway = $this->gateways->resolve($transaction->method);
+        $payment = $gateway->initiate(PaymentIntent::forWalletTopUp($transaction));
+
+        if (! $payment->success) {
+            throw new PaymentFailedException($payment->failureReason ?? 'Top-up could not be started.');
+        }
+
+        // Merchant credentials missing and no sandbox to fall back on: refuse rather
+        // than hand out a link that cannot move real money.
+        if ($payment->sandbox && ! (bool) config('wallet.sandbox_enabled')) {
+            throw new PaymentFailedException('Top-up is unavailable: no payment provider is configured.');
+        }
+
+        $meta = array_merge($transaction->metadata ?? [], [
+            'gateway' => $gateway->name(),
+            'gateway_transaction_id' => $payment->transactionId,
+        ]);
+
+        if ($payment->cryptoAddress !== null) {
+            $meta['crypto_address'] = $payment->cryptoAddress;
+            $meta['crypto_amount'] = $payment->cryptoAmount;
+            $meta['crypto_currency'] = $payment->cryptoCurrency;
+            $meta['exchange_rate'] = $payment->exchangeRate;
+            $meta['expires_at'] = $payment->expiresAt;
+            $meta['qr_payload'] = $payment->qrPayload;
+        }
+
+        $transaction->metadata = $meta;
+        $transaction->save();
+
+        // Drivers without a redirect leave sandbox confirmation as the callback.
+        $paymentUrl = $payment->paymentUrl
+            ?? url('/api/v1/wallet/topups/'.$transaction->id.'/confirm');
+
+        return new TopUpResult(
+            transaction: $transaction,
+            paymentUrl: $paymentUrl,
+            cryptoAddress: $payment->cryptoAddress,
+            cryptoAmount: $payment->cryptoAmount,
+            cryptoCurrency: $payment->cryptoCurrency,
+            exchangeRate: $payment->exchangeRate,
+            expiresAt: $payment->expiresAt,
+            qrPayload: $payment->qrPayload,
+        );
     }
 }

@@ -33,12 +33,59 @@ class WalletRemoteDataSource {
   Future<TopUpIntent> startTopUp({
     required int amount,
     required String method,
+    String? paymentMethodId,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/wallet/topups',
-      data: {'amount': amount, 'method': method},
+      data: {
+        'amount': amount,
+        'method': method,
+        if (paymentMethodId != null) 'payment_method_id': paymentMethodId,
+      },
     );
     return TopUpIntent.fromJson(response.data!['data'] as Map<String, dynamic>);
+  }
+
+  Future<BitcoinQuote> bitcoinQuote(int amount) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/wallet/bitcoin-quote',
+      queryParameters: {'amount': amount},
+    );
+    return BitcoinQuote.fromJson(
+      response.data!['data'] as Map<String, dynamic>,
+    );
+  }
+
+  Future<List<PaymentCard>> fetchCards() async {
+    final response = await _dio.get<Map<String, dynamic>>('/wallet/cards');
+    final data = response.data!['data'] as List<dynamic>;
+    return data
+        .map((item) => PaymentCard.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<PaymentCard> storeCard({
+    required String cardNumber,
+    required String holderName,
+    required int expMonth,
+    required int expYear,
+    bool isDefault = false,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/wallet/cards',
+      data: {
+        'card_number': cardNumber,
+        'holder_name': holderName,
+        'exp_month': expMonth,
+        'exp_year': expYear,
+        'is_default': isDefault,
+      },
+    );
+    return PaymentCard.fromJson(response.data!['data'] as Map<String, dynamic>);
+  }
+
+  Future<void> deleteCard(String id) async {
+    await _dio.delete<Map<String, dynamic>>('/wallet/cards/$id');
   }
 
   Future<WalletTransaction> confirmTopUp({
@@ -103,12 +150,55 @@ class WalletRepository {
   Future<WalletTransactionPage> listTransactions({String? cursor}) =>
       _remote.fetchTransactions(cursor: cursor);
 
-  Future<TopUpIntent> startTopUp({required int amount, required String method}) =>
-      _remote.startTopUp(amount: amount, method: method);
+  Future<TopUpIntent> startTopUp({
+    required int amount,
+    required String method,
+    String? paymentMethodId,
+  }) =>
+      _remote.startTopUp(
+        amount: amount,
+        method: method,
+        paymentMethodId: paymentMethodId,
+      );
+
+  Future<BitcoinQuote> bitcoinQuote(int amount) =>
+      _remote.bitcoinQuote(amount);
+
+  Future<List<PaymentCard>> listCards() => _remote.fetchCards();
+
+  Future<PaymentCard> storeCard({
+    required String cardNumber,
+    required String holderName,
+    required int expMonth,
+    required int expYear,
+    bool isDefault = false,
+  }) =>
+      _remote.storeCard(
+        cardNumber: cardNumber,
+        holderName: holderName,
+        expMonth: expMonth,
+        expYear: expYear,
+        isDefault: isDefault,
+      );
+
+  Future<void> deleteCard(String id) => _remote.deleteCard(id);
 
   Future<WalletTransaction> confirmTopUp(String transactionId,
           {bool success = true}) =>
       _remote.confirmTopUp(transactionId: transactionId, success: success);
+
+  /// Recent transactions are enough to follow a top-up we just started.
+  Future<WalletTransaction?> findTransaction(String id) async {
+    final page = await _remote.fetchTransactions();
+
+    for (final transaction in page.items) {
+      if (transaction.id == id) {
+        return transaction;
+      }
+    }
+
+    return null;
+  }
 
   Future<List<WalletWithdrawal>> listWithdrawals() => _remote.fetchWithdrawals();
 

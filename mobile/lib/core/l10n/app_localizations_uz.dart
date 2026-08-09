@@ -719,6 +719,19 @@ class AppLocalizationsUz extends AppLocalizations {
   String get walletTopUpSuccess => 'Hamyon to\'ldirildi';
 
   @override
+  String get walletTopUpWaiting => 'To\'lov tasdiqlanishini kutmoqdamiz…';
+
+  @override
+  String get walletTopUpPending =>
+      'To\'lov hali tasdiqlanmadi. Tasdiq kelishi bilan balans yangilanadi.';
+
+  @override
+  String get walletTopUpFailed => 'To\'lov amalga oshmadi';
+
+  @override
+  String get walletTopUpOpenFailed => 'To\'lov sahifasini ochib bo\'lmadi';
+
+  @override
   String get walletWithdrawSuccess => 'Yechish so\'rovi yaratildi';
 
   @override
@@ -776,4 +789,60 @@ class AppLocalizationsUz extends AppLocalizations {
 
   @override
   String get walletInvalidCard => 'To\'g\'ri karta raqamini kiriting';
+
+  @override
+  String get walletMethodBitcoin => 'Bitcoin';
+
+  @override
+  String get walletMethodCard => 'Karta';
+
+  @override
+  String walletBitcoinApprox(String amount) {
+    return '≈ $amount';
+  }
+
+  @override
+  String walletChargeAmount(String amount) {
+    return 'Yechiladi: $amount';
+  }
+
+  @override
+  String walletChargeFromCard(String last4, String amount) {
+    return '•••• $last4 kartasidan $amount yechiladi';
+  }
+
+  @override
+  String get walletAddCard => 'Karta qo\'shish';
+
+  @override
+  String get walletSaveCard => 'Saqlash';
+
+  @override
+  String get walletCancelAddCard => 'Bekor qilish';
+
+  @override
+  String get walletCardExpMonth => 'Oy';
+
+  @override
+  String get walletCardExpYear => 'Yil';
+
+  @override
+  String get walletBitcoinPayTitle => 'Bitcoin to\'lovi';
+
+  @override
+  String get walletCopyAddress => 'Manzilni nusxalash';
+
+  @override
+  String get walletAddressCopied => 'Manzil nusxalandi';
+
+  @override
+  String get walletBitcoinConfirmPaid => 'To\'ladim';
+
+  @override
+  String get walletBitcoinClose => 'Yopish';
+
+  @override
+  String walletBitcoinExpires(String time) {
+    return '$time gacha amal qiladi';
+  }
 }

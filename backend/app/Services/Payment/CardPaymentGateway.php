@@ -10,24 +10,21 @@ use App\DTOs\Payment\PaymentIntent;
 use Illuminate\Support\Str;
 
 /**
- * Sandbox adapter for Uzbekistan gateways (Click / Payme / Uzum).
- * Returns a payment URL; order stays awaiting_payment until webhook / sandbox complete.
+ * Sandbox card charge for wallet top-up / checkout.
+ * Production will bind a PSP token (Click/Payme); MVP settles via sandbox confirm.
  */
-class LocalPaymentGateway implements PaymentGatewayInterface
+class CardPaymentGateway implements PaymentGatewayInterface
 {
     public function name(): string
     {
-        $driver = (string) config('payment.driver', 'local');
-
-        return in_array($driver, ['click', 'payme', 'uzum', 'local'], true)
-            ? $driver
-            : 'local';
+        return 'card';
     }
 
     public function initiate(PaymentIntent $intent): PaymentInitiationResult
     {
-        $transactionId = $this->name().'-'.Str::uuid()->toString();
+        $transactionId = 'card-'.Str::uuid()->toString();
 
+        // No external checkout: mobile (or sandbox confirm) settles the charge.
         return PaymentInitiationResult::succeeded(
             transactionId: $transactionId,
             paymentUrl: $intent->sandboxUrlFor($transactionId),

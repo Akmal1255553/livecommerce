@@ -2,11 +2,24 @@
 
 declare(strict_types=1);
 
+use App\DTOs\Payment\PaymentIntent;
+use App\Models\Order;
+use App\Services\Payment\BitcoinPaymentGateway;
+use App\Services\Payment\CardPaymentGateway;
 use App\Services\Payment\ClickPaymentGateway;
 use App\Services\Payment\PaymePaymentGateway;
 use App\Services\Payment\UzumPaymentGateway;
-use App\Models\Order;
 use Illuminate\Support\Str;
+
+function orderIntent(int $total): PaymentIntent
+{
+    $order = new Order;
+    $order->id = (string) Str::uuid();
+    $order->total = $total;
+    $order->currency = 'UZS';
+
+    return PaymentIntent::forOrder($order);
+}
 
 beforeEach(function () {
     config([
@@ -25,12 +38,7 @@ beforeEach(function () {
 });
 
 test('click gateway builds my.click.uz payment url', function () {
-    $order = new Order;
-    $order->id = (string) Str::uuid();
-    $order->total = 50000;
-    $order->currency = 'UZS';
-
-    $result = app(ClickPaymentGateway::class)->initiate($order);
+    $result = app(ClickPaymentGateway::class)->initiate(orderIntent(50000));
 
     expect($result->success)->toBeTrue()
         ->and($result->transactionId)->toStartWith('click-pending-')
@@ -63,28 +71,45 @@ test('click sign verification accepts prepare digest', function () {
 });
 
 test('payme gateway builds checkout.paycom.uz url', function () {
-    $order = new Order;
-    $order->id = (string) Str::uuid();
-    $order->total = 25000;
-    $order->currency = 'UZS';
-
-    $result = app(PaymePaymentGateway::class)->initiate($order);
+    $result = app(PaymePaymentGateway::class)->initiate(orderIntent(25000));
 
     expect($result->paymentUrl)->toStartWith('https://checkout.paycom.uz/')
         ->and($result->transactionId)->toStartWith('payme-pending-');
 });
 
 test('uzum gateway builds checkout url with hmac-ready secret', function () {
-    $order = new Order;
-    $order->id = (string) Str::uuid();
-    $order->total = 12000;
-    $order->currency = 'UZS';
-
+    $intent = orderIntent(12000);
     $gateway = app(UzumPaymentGateway::class);
-    $result = $gateway->initiate($order);
-    $raw = '{"event":"payment.success","transaction_id":"u1","order_id":"'.$order->id.'","amount":12000,"currency":"UZS"}';
+    $result = $gateway->initiate($intent);
+    $raw = '{"event":"payment.success","transaction_id":"u1","order_id":"'.$intent->reference.'","amount":12000,"currency":"UZS"}';
     $sig = hash_hmac('sha256', $raw, 'uzum-secret');
 
     expect($result->paymentUrl)->toContain('checkout.uzumbank.uz')
         ->and($gateway->verifyWebhookSignature($raw, $sig))->toBeTrue();
+});
+
+test('bitcoin sandbox initiate returns crypto fields without api key', function () {
+    config([
+        'payment.bitcoin.api_key' => '',
+        'payment.bitcoin.sandbox_rate_uzs_per_btc' => 2_000_000_000,
+        'payment.bitcoin.sandbox_address' => 'bc1qtestaddress',
+    ]);
+
+    $result = app(BitcoinPaymentGateway::class)->initiate(orderIntent(100000));
+
+    expect($result->success)->toBeTrue()
+        ->and($result->sandbox)->toBeTrue()
+        ->and($result->cryptoAddress)->toBe('bc1qtestaddress')
+        ->and($result->cryptoAmount)->toBe('0.00005000')
+        ->and($result->cryptoCurrency)->toBe('BTC')
+        ->and($result->qrPayload)->toBe('bitcoin:bc1qtestaddress?amount=0.00005000');
+});
+
+test('card gateway returns sandbox confirm url', function () {
+    $result = app(CardPaymentGateway::class)->initiate(orderIntent(50000));
+
+    expect($result->success)->toBeTrue()
+        ->and($result->sandbox)->toBeTrue()
+        ->and($result->transactionId)->toStartWith('card-')
+        ->and($result->paymentUrl)->toContain('/payments/sandbox/');
 });

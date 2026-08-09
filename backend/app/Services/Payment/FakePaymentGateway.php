@@ -6,7 +6,7 @@ namespace App\Services\Payment;
 
 use App\Contracts\Services\PaymentGatewayInterface;
 use App\DTOs\Payment\PaymentInitiationResult;
-use App\Models\Order;
+use App\DTOs\Payment\PaymentIntent;
 
 /**
  * Instant success — used in Feature tests and PAYMENT_GATEWAY=fake.
@@ -19,10 +19,11 @@ class FakePaymentGateway implements PaymentGatewayInterface
         return 'fake';
     }
 
-    public function initiate(Order $order): PaymentInitiationResult
+    public function initiate(PaymentIntent $intent): PaymentInitiationResult
     {
         return PaymentInitiationResult::succeeded(
-            transactionId: 'fake-'.$order->id,
+            transactionId: 'fake-'.$intent->reference,
+            sandbox: true,
         );
     }
 

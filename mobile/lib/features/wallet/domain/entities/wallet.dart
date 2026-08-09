@@ -164,10 +164,30 @@ class WalletTransactionPage {
 }
 
 class TopUpIntent {
-  const TopUpIntent({required this.transaction, this.paymentUrl});
+  const TopUpIntent({
+    required this.transaction,
+    this.paymentUrl,
+    this.cryptoAddress,
+    this.cryptoAmount,
+    this.cryptoCurrency,
+    this.exchangeRate,
+    this.expiresAt,
+    this.qrPayload,
+  });
 
   final WalletTransaction transaction;
   final String? paymentUrl;
+  final String? cryptoAddress;
+  final String? cryptoAmount;
+  final String? cryptoCurrency;
+  final double? exchangeRate;
+  final String? expiresAt;
+  final String? qrPayload;
+
+  bool get isBitcoin =>
+      cryptoAddress != null &&
+      cryptoAddress!.isNotEmpty &&
+      (qrPayload != null || cryptoAmount != null);
 
   factory TopUpIntent.fromJson(Map<String, dynamic> json) {
     return TopUpIntent(
@@ -175,6 +195,67 @@ class TopUpIntent {
         unwrapApiResource(json['transaction']),
       ),
       paymentUrl: json['payment_url'] as String?,
+      cryptoAddress: json['crypto_address'] as String?,
+      cryptoAmount: json['crypto_amount'] as String?,
+      cryptoCurrency: json['crypto_currency'] as String?,
+      exchangeRate: (json['exchange_rate'] as num?)?.toDouble(),
+      expiresAt: json['expires_at'] as String?,
+      qrPayload: json['qr_payload'] as String?,
+    );
+  }
+}
+
+class BitcoinQuote {
+  const BitcoinQuote({
+    required this.amount,
+    required this.cryptoAmount,
+    required this.cryptoCurrency,
+    required this.exchangeRate,
+  });
+
+  final int amount;
+  final String cryptoAmount;
+  final String cryptoCurrency;
+  final double exchangeRate;
+
+  factory BitcoinQuote.fromJson(Map<String, dynamic> json) {
+    return BitcoinQuote(
+      amount: (json['amount'] as num?)?.toInt() ?? 0,
+      cryptoAmount: json['crypto_amount'] as String? ?? '0',
+      cryptoCurrency: json['crypto_currency'] as String? ?? 'BTC',
+      exchangeRate: (json['exchange_rate'] as num?)?.toDouble() ?? 0,
+    );
+  }
+}
+
+class PaymentCard {
+  const PaymentCard({
+    required this.id,
+    required this.last4,
+    required this.brand,
+    required this.holderName,
+    required this.expMonth,
+    required this.expYear,
+    required this.isDefault,
+  });
+
+  final String id;
+  final String last4;
+  final String brand;
+  final String holderName;
+  final int expMonth;
+  final int expYear;
+  final bool isDefault;
+
+  factory PaymentCard.fromJson(Map<String, dynamic> json) {
+    return PaymentCard(
+      id: json['id'] as String,
+      last4: json['last4'] as String? ?? '',
+      brand: json['brand'] as String? ?? 'unknown',
+      holderName: json['holder_name'] as String? ?? '',
+      expMonth: (json['exp_month'] as num?)?.toInt() ?? 0,
+      expYear: (json['exp_year'] as num?)?.toInt() ?? 0,
+      isDefault: json['is_default'] as bool? ?? false,
     );
   }
 }

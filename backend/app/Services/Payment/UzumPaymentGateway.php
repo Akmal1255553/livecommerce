@@ -6,7 +6,7 @@ namespace App\Services\Payment;
 
 use App\Contracts\Services\PaymentGatewayInterface;
 use App\DTOs\Payment\PaymentInitiationResult;
-use App\Models\Order;
+use App\DTOs\Payment\PaymentIntent;
 
 /**
  * Uzum Bank / Uzum Nasiya style checkout adapter.
@@ -19,9 +19,9 @@ class UzumPaymentGateway implements PaymentGatewayInterface
         return 'uzum';
     }
 
-    public function initiate(Order $order): PaymentInitiationResult
+    public function initiate(PaymentIntent $intent): PaymentInitiationResult
     {
-        $transactionId = 'uzum-pending-'.$order->id;
+        $transactionId = 'uzum-pending-'.$intent->reference;
         $merchantId = (string) config('payment.uzum.merchant_id', '');
         $secret = (string) config('payment.uzum.secret', '');
         $checkoutBase = rtrim((string) config('payment.uzum.checkout_url', 'https://checkout.uzumbank.uz'), '/');
@@ -29,15 +29,16 @@ class UzumPaymentGateway implements PaymentGatewayInterface
         if ($merchantId === '' || $secret === '') {
             return PaymentInitiationResult::succeeded(
                 transactionId: $transactionId,
-                paymentUrl: url('/api/v1/payments/sandbox/'.$order->id).'?txn='.urlencode($transactionId),
+                paymentUrl: $intent->sandboxUrlFor($transactionId),
+                sandbox: true,
             );
         }
 
         $paymentUrl = $checkoutBase.'?'.http_build_query([
             'merchant_id' => $merchantId,
-            'amount' => (int) $order->total,
-            'order_id' => $order->id,
-            'currency' => strtoupper((string) ($order->currency ?? 'UZS')),
+            'amount' => $intent->amount,
+            'order_id' => $intent->reference,
+            'currency' => $intent->currency,
             'return_url' => (string) config('payment.uzum.return_url', url('/')),
         ]);
 

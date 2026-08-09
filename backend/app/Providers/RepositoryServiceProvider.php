@@ -129,9 +129,12 @@ use App\Services\Order\DateSequenceOrderNumberGenerator;
 use App\Services\Order\OrderService;
 use App\Services\Order\OrderStateMachine;
 use App\Services\Order\ShortCodeOrderNumberGenerator;
+use App\Services\Payment\BitcoinPaymentGateway;
+use App\Services\Payment\CardPaymentGateway;
 use App\Services\Payment\ClickPaymentGateway;
 use App\Services\Payment\FakePaymentGateway;
 use App\Services\Payment\LocalPaymentGateway;
+use App\Services\Payment\PaymentGatewayResolver;
 use App\Services\Payment\PaymentWebhookProcessor;
 use App\Services\Payment\PaymePaymentGateway;
 use App\Services\Payment\UzumPaymentGateway;
@@ -150,6 +153,7 @@ use App\Services\Video\VideoCommerceService;
 use App\Services\Video\VideoInteractionService;
 use App\Services\Video\VideoStateMachine;
 use App\Services\Video\VideoUploadService;
+use App\Services\Wallet\PaymentCardService;
 use App\Services\Wallet\WalletService;
 use App\Storage\Drivers\LocalStorageDriver;
 use App\Storage\Drivers\S3StorageDriver;
@@ -266,7 +270,7 @@ class RepositoryServiceProvider extends ServiceProvider
 
             if ($app->environment('production') && $driver === 'fake') {
                 throw new \RuntimeException(
-                    'PAYMENT_GATEWAY=fake is not allowed in production. Use local|click|payme|uzum.',
+                    'PAYMENT_GATEWAY=fake is not allowed in production. Use local|click|payme|uzum|bitcoin|card.',
                 );
             }
 
@@ -275,9 +279,16 @@ class RepositoryServiceProvider extends ServiceProvider
                 'click' => $app->make(ClickPaymentGateway::class),
                 'payme' => $app->make(PaymePaymentGateway::class),
                 'uzum' => $app->make(UzumPaymentGateway::class),
+                'bitcoin' => $app->make(BitcoinPaymentGateway::class),
+                'card' => $app->make(CardPaymentGateway::class),
                 default => $app->make(FakePaymentGateway::class),
             };
         });
+
+        $this->app->singleton(BitcoinPaymentGateway::class);
+        $this->app->singleton(CardPaymentGateway::class);
+        $this->app->singleton(PaymentGatewayResolver::class);
+        $this->app->singleton(PaymentCardService::class);
 
         $this->app->singleton(
             PaymentWebhookProcessorInterface::class,

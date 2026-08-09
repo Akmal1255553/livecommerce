@@ -6,7 +6,7 @@ namespace App\Services\Payment;
 
 use App\Contracts\Services\PaymentGatewayInterface;
 use App\DTOs\Payment\PaymentInitiationResult;
-use App\Models\Order;
+use App\DTOs\Payment\PaymentIntent;
 use Illuminate\Support\Str;
 
 /**
@@ -20,9 +20,9 @@ class ClickPaymentGateway implements PaymentGatewayInterface
         return 'click';
     }
 
-    public function initiate(Order $order): PaymentInitiationResult
+    public function initiate(PaymentIntent $intent): PaymentInitiationResult
     {
-        $transactionId = 'click-pending-'.$order->id;
+        $transactionId = $this->pendingTransactionId($intent->reference);
         $merchantId = (string) config('payment.click.merchant_id', '');
         $serviceId = (string) config('payment.click.service_id', '');
         $secret = (string) config('payment.click.secret', '');
@@ -30,18 +30,19 @@ class ClickPaymentGateway implements PaymentGatewayInterface
         if ($merchantId === '' || $serviceId === '' || $secret === '') {
             return PaymentInitiationResult::succeeded(
                 transactionId: $transactionId,
-                paymentUrl: url('/api/v1/payments/sandbox/'.$order->id).'?txn='.urlencode($transactionId),
+                paymentUrl: $intent->sandboxUrlFor($transactionId),
+                sandbox: true,
             );
         }
 
         // Click amount is in UZS (our totals are integer UZS).
-        $amount = number_format((int) $order->total, 2, '.', '');
+        $amount = number_format($intent->amount, 2, '.', '');
         $paymentUrl = 'https://my.click.uz/services/pay?'
             .http_build_query([
                 'service_id' => $serviceId,
                 'merchant_id' => $merchantId,
                 'amount' => $amount,
-                'transaction_param' => $order->id,
+                'transaction_param' => $intent->reference,
                 'merchant_user_id' => (string) config('payment.click.merchant_user_id', ''),
                 'return_url' => (string) config('payment.click.return_url', url('/')),
             ]);
@@ -86,9 +87,9 @@ class ClickPaymentGateway implements PaymentGatewayInterface
         return hash_equals($digest, $signString);
     }
 
-    public function pendingTransactionId(string $orderId): string
+    public function pendingTransactionId(string $reference): string
     {
-        return 'click-pending-'.$orderId;
+        return 'click-pending-'.$reference;
     }
 
     public function newClickTransRef(): string

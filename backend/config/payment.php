@@ -41,6 +41,16 @@ return [
         'return_url' => env('UZUM_RETURN_URL'),
     ],
 
+    'bitcoin' => [
+        'api_key' => env('BITCOIN_API_KEY', ''),
+        'api_url' => env('BITCOIN_API_URL', 'https://api.nowpayments.io/v1'),
+        'ipn_secret' => env('BITCOIN_IPN_SECRET', ''),
+        'ipn_callback_url' => env('BITCOIN_IPN_CALLBACK_URL'),
+        'sandbox_rate_uzs_per_btc' => (float) env('BITCOIN_SANDBOX_RATE_UZS', 1_200_000_000),
+        'sandbox_address' => env('BITCOIN_SANDBOX_ADDRESS', 'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh'),
+        'invoice_ttl_minutes' => (int) env('BITCOIN_INVOICE_TTL_MINUTES', 30),
+    ],
+
     /*
     | Sandbox complete endpoint for mobile Pay/Cancel.
     | Defaults off in production unless PAYMENT_SANDBOX_ENABLED=true.

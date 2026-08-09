@@ -12,6 +12,7 @@ use Illuminate\Support\Carbon;
  * @property string $idempotency_key
  * @property string $event
  * @property string $transaction_id
+ * @property string|null $reference
  * @property string|null $order_id
  * @property array<string, mixed> $payload
  * @property Carbon $processed_at
@@ -28,6 +29,7 @@ class PaymentWebhookEvent extends Model
         'idempotency_key',
         'event',
         'transaction_id',
+        'reference',
         'order_id',
         'payload',
         'processed_at',

@@ -20,7 +20,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
   final _cityController = TextEditingController();
   final _addressController = TextEditingController();
   final _postalCodeController = TextEditingController();
-  String _paymentMethod = 'click';
+  String _paymentMethod = 'bitcoin';
 
   @override
   void initState() {
@@ -154,17 +154,13 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      for (final method in const [
-                        ('click', 'Click'),
-                        ('payme', 'Payme'),
-                        ('uzum', 'Uzum'),
-                        ('wallet', null),
+                      for (final method in [
+                        ('bitcoin', AppLocalizations.of(context)!.walletMethodBitcoin),
+                        ('card', AppLocalizations.of(context)!.walletMethodCard),
+                        ('wallet', AppLocalizations.of(context)!.walletTitle),
                       ])
                         ChoiceChip(
-                          label: Text(
-                            method.$2 ??
-                                AppLocalizations.of(context)!.walletTitle,
-                          ),
+                          label: Text(method.$2),
                           selected: _paymentMethod == method.$1,
                           onSelected: (_) {
                             setState(() => _paymentMethod = method.$1);

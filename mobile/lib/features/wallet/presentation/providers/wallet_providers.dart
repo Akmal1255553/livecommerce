@@ -15,6 +15,7 @@ class WalletState {
     this.wallet,
     this.transactions = const [],
     this.withdrawals = const [],
+    this.cards = const [],
     this.nextCursor,
     this.hasMore = false,
     this.isLoading = false,
@@ -26,6 +27,7 @@ class WalletState {
   final Wallet? wallet;
   final List<WalletTransaction> transactions;
   final List<WalletWithdrawal> withdrawals;
+  final List<PaymentCard> cards;
   final String? nextCursor;
   final bool hasMore;
   final bool isLoading;
@@ -40,6 +42,7 @@ class WalletState {
     Wallet? wallet,
     List<WalletTransaction>? transactions,
     List<WalletWithdrawal>? withdrawals,
+    List<PaymentCard>? cards,
     String? nextCursor,
     bool? hasMore,
     bool? isLoading,
@@ -53,6 +56,7 @@ class WalletState {
       wallet: wallet ?? this.wallet,
       transactions: transactions ?? this.transactions,
       withdrawals: withdrawals ?? this.withdrawals,
+      cards: cards ?? this.cards,
       nextCursor: clearCursor ? null : (nextCursor ?? this.nextCursor),
       hasMore: hasMore ?? this.hasMore,
       isLoading: isLoading ?? this.isLoading,
@@ -61,6 +65,32 @@ class WalletState {
       error: clearError ? null : (error ?? this.error),
     );
   }
+}
+
+enum TopUpOutcome { credited, awaitingProvider, awaitingBitcoin, failed }
+
+class TopUpStart {
+  const TopUpStart(
+    this.outcome, {
+    this.transactionId,
+    this.paymentUrl,
+    this.cryptoAddress,
+    this.cryptoAmount,
+    this.cryptoCurrency,
+    this.expiresAt,
+    this.qrPayload,
+    this.sandboxConfirm = false,
+  });
+
+  final TopUpOutcome outcome;
+  final String? transactionId;
+  final String? paymentUrl;
+  final String? cryptoAddress;
+  final String? cryptoAmount;
+  final String? cryptoCurrency;
+  final String? expiresAt;
+  final String? qrPayload;
+  final bool sandboxConfirm;
 }
 
 class WalletNotifier extends StateNotifier<WalletState> {
@@ -74,11 +104,13 @@ class WalletNotifier extends StateNotifier<WalletState> {
       final wallet = await _repository.getWallet();
       final page = await _repository.listTransactions();
       final withdrawals = await _repository.listWithdrawals();
+      final cards = await _repository.listCards();
 
       state = state.copyWith(
         wallet: wallet,
         transactions: page.items,
         withdrawals: withdrawals,
+        cards: cards,
         nextCursor: page.nextCursor,
         hasMore: page.hasMore,
         isLoading: false,
@@ -112,23 +144,150 @@ class WalletNotifier extends StateNotifier<WalletState> {
     }
   }
 
-  /// Starts a top-up and, in sandbox, settles it right away so the balance
-  /// reflects the payment without a provider callback.
-  Future<bool> topUp({required int amount, required String method}) async {
+  Future<BitcoinQuote?> quoteBitcoin(int amount) async {
+    try {
+      return await _repository.bitcoinQuote(amount);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<PaymentCard?> addCard({
+    required String cardNumber,
+    required String holderName,
+    required int expMonth,
+    required int expYear,
+  }) async {
     state = state.copyWith(isSubmitting: true, clearError: true);
     try {
-      final intent = await _repository.startTopUp(amount: amount, method: method);
-      await _repository.confirmTopUp(intent.transaction.id);
-      state = state.copyWith(isSubmitting: false);
-      await load();
-      return true;
+      final card = await _repository.storeCard(
+        cardNumber: cardNumber,
+        holderName: holderName,
+        expMonth: expMonth,
+        expYear: expYear,
+        isDefault: state.cards.isEmpty,
+      );
+      state = state.copyWith(
+        isSubmitting: false,
+        cards: [card, ...state.cards.where((c) => c.id != card.id)],
+      );
+      return card;
     } catch (error) {
       state = state.copyWith(
         isSubmitting: false,
         error: describeFailure(error),
       );
-      return false;
+      return null;
     }
+  }
+
+  /// Starts a top-up.
+  ///
+  /// Bitcoin returns invoice details for the QR dialog. Card / sandbox confirm
+  /// URLs settle immediately. Other provider URLs open externally.
+  Future<TopUpStart> topUp({
+    required int amount,
+    required String method,
+    String? paymentMethodId,
+  }) async {
+    state = state.copyWith(isSubmitting: true, clearError: true);
+    try {
+      final intent = await _repository.startTopUp(
+        amount: amount,
+        method: method,
+        paymentMethodId: paymentMethodId,
+      );
+      final paymentUrl = intent.paymentUrl;
+
+      if (intent.isBitcoin) {
+        state = state.copyWith(isSubmitting: false);
+        return TopUpStart(
+          TopUpOutcome.awaitingBitcoin,
+          transactionId: intent.transaction.id,
+          paymentUrl: paymentUrl,
+          cryptoAddress: intent.cryptoAddress,
+          cryptoAmount: intent.cryptoAmount,
+          cryptoCurrency: intent.cryptoCurrency,
+          expiresAt: intent.expiresAt,
+          qrPayload: intent.qrPayload,
+          sandboxConfirm:
+              paymentUrl != null && paymentUrl.contains('/wallet/topups/'),
+        );
+      }
+
+      if (paymentUrl == null || paymentUrl.contains('/wallet/topups/')) {
+        await _repository.confirmTopUp(intent.transaction.id);
+        state = state.copyWith(isSubmitting: false);
+        await load();
+        return const TopUpStart(TopUpOutcome.credited);
+      }
+
+      state = state.copyWith(isSubmitting: false);
+      return TopUpStart(
+        TopUpOutcome.awaitingProvider,
+        transactionId: intent.transaction.id,
+        paymentUrl: paymentUrl,
+      );
+    } catch (error) {
+      state = state.copyWith(
+        isSubmitting: false,
+        error: describeFailure(error),
+      );
+      return const TopUpStart(TopUpOutcome.failed);
+    }
+  }
+
+  Future<TopUpOutcome> confirmSandboxTopUp(String transactionId) async {
+    state = state.copyWith(isSubmitting: true, clearError: true);
+    try {
+      await _repository.confirmTopUp(transactionId);
+      state = state.copyWith(isSubmitting: false);
+      await load();
+      return TopUpOutcome.credited;
+    } catch (error) {
+      state = state.copyWith(
+        isSubmitting: false,
+        error: describeFailure(error),
+      );
+      return TopUpOutcome.failed;
+    }
+  }
+
+  /// Waits for the provider callback to settle a top-up we already started.
+  Future<TopUpOutcome> awaitTopUp(
+    String transactionId, {
+    Duration interval = const Duration(seconds: 3),
+    int attempts = 40,
+  }) async {
+    for (var attempt = 0; attempt < attempts; attempt++) {
+      await Future<void>.delayed(interval);
+
+      if (!mounted) {
+        return TopUpOutcome.awaitingProvider;
+      }
+
+      try {
+        final transaction = await _repository.findTransaction(transactionId);
+
+        switch (transaction?.status) {
+          case WalletTransactionStatus.completed:
+            await load();
+            return TopUpOutcome.credited;
+          case WalletTransactionStatus.failed:
+          case WalletTransactionStatus.cancelled:
+            await load();
+            return TopUpOutcome.failed;
+          case WalletTransactionStatus.pending:
+          case null:
+            break;
+        }
+      } catch (_) {
+        // A flaky poll should not end the wait; the callback may still arrive.
+      }
+    }
+
+    await load();
+    return TopUpOutcome.awaitingProvider;
   }
 
   Future<bool> withdraw({

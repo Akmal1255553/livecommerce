@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Admin\AdminStoreController;
 use App\Http\Controllers\Api\V1\Admin\AdminUserController;
 use App\Http\Controllers\Api\V1\Admin\AdminVideoController;
 use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\BitcoinWebhookController;
 use App\Http\Controllers\Api\V1\BookmarkController;
 use App\Http\Controllers\Api\V1\BrandController;
 use App\Http\Controllers\Api\V1\CartController;
@@ -55,6 +56,8 @@ Route::prefix('v1')->group(function (): void {
     Route::post('webhooks/payme', PaymeWebhookController::class)
         ->middleware('throttle:60,1');
     Route::post('webhooks/uzum', UzumWebhookController::class)
+        ->middleware('throttle:60,1');
+    Route::post('webhooks/bitcoin', BitcoinWebhookController::class)
         ->middleware('throttle:60,1');
 
     Route::prefix('auth')->middleware('throttle:auth')->group(function (): void {
@@ -182,6 +185,10 @@ Route::prefix('v1')->group(function (): void {
 
         Route::get('wallet', [WalletController::class, 'show']);
         Route::get('wallet/transactions', [WalletController::class, 'transactions']);
+        Route::get('wallet/bitcoin-quote', [WalletController::class, 'bitcoinQuote']);
+        Route::get('wallet/cards', [WalletController::class, 'cards']);
+        Route::post('wallet/cards', [WalletController::class, 'storeCard']);
+        Route::delete('wallet/cards/{id}', [WalletController::class, 'destroyCard']);
         Route::post('wallet/topups', [WalletController::class, 'topUp'])
             ->middleware('throttle:checkout');
         Route::post('wallet/topups/{id}/confirm', [WalletController::class, 'confirmTopUp']);

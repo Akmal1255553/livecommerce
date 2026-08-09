@@ -716,6 +716,19 @@ class AppLocalizationsRu extends AppLocalizations {
   String get walletTopUpSuccess => 'Кошелёк пополнен';
 
   @override
+  String get walletTopUpWaiting => 'Ждём подтверждения оплаты…';
+
+  @override
+  String get walletTopUpPending =>
+      'Оплата ещё не подтверждена. Баланс обновится, как только придёт подтверждение.';
+
+  @override
+  String get walletTopUpFailed => 'Оплата не прошла';
+
+  @override
+  String get walletTopUpOpenFailed => 'Не удалось открыть страницу оплаты';
+
+  @override
   String get walletWithdrawSuccess => 'Заявка на вывод создана';
 
   @override
@@ -773,4 +786,60 @@ class AppLocalizationsRu extends AppLocalizations {
 
   @override
   String get walletInvalidCard => 'Введите корректный номер карты';
+
+  @override
+  String get walletMethodBitcoin => 'Bitcoin';
+
+  @override
+  String get walletMethodCard => 'Карта';
+
+  @override
+  String walletBitcoinApprox(String amount) {
+    return '≈ $amount';
+  }
+
+  @override
+  String walletChargeAmount(String amount) {
+    return 'К списанию: $amount';
+  }
+
+  @override
+  String walletChargeFromCard(String last4, String amount) {
+    return 'С карты •••• $last4 будет списано $amount';
+  }
+
+  @override
+  String get walletAddCard => 'Добавить карту';
+
+  @override
+  String get walletSaveCard => 'Сохранить';
+
+  @override
+  String get walletCancelAddCard => 'Отмена';
+
+  @override
+  String get walletCardExpMonth => 'Месяц';
+
+  @override
+  String get walletCardExpYear => 'Год';
+
+  @override
+  String get walletBitcoinPayTitle => 'Оплата Bitcoin';
+
+  @override
+  String get walletCopyAddress => 'Копировать адрес';
+
+  @override
+  String get walletAddressCopied => 'Адрес скопирован';
+
+  @override
+  String get walletBitcoinConfirmPaid => 'Я оплатил';
+
+  @override
+  String get walletBitcoinClose => 'Закрыть';
+
+  @override
+  String walletBitcoinExpires(String time) {
+    return 'Действует до $time';
+  }
 }

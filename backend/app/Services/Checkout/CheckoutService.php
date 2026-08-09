@@ -9,7 +9,6 @@ use App\Contracts\Services\CheckoutServiceInterface;
 use App\Contracts\Services\CouponServiceInterface;
 use App\Contracts\Services\InventoryServiceInterface;
 use App\Contracts\Services\OrderServiceInterface;
-use App\Contracts\Services\PaymentGatewayInterface;
 use App\Contracts\Services\PricingServiceInterface;
 use App\Contracts\Services\ShippingCalculatorInterface;
 use App\Contracts\Services\WalletServiceInterface;
@@ -18,6 +17,7 @@ use App\DTOs\Checkout\CheckoutResult;
 use App\DTOs\Order\CreateOrderData;
 use App\DTOs\Order\PaymentSnapshot;
 use App\DTOs\Order\ShipmentSnapshot;
+use App\DTOs\Payment\PaymentIntent;
 use App\Enums\PaymentStatus;
 use App\Events\CartCheckedOut;
 use App\Events\PaymentFailed;
@@ -31,6 +31,7 @@ use App\Models\Cart;
 use App\Models\CheckoutIdempotencyKey;
 use App\Models\Order;
 use App\Services\BaseService;
+use App\Services\Payment\PaymentGatewayResolver;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -45,7 +46,7 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
         private readonly ShippingCalculatorInterface $shipping,
         private readonly OrderServiceInterface $orders,
         private readonly InventoryServiceInterface $inventory,
-        private readonly PaymentGatewayInterface $paymentGateway,
+        private readonly PaymentGatewayResolver $gateways,
         private readonly WalletServiceInterface $wallet,
     ) {
         parent::__construct($logger);
@@ -117,13 +118,15 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
                     $snapshots,
                 );
 
+                $paymentGateway = $this->gateways->resolve($data->paymentMethod);
+
                 $order = $this->orders->createFromCheckout(new CreateOrderData(
                     userId: $data->userId,
                     storeId: $storeId,
                     lines: $snapshots,
                     totals: $totals,
                     payment: new PaymentSnapshot(
-                        provider: $this->paymentGateway->name(),
+                        provider: $paymentGateway->name(),
                         method: $data->paymentMethod,
                         transactionId: null,
                         amount: $totals->total,
@@ -155,7 +158,8 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
             return $this->settleWithWallet($data, $order, $reservationGroupId, $claim);
         }
 
-        $payment = $this->paymentGateway->initiate($order);
+        $paymentGateway = $this->gateways->resolve($data->paymentMethod);
+        $payment = $paymentGateway->initiate(PaymentIntent::forOrder($order));
 
         if (! $payment->success) {
             $this->inventory->releaseReservation($reservationGroupId);
@@ -171,7 +175,7 @@ class CheckoutService extends BaseService implements CheckoutServiceInterface
             throw new PaymentFailedException($payment->failureReason ?? 'Payment failed');
         }
 
-        $order->payment_provider = $this->paymentGateway->name();
+        $order->payment_provider = $paymentGateway->name();
         $order->payment_transaction_id = $payment->transactionId;
         $order->payment_reference = $payment->transactionId;
         $order->save();

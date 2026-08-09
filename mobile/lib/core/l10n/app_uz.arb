@@ -342,6 +342,10 @@
     "placeholders": { "amount": { "type": "String" } }
   },
   "walletTopUpSuccess": "Hamyon to'ldirildi",
+  "walletTopUpWaiting": "To'lov tasdiqlanishini kutmoqdamiz…",
+  "walletTopUpPending": "To'lov hali tasdiqlanmadi. Tasdiq kelishi bilan balans yangilanadi.",
+  "walletTopUpFailed": "To'lov amalga oshmadi",
+  "walletTopUpOpenFailed": "To'lov sahifasini ochib bo'lmadi",
   "walletWithdrawSuccess": "Yechish so'rovi yaratildi",
   "walletWithdrawCancelled": "So'rov bekor qilindi",
   "walletCancelWithdrawal": "So'rovni bekor qilish",
@@ -363,5 +367,36 @@
     "placeholders": { "last4": { "type": "String" } }
   },
   "walletInvalidAmount": "To'g'ri summa kiriting",
-  "walletInvalidCard": "To'g'ri karta raqamini kiriting"
+  "walletInvalidCard": "To'g'ri karta raqamini kiriting",
+  "walletMethodBitcoin": "Bitcoin",
+  "walletMethodCard": "Karta",
+  "walletBitcoinApprox": "≈ {amount}",
+  "@walletBitcoinApprox": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletChargeAmount": "Yechiladi: {amount}",
+  "@walletChargeAmount": {
+    "placeholders": { "amount": { "type": "String" } }
+  },
+  "walletChargeFromCard": "•••• {last4} kartasidan {amount} yechiladi",
+  "@walletChargeFromCard": {
+    "placeholders": {
+      "last4": { "type": "String" },
+      "amount": { "type": "String" }
+    }
+  },
+  "walletAddCard": "Karta qo'shish",
+  "walletSaveCard": "Saqlash",
+  "walletCancelAddCard": "Bekor qilish",
+  "walletCardExpMonth": "Oy",
+  "walletCardExpYear": "Yil",
+  "walletBitcoinPayTitle": "Bitcoin to'lovi",
+  "walletCopyAddress": "Manzilni nusxalash",
+  "walletAddressCopied": "Manzil nusxalandi",
+  "walletBitcoinConfirmPaid": "To'ladim",
+  "walletBitcoinClose": "Yopish",
+  "walletBitcoinExpires": "{time} gacha amal qiladi",
+  "@walletBitcoinExpires": {
+    "placeholders": { "time": { "type": "String" } }
+  }
 }

@@ -18,6 +18,7 @@ function checkoutAwaitingPayment(): array
 {
     config(['payment.driver' => 'local']);
     app()->forgetInstance(PaymentGatewayInterface::class);
+    app()->forgetInstance(\App\Services\Payment\PaymentGatewayResolver::class);
 
     $data = createSellerProductForCart();
     $buyer = registerUser('paybuyer'.Str::random(4), 'paybuyer'.Str::random(4).'@example.com');

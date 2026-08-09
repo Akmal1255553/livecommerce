@@ -6,7 +6,7 @@ namespace App\Services\Payment;
 
 use App\Contracts\Services\PaymentGatewayInterface;
 use App\DTOs\Payment\PaymentInitiationResult;
-use App\Models\Order;
+use App\DTOs\Payment\PaymentIntent;
 
 /**
  * Payme.uz Merchant API adapter (checkout URL + Basic-auth webhooks).
@@ -19,24 +19,25 @@ class PaymePaymentGateway implements PaymentGatewayInterface
         return 'payme';
     }
 
-    public function initiate(Order $order): PaymentInitiationResult
+    public function initiate(PaymentIntent $intent): PaymentInitiationResult
     {
-        $transactionId = 'payme-pending-'.$order->id;
+        $transactionId = 'payme-pending-'.$intent->reference;
         $merchantId = (string) config('payment.payme.merchant_id', '');
         $secret = (string) config('payment.payme.secret', '');
 
         if ($merchantId === '' || $secret === '') {
             return PaymentInitiationResult::succeeded(
                 transactionId: $transactionId,
-                paymentUrl: url('/api/v1/payments/sandbox/'.$order->id).'?txn='.urlencode($transactionId),
+                paymentUrl: $intent->sandboxUrlFor($transactionId),
+                sandbox: true,
             );
         }
 
         // Payme amount is in tiyin (1 UZS = 100 tiyin).
-        $amountTiyin = (int) $order->total * 100;
+        $amountTiyin = $intent->amount * 100;
         $params = base64_encode(http_build_query([
             'm' => $merchantId,
-            'ac.order_id' => $order->id,
+            'ac.order_id' => $intent->reference,
             'a' => $amountTiyin,
         ]));
 

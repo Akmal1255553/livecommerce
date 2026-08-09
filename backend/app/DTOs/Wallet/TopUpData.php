@@ -10,5 +10,6 @@ final readonly class TopUpData
         public int $amount,
         public string $method,
         public ?string $reference = null,
+        public ?string $paymentMethodId = null,
     ) {}
 }

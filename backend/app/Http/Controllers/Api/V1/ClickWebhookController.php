@@ -7,8 +7,8 @@ namespace App\Http\Controllers\Api\V1;
 use App\Contracts\Services\PaymentWebhookProcessorInterface;
 use App\DTOs\Payment\PaymentWebhookData;
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Services\Payment\ClickPaymentGateway;
+use App\Services\Payment\PaymentSubjectLookup;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -21,6 +21,7 @@ class ClickWebhookController extends Controller
     public function __construct(
         private readonly ClickPaymentGateway $click,
         private readonly PaymentWebhookProcessorInterface $processor,
+        private readonly PaymentSubjectLookup $subjects,
     ) {}
 
     public function __invoke(Request $request): JsonResponse
@@ -36,32 +37,33 @@ class ClickWebhookController extends Controller
             ]);
         }
 
-        $orderId = (string) ($payload['merchant_trans_id'] ?? '');
-        $order = Order::query()->find($orderId);
-        if ($order === null) {
+        $reference = (string) ($payload['merchant_trans_id'] ?? '');
+        $subject = $this->subjects->find($reference);
+
+        if ($subject === null) {
             return response()->json([
                 'error' => -5,
                 'error_note' => 'Order not found',
                 'click_trans_id' => $payload['click_trans_id'] ?? null,
-                'merchant_trans_id' => $orderId,
+                'merchant_trans_id' => $reference,
             ]);
         }
 
         $amount = (int) round((float) ($payload['amount'] ?? 0));
-        if ($amount !== (int) $order->total) {
+        if ($amount !== $subject->amount) {
             return response()->json([
                 'error' => -2,
                 'error_note' => 'Incorrect amount',
                 'click_trans_id' => $payload['click_trans_id'] ?? null,
-                'merchant_trans_id' => $orderId,
+                'merchant_trans_id' => $reference,
             ]);
         }
 
         if ($action === 0) {
             return response()->json([
                 'click_trans_id' => $payload['click_trans_id'] ?? null,
-                'merchant_trans_id' => $orderId,
-                'merchant_prepare_id' => crc32($orderId) & 0x7FFFFFFF,
+                'merchant_trans_id' => $reference,
+                'merchant_prepare_id' => crc32($reference) & 0x7FFFFFFF,
                 'error' => 0,
                 'error_note' => 'Success',
             ]);
@@ -74,10 +76,10 @@ class ClickWebhookController extends Controller
             try {
                 $this->processor->apply(new PaymentWebhookData(
                     event: $error === 0 ? 'payment.success' : 'payment.failed',
-                    transactionId: $clickTransId !== '' ? $clickTransId : 'click-'.$orderId,
-                    orderId: $orderId,
+                    transactionId: $clickTransId !== '' ? $clickTransId : 'click-'.$reference,
+                    orderId: $reference,
                     amount: $amount,
-                    currency: (string) ($order->currency ?? 'UZS'),
+                    currency: $subject->currency,
                 ));
             } catch (\Throwable $e) {
                 Log::warning('payment.click.webhook.rejected', ['message' => $e->getMessage()]);
@@ -86,15 +88,15 @@ class ClickWebhookController extends Controller
                     'error' => -9,
                     'error_note' => $e->getMessage(),
                     'click_trans_id' => $payload['click_trans_id'] ?? null,
-                    'merchant_trans_id' => $orderId,
+                    'merchant_trans_id' => $reference,
                 ]);
             }
 
             return response()->json([
                 'click_trans_id' => $payload['click_trans_id'] ?? null,
-                'merchant_trans_id' => $orderId,
-                'merchant_prepare_id' => $payload['merchant_prepare_id'] ?? (crc32($orderId) & 0x7FFFFFFF),
-                'merchant_confirm_id' => crc32($orderId.'confirm') & 0x7FFFFFFF,
+                'merchant_trans_id' => $reference,
+                'merchant_prepare_id' => $payload['merchant_prepare_id'] ?? (crc32($reference) & 0x7FFFFFFF),
+                'merchant_confirm_id' => crc32($reference.'confirm') & 0x7FFFFFFF,
                 'error' => 0,
                 'error_note' => 'Success',
             ]);

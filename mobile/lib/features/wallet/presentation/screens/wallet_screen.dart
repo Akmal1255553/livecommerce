@@ -9,6 +9,7 @@ import 'package:livecommerce_mobile/features/wallet/presentation/providers/walle
 import 'package:livecommerce_mobile/features/wallet/presentation/widgets/wallet_sheets.dart';
 import 'package:livecommerce_mobile/shared/widgets/empty_state.dart';
 import 'package:livecommerce_mobile/shared/widgets/error_widget.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class WalletScreen extends ConsumerStatefulWidget {
   const WalletScreen({super.key});
@@ -41,13 +42,74 @@ class _WalletScreenState extends ConsumerState<WalletScreen> {
   }
 
   Future<void> _openTopUp(Wallet wallet) async {
-    final l10n = AppLocalizations.of(context)!;
     final result = await showWalletTopUpSheet(context, wallet);
-    if (result == true && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.walletTopUpSuccess)),
-      );
+    if (result == null || !mounted) {
+      return;
     }
+
+    if (result.outcome == TopUpOutcome.credited) {
+      _showTopUpMessage(AppLocalizations.of(context)!.walletTopUpSuccess);
+      return;
+    }
+
+    if (result.outcome == TopUpOutcome.awaitingBitcoin) {
+      final bitcoinOutcome = await showBitcoinPaymentDialog(context, result);
+      if (!mounted) return;
+      _showTopUpMessage(switch (bitcoinOutcome) {
+        TopUpOutcome.credited => AppLocalizations.of(context)!.walletTopUpSuccess,
+        TopUpOutcome.failed => AppLocalizations.of(context)!.walletTopUpFailed,
+        _ => AppLocalizations.of(context)!.walletTopUpPending,
+      });
+      return;
+    }
+
+    await _payAtProvider(result);
+  }
+
+  /// Real money moves at the provider, so the app opens its page and then waits
+  /// for the backend to be told the payment happened.
+  Future<void> _payAtProvider(TopUpStart start) async {
+    final l10n = AppLocalizations.of(context)!;
+    final uri = Uri.tryParse(start.paymentUrl ?? '');
+    final transactionId = start.transactionId;
+
+    if (uri == null || transactionId == null) {
+      _showTopUpMessage(l10n.walletTopUpOpenFailed);
+      return;
+    }
+
+    try {
+      final opened = await launchUrl(uri, mode: LaunchMode.externalApplication);
+      if (!opened) {
+        _showTopUpMessage(l10n.walletTopUpOpenFailed);
+        return;
+      }
+    } catch (_) {
+      _showTopUpMessage(l10n.walletTopUpOpenFailed);
+      return;
+    }
+
+    _showTopUpMessage(l10n.walletTopUpWaiting);
+
+    final outcome =
+        await ref.read(walletNotifierProvider.notifier).awaitTopUp(transactionId);
+
+    if (!mounted) {
+      return;
+    }
+
+    _showTopUpMessage(switch (outcome) {
+      TopUpOutcome.credited => l10n.walletTopUpSuccess,
+      TopUpOutcome.failed => l10n.walletTopUpFailed,
+      TopUpOutcome.awaitingProvider ||
+      TopUpOutcome.awaitingBitcoin => l10n.walletTopUpPending,
+    });
+  }
+
+  void _showTopUpMessage(String message) {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 
   Future<void> _openWithdraw(Wallet wallet) async {

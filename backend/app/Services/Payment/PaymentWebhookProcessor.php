@@ -8,6 +8,8 @@ use App\Contracts\Services\InventoryServiceInterface;
 use App\Contracts\Services\OrderServiceInterface;
 use App\Contracts\Services\PaymentGatewayInterface;
 use App\Contracts\Services\PaymentWebhookProcessorInterface;
+use App\Contracts\Services\WalletServiceInterface;
+use App\DTOs\Payment\PaymentIntent;
 use App\DTOs\Payment\PaymentWebhookData;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
@@ -31,6 +33,7 @@ class PaymentWebhookProcessor extends BaseService implements PaymentWebhookProce
         private readonly PaymentGatewayInterface $gateway,
         private readonly OrderServiceInterface $orders,
         private readonly InventoryServiceInterface $inventory,
+        private readonly WalletServiceInterface $wallet,
     ) {
         parent::__construct($logger);
     }
@@ -80,7 +83,8 @@ class PaymentWebhookProcessor extends BaseService implements PaymentWebhookProce
                     'idempotency_key' => $data->idempotencyKey(),
                     'event' => $data->event,
                     'transaction_id' => $data->transactionId,
-                    'order_id' => $data->orderId,
+                    'reference' => $data->orderId,
+                    'order_id' => PaymentIntent::isWalletTopUpReference($data->orderId) ? null : $data->orderId,
                     'payload' => [
                         'event' => $data->event,
                         'transaction_id' => $data->transactionId,
@@ -102,6 +106,17 @@ class PaymentWebhookProcessor extends BaseService implements PaymentWebhookProce
 
     private function handleSuccess(PaymentWebhookData $data): void
     {
+        if (PaymentIntent::isWalletTopUpReference($data->orderId)) {
+            $this->wallet->creditTopUpFromGateway(
+                $data->orderId,
+                $data->transactionId,
+                $data->amount,
+                $data->currency,
+            );
+
+            return;
+        }
+
         $order = Order::query()->whereKey($data->orderId)->lockForUpdate()->first();
 
         if ($order === null) {
@@ -160,6 +175,12 @@ class PaymentWebhookProcessor extends BaseService implements PaymentWebhookProce
 
     private function handleFailure(PaymentWebhookData $data): void
     {
+        if (PaymentIntent::isWalletTopUpReference($data->orderId)) {
+            $this->wallet->failTopUpFromGateway($data->orderId, 'Payment failed');
+
+            return;
+        }
+
         $order = Order::query()->whereKey($data->orderId)->lockForUpdate()->first();
 
         if ($order === null) {

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,9 +10,10 @@ import 'package:livecommerce_mobile/core/utils/number_format.dart';
 import 'package:livecommerce_mobile/features/wallet/domain/entities/wallet.dart';
 import 'package:livecommerce_mobile/features/wallet/presentation/providers/wallet_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/gradient_button.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 
-Future<bool?> showWalletTopUpSheet(BuildContext context, Wallet wallet) {
-  return showModalBottomSheet<bool>(
+Future<TopUpStart?> showWalletTopUpSheet(BuildContext context, Wallet wallet) {
+  return showModalBottomSheet<TopUpStart>(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
@@ -29,15 +32,19 @@ Future<bool?> showWalletWithdrawSheet(BuildContext context, Wallet wallet) {
   );
 }
 
+Future<TopUpOutcome?> showBitcoinPaymentDialog(
+  BuildContext context,
+  TopUpStart start,
+) {
+  return showDialog<TopUpOutcome>(
+    context: context,
+    barrierDismissible: false,
+    builder: (_) => _BitcoinPaymentDialog(start: start),
+  );
+}
+
 /// Presets keep the common amounts one tap away instead of typing six zeros.
 const _topUpPresets = <int>[50000, 100000, 250000, 500000, 1000000];
-
-const _topUpMethods = <({String id, String label, IconData icon})>[
-  (id: 'click', label: 'Click', icon: Icons.bolt_rounded),
-  (id: 'payme', label: 'Payme', icon: Icons.qr_code_rounded),
-  (id: 'uzum', label: 'Uzum', icon: Icons.account_balance_wallet_outlined),
-  (id: 'card', label: 'Card', icon: Icons.credit_card_rounded),
-];
 
 class _SheetShell extends StatelessWidget {
   const _SheetShell({required this.title, required this.children});
@@ -165,12 +172,57 @@ class _TopUpSheet extends ConsumerStatefulWidget {
 
 class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
   final _amountController = TextEditingController();
-  String _method = _topUpMethods.first.id;
+  String _method = 'bitcoin';
+  String? _selectedCardId;
+  BitcoinQuote? _quote;
+  Timer? _quoteDebounce;
+  bool _showAddCard = false;
+
+  final _cardController = TextEditingController();
+  final _holderController = TextEditingController();
+  final _expMonthController = TextEditingController();
+  final _expYearController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _amountController.addListener(_onAmountChanged);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final cards = ref.read(walletNotifierProvider).cards;
+      if (cards.isNotEmpty) {
+        setState(() {
+          _selectedCardId =
+              cards.firstWhere((c) => c.isDefault, orElse: () => cards.first).id;
+        });
+      }
+    });
+  }
 
   @override
   void dispose() {
+    _quoteDebounce?.cancel();
     _amountController.dispose();
+    _cardController.dispose();
+    _holderController.dispose();
+    _expMonthController.dispose();
+    _expYearController.dispose();
     super.dispose();
+  }
+
+  void _onAmountChanged() {
+    setState(() {});
+    _quoteDebounce?.cancel();
+    if (_method != 'bitcoin' || !_isValid) {
+      setState(() => _quote = null);
+      return;
+    }
+    _quoteDebounce = Timer(const Duration(milliseconds: 350), () async {
+      final quote =
+          await ref.read(walletNotifierProvider.notifier).quoteBitcoin(_amount);
+      if (mounted && _method == 'bitcoin') {
+        setState(() => _quote = quote);
+      }
+    });
   }
 
   int get _amount => int.tryParse(_amountController.text.trim()) ?? 0;
@@ -179,21 +231,64 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
       _amount >= widget.wallet.limits.topUpMin &&
       _amount <= widget.wallet.limits.topUpMax;
 
-  Future<void> _submit() async {
-    final ok = await ref
-        .read(walletNotifierProvider.notifier)
-        .topUp(amount: _amount, method: _method);
+  bool get _canSubmit {
+    if (!_isValid) return false;
+    if (_method == 'card') {
+      return _selectedCardId != null && !_showAddCard;
+    }
+    return true;
+  }
 
-    if (ok && mounted) {
-      Navigator.of(context).pop(true);
+  Future<void> _submit() async {
+    final result = await ref.read(walletNotifierProvider.notifier).topUp(
+          amount: _amount,
+          method: _method,
+          paymentMethodId: _method == 'card' ? _selectedCardId : null,
+        );
+
+    if (result.outcome != TopUpOutcome.failed && mounted) {
+      Navigator.of(context).pop(result);
+    }
+  }
+
+  Future<void> _saveCard() async {
+    final digits = _cardController.text.replaceAll(RegExp(r'\D'), '');
+    final month = int.tryParse(_expMonthController.text.trim()) ?? 0;
+    final year = int.tryParse(_expYearController.text.trim()) ?? 0;
+    if (digits.length < 12 ||
+        _holderController.text.trim().length < 3 ||
+        month < 1 ||
+        month > 12 ||
+        year < DateTime.now().year) {
+      return;
+    }
+
+    final card = await ref.read(walletNotifierProvider.notifier).addCard(
+          cardNumber: digits,
+          holderName: _holderController.text.trim(),
+          expMonth: month,
+          expYear: year,
+        );
+
+    if (card != null && mounted) {
+      setState(() {
+        _selectedCardId = card.id;
+        _showAddCard = false;
+        _cardController.clear();
+        _holderController.clear();
+        _expMonthController.clear();
+        _expYearController.clear();
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final palette = AppPalette.of(context);
     final state = ref.watch(walletNotifierProvider);
     final limits = widget.wallet.limits;
+    final cards = state.cards;
 
     return _SheetShell(
       title: l10n.walletTopUpTitle,
@@ -218,9 +313,10 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
               _PresetChip(
                 label: formatPrice(preset, widget.wallet.currency),
                 selected: _amount == preset,
-                onTap: () => setState(() {
+                onTap: () {
                   _amountController.text = '$preset';
-                }),
+                  _onAmountChanged();
+                },
               ),
           ],
         ),
@@ -232,27 +328,319 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
         const SizedBox(height: AppSpacing.sm),
         Row(
           children: [
-            for (final method in _topUpMethods)
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: AppSpacing.sm),
-                  child: _MethodTile(
-                    icon: method.icon,
-                    label: method.label,
-                    selected: _method == method.id,
-                    onTap: () => setState(() => _method = method.id),
-                  ),
-                ),
+            Expanded(
+              child: _MethodTile(
+                icon: Icons.currency_bitcoin,
+                label: l10n.walletMethodBitcoin,
+                selected: _method == 'bitcoin',
+                onTap: () => setState(() {
+                  _method = 'bitcoin';
+                  _onAmountChanged();
+                }),
               ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: _MethodTile(
+                icon: Icons.credit_card_rounded,
+                label: l10n.walletMethodCard,
+                selected: _method == 'card',
+                onTap: () => setState(() {
+                  _method = 'card';
+                  _quote = null;
+                }),
+              ),
+            ),
           ],
         ),
+        if (_method == 'bitcoin' && _quote != null && _isValid) ...[
+          const SizedBox(height: AppSpacing.lg),
+          Container(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: palette.surfaceHigh,
+              borderRadius: AppRadius.smAll,
+            ),
+            child: Text(
+              l10n.walletBitcoinApprox(
+                '${_quote!.cryptoAmount} ${_quote!.cryptoCurrency}',
+              ),
+              style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ),
+        ],
+        if (_method == 'card') ...[
+          const SizedBox(height: AppSpacing.lg),
+          if (_isValid)
+            Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                color: palette.surfaceHigh,
+                borderRadius: AppRadius.smAll,
+              ),
+              child: Text(
+                _selectedCardId == null
+                    ? l10n.walletChargeAmount(
+                        formatPrice(_amount, widget.wallet.currency),
+                      )
+                    : l10n.walletChargeFromCard(
+                        cards
+                            .firstWhere(
+                              (c) => c.id == _selectedCardId,
+                              orElse: () => cards.first,
+                            )
+                            .last4,
+                        formatPrice(_amount, widget.wallet.currency),
+                      ),
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
+              ),
+            ),
+          const SizedBox(height: AppSpacing.md),
+          if (!_showAddCard) ...[
+            for (final card in cards)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(
+                  Icons.credit_card_rounded,
+                  color: _selectedCardId == card.id
+                      ? palette.brand
+                      : palette.textSecondary,
+                ),
+                title: Text(l10n.walletCardMask(card.last4)),
+                subtitle: Text(
+                  '${card.brand.toUpperCase()} · ${card.expMonth}/${card.expYear}',
+                ),
+                trailing: _selectedCardId == card.id
+                    ? Icon(Icons.check_circle, color: palette.brand)
+                    : null,
+                onTap: () => setState(() => _selectedCardId = card.id),
+              ),
+            TextButton.icon(
+              onPressed: () => setState(() => _showAddCard = true),
+              icon: const Icon(Icons.add_rounded),
+              label: Text(l10n.walletAddCard),
+            ),
+          ] else ...[
+            TextField(
+              controller: _cardController,
+              keyboardType: TextInputType.number,
+              inputFormatters: [
+                FilteringTextInputFormatter.digitsOnly,
+                LengthLimitingTextInputFormatter(16),
+                _CardNumberFormatter(),
+              ],
+              decoration: InputDecoration(
+                labelText: l10n.walletCardNumberLabel,
+                hintText: '8600 0000 0000 0000',
+                prefixIcon: const Icon(Icons.credit_card_rounded),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            TextField(
+              controller: _holderController,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                labelText: l10n.walletCardHolderLabel,
+                prefixIcon: const Icon(Icons.person_outline_rounded),
+              ),
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _expMonthController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(2),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: l10n.walletCardExpMonth,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppSpacing.md),
+                Expanded(
+                  child: TextField(
+                    controller: _expYearController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(4),
+                    ],
+                    decoration: InputDecoration(
+                      labelText: l10n.walletCardExpYear,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Row(
+              children: [
+                TextButton(
+                  onPressed: () => setState(() => _showAddCard = false),
+                  child: Text(l10n.walletCancelAddCard),
+                ),
+                const Spacer(),
+                FilledButton(
+                  onPressed: state.isSubmitting ? null : _saveCard,
+                  child: Text(l10n.walletSaveCard),
+                ),
+              ],
+            ),
+          ],
+        ],
         const SizedBox(height: AppSpacing.xl),
         GradientButton(
           label: l10n.walletTopUp,
           icon: Icons.add_rounded,
           busy: state.isSubmitting,
-          onPressed: _isValid ? _submit : null,
+          onPressed: _canSubmit ? _submit : null,
         ),
+      ],
+    );
+  }
+}
+
+class _BitcoinPaymentDialog extends ConsumerStatefulWidget {
+  const _BitcoinPaymentDialog({required this.start});
+
+  final TopUpStart start;
+
+  @override
+  ConsumerState<_BitcoinPaymentDialog> createState() =>
+      _BitcoinPaymentDialogState();
+}
+
+class _BitcoinPaymentDialogState extends ConsumerState<_BitcoinPaymentDialog> {
+  TopUpOutcome? _pollOutcome;
+  bool _confirming = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final id = widget.start.transactionId;
+    if (id != null) {
+      ref.read(walletNotifierProvider.notifier).awaitTopUp(id).then((outcome) {
+        if (!mounted) return;
+        if (outcome == TopUpOutcome.credited ||
+            outcome == TopUpOutcome.failed) {
+          Navigator.of(context).pop(outcome);
+        } else {
+          setState(() => _pollOutcome = outcome);
+        }
+      });
+    }
+  }
+
+  Future<void> _copyAddress() async {
+    final address = widget.start.cryptoAddress;
+    if (address == null) return;
+    await Clipboard.setData(ClipboardData(text: address));
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.walletAddressCopied),
+      ),
+    );
+  }
+
+  Future<void> _confirmSandbox() async {
+    final id = widget.start.transactionId;
+    if (id == null) return;
+    setState(() => _confirming = true);
+    final outcome =
+        await ref.read(walletNotifierProvider.notifier).confirmSandboxTopUp(id);
+    if (mounted) {
+      Navigator.of(context).pop(outcome);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final palette = AppPalette.of(context);
+    final qr = widget.start.qrPayload ??
+        'bitcoin:${widget.start.cryptoAddress}?amount=${widget.start.cryptoAmount}';
+
+    return AlertDialog(
+      title: Text(l10n.walletBitcoinPayTitle),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            QrImageView(
+              data: qr,
+              size: 200,
+              backgroundColor: Colors.white,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              '${widget.start.cryptoAmount ?? ''} ${widget.start.cryptoCurrency ?? 'BTC'}',
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+            const SizedBox(height: AppSpacing.sm),
+            SelectableText(
+              widget.start.cryptoAddress ?? '',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: palette.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            if (widget.start.expiresAt != null) ...[
+              const SizedBox(height: AppSpacing.sm),
+              Text(
+                l10n.walletBitcoinExpires(widget.start.expiresAt!),
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: palette.textTertiary,
+                    ),
+              ),
+            ],
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              l10n.walletTopUpWaiting,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: palette.textSecondary,
+                  ),
+              textAlign: TextAlign.center,
+            ),
+            if (_pollOutcome == TopUpOutcome.awaitingProvider)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.sm),
+                child: Text(
+                  l10n.walletTopUpPending,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: palette.danger,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+              ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _copyAddress,
+          child: Text(l10n.walletCopyAddress),
+        ),
+        if (widget.start.sandboxConfirm)
+          FilledButton(
+            onPressed: _confirming ? null : _confirmSandbox,
+            child: Text(l10n.walletBitcoinConfirmPaid),
+          )
+        else
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(TopUpOutcome.awaitingProvider),
+            child: Text(l10n.walletBitcoinClose),
+          ),
       ],
     );
   }

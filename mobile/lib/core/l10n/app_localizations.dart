@@ -1400,6 +1400,30 @@ abstract class AppLocalizations {
   /// **'Hamyon to\'ldirildi'**
   String get walletTopUpSuccess;
 
+  /// No description provided for @walletTopUpWaiting.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov tasdiqlanishini kutmoqdamiz…'**
+  String get walletTopUpWaiting;
+
+  /// No description provided for @walletTopUpPending.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov hali tasdiqlanmadi. Tasdiq kelishi bilan balans yangilanadi.'**
+  String get walletTopUpPending;
+
+  /// No description provided for @walletTopUpFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov amalga oshmadi'**
+  String get walletTopUpFailed;
+
+  /// No description provided for @walletTopUpOpenFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'lov sahifasini ochib bo\'lmadi'**
+  String get walletTopUpOpenFailed;
+
   /// No description provided for @walletWithdrawSuccess.
   ///
   /// In uz, this message translates to:
@@ -1513,6 +1537,102 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'To\'g\'ri karta raqamini kiriting'**
   String get walletInvalidCard;
+
+  /// No description provided for @walletMethodBitcoin.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bitcoin'**
+  String get walletMethodBitcoin;
+
+  /// No description provided for @walletMethodCard.
+  ///
+  /// In uz, this message translates to:
+  /// **'Karta'**
+  String get walletMethodCard;
+
+  /// No description provided for @walletBitcoinApprox.
+  ///
+  /// In uz, this message translates to:
+  /// **'≈ {amount}'**
+  String walletBitcoinApprox(String amount);
+
+  /// No description provided for @walletChargeAmount.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yechiladi: {amount}'**
+  String walletChargeAmount(String amount);
+
+  /// No description provided for @walletChargeFromCard.
+  ///
+  /// In uz, this message translates to:
+  /// **'•••• {last4} kartasidan {amount} yechiladi'**
+  String walletChargeFromCard(String last4, String amount);
+
+  /// No description provided for @walletAddCard.
+  ///
+  /// In uz, this message translates to:
+  /// **'Karta qo\'shish'**
+  String get walletAddCard;
+
+  /// No description provided for @walletSaveCard.
+  ///
+  /// In uz, this message translates to:
+  /// **'Saqlash'**
+  String get walletSaveCard;
+
+  /// No description provided for @walletCancelAddCard.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bekor qilish'**
+  String get walletCancelAddCard;
+
+  /// No description provided for @walletCardExpMonth.
+  ///
+  /// In uz, this message translates to:
+  /// **'Oy'**
+  String get walletCardExpMonth;
+
+  /// No description provided for @walletCardExpYear.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yil'**
+  String get walletCardExpYear;
+
+  /// No description provided for @walletBitcoinPayTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bitcoin to\'lovi'**
+  String get walletBitcoinPayTitle;
+
+  /// No description provided for @walletCopyAddress.
+  ///
+  /// In uz, this message translates to:
+  /// **'Manzilni nusxalash'**
+  String get walletCopyAddress;
+
+  /// No description provided for @walletAddressCopied.
+  ///
+  /// In uz, this message translates to:
+  /// **'Manzil nusxalandi'**
+  String get walletAddressCopied;
+
+  /// No description provided for @walletBitcoinConfirmPaid.
+  ///
+  /// In uz, this message translates to:
+  /// **'To\'ladim'**
+  String get walletBitcoinConfirmPaid;
+
+  /// No description provided for @walletBitcoinClose.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yopish'**
+  String get walletBitcoinClose;
+
+  /// No description provided for @walletBitcoinExpires.
+  ///
+  /// In uz, this message translates to:
+  /// **'{time} gacha amal qiladi'**
+  String walletBitcoinExpires(String time);
 }
 
 class _AppLocalizationsDelegate
