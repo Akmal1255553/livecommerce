@@ -14,8 +14,8 @@ if [ -z "$DB_URL" ] && [ -n "$DATABASE_URL" ]; then
 fi
 
 if [ -z "$APP_KEY" ]; then
-  export APP_KEY="$(php -r "echo 'base64:'.base64_encode(random_bytes(32));")"
-  echo "WARNING: Generated ephemeral APP_KEY for this boot. Set a permanent APP_KEY in the host dashboard."
+  echo "ERROR: Set a permanent APP_KEY in the host dashboard before deployment." >&2
+  exit 1
 elif ! echo "$APP_KEY" | grep -q '^base64:'; then
   export APP_KEY="base64:${APP_KEY}"
 fi
@@ -36,14 +36,15 @@ fi
 
 php artisan migrate --force --no-interaction
 
-# Always ensure demo admin exists for /admin (idempotent)
-php artisan db:seed --class=AdminUserSeeder --force --no-interaction || true
+# Cache config/routes/views now that env is present (best-effort)
+if [ "$MODE" = "web" ]; then
+  php artisan optimize --no-interaction || true
+fi
 
-# Idempotent demo catalog when empty (or SEED_ON_BOOT=true)
-if [ "$SEED_ON_BOOT" = "true" ]; then
+# Demo accounts have public passwords. Never create them in production.
+if [ "$SEED_ON_BOOT" = "true" ] && [ "$APP_ENV" != "production" ]; then
+  php artisan db:seed --class=AdminUserSeeder --force --no-interaction
   php artisan db:seed --class=DemoCommerceSeeder --force --no-interaction
-else
-  php artisan db:seed --class=DemoCommerceSeeder --force --no-interaction || true
 fi
 
 exec php artisan serve --host=0.0.0.0 --port="$PORT"
