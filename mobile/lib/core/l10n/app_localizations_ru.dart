@@ -847,4 +847,112 @@ class AppLocalizationsRu extends AppLocalizations {
   String walletBitcoinExpires(String time) {
     return 'Действует до $time';
   }
+
+  @override
+  String get createSheetTitle => 'Создать';
+
+  @override
+  String get createUploadVideo => 'Загрузить видео';
+
+  @override
+  String get createGoLive => 'В эфир';
+
+  @override
+  String get uploadTitle => 'Загрузка видео';
+
+  @override
+  String get uploadChooseVideo => 'Выберите видео';
+
+  @override
+  String get uploadPickFromGallery => 'Из галереи';
+
+  @override
+  String get uploadPickFailed => 'Не удалось открыть выбор видео';
+
+  @override
+  String get uploadUnsupportedFormat =>
+      'Формат видео не поддерживается. Нужен MP4, MOV или WebM.';
+
+  @override
+  String get uploadTooLarge => 'Видео слишком большое (макс. 100 МБ)';
+
+  @override
+  String get uploadTitleLabel => 'Название (необязательно)';
+
+  @override
+  String get uploadDescriptionLabel => 'Описание (необязательно)';
+
+  @override
+  String get uploadVisibilityLabel => 'Кто может видеть';
+
+  @override
+  String get visibilityPublic => 'Публичное';
+
+  @override
+  String get visibilityFollowers => 'Подписчики';
+
+  @override
+  String get visibilityPrivate => 'Приватное';
+
+  @override
+  String get uploadButton => 'Загрузить';
+
+  @override
+  String get uploadUploading => 'Загрузка…';
+
+  @override
+  String get uploadConfirming => 'Подтверждение…';
+
+  @override
+  String get uploadProcessingTitle => 'Видео обрабатывается…';
+
+  @override
+  String get uploadProcessingHint =>
+      'Обычно занимает минуту. Видео появится в ленте автоматически.';
+
+  @override
+  String get uploadCheckStatus => 'Проверить статус';
+
+  @override
+  String get uploadDoneTitle => 'Видео загружено!';
+
+  @override
+  String get uploadDoneHint => 'Видео уже в вашей ленте.';
+
+  @override
+  String get uploadAnotherVideo => 'Загрузить ещё одно видео';
+
+  @override
+  String get uploadFailedTitle => 'Не удалось загрузить';
+
+  @override
+  String get uploadRetry => 'Повторить';
+
+  @override
+  String get uploadChooseAnother => 'Выбрать другое видео';
+
+  @override
+  String get obsPanelTitle => 'Эфир через OBS';
+
+  @override
+  String get obsServerLabel => 'RTMP сервер';
+
+  @override
+  String get obsStreamKeyLabel => 'Ключ трансляции';
+
+  @override
+  String get obsCopied => 'Скопировано';
+
+  @override
+  String get obsWaiting => 'Ждём трансляцию…';
+
+  @override
+  String get obsLive => 'Вы в эфире!';
+
+  @override
+  String get obsHint =>
+      'В OBS: Настройки → Трансляция → Сервис: Custom → вставьте сервер и ключ.';
+
+  @override
+  String get liveHlsWaiting => 'Трансляция запускается…';
 }

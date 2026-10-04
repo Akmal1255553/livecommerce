@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livecommerce_mobile/app/app.dart';
 import 'package:livecommerce_mobile/core/config/dev_config.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:livecommerce_mobile/features/push/presentation/providers/push_providers.dart';
 import 'package:sentry_flutter/sentry_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -30,6 +33,11 @@ Future<void> bootstrap() async {
   if (DevConfig.bypassAuth &&
       !container.read(authNotifierProvider).isAuthenticated) {
     container.read(authNotifierProvider.notifier).enterDevGuestMode();
+  }
+
+  // Register the FCM token for push notifications (no-op without Firebase config).
+  if (container.read(authNotifierProvider).isAuthenticated) {
+    unawaited(container.read(pushServiceProvider).setup());
   }
 
   Future<void> run() async {

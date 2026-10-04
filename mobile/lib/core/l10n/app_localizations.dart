@@ -1639,6 +1639,216 @@ abstract class AppLocalizations {
   /// In uz, this message translates to:
   /// **'{time} gacha amal qiladi'**
   String walletBitcoinExpires(String time);
+
+  /// No description provided for @createSheetTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yaratish'**
+  String get createSheetTitle;
+
+  /// No description provided for @createUploadVideo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video yuklash'**
+  String get createUploadVideo;
+
+  /// No description provided for @createGoLive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jonli efir'**
+  String get createGoLive;
+
+  /// No description provided for @uploadTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video yuklash'**
+  String get uploadTitle;
+
+  /// No description provided for @uploadChooseVideo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video tanlang'**
+  String get uploadChooseVideo;
+
+  /// No description provided for @uploadPickFromGallery.
+  ///
+  /// In uz, this message translates to:
+  /// **'Galereyadan'**
+  String get uploadPickFromGallery;
+
+  /// No description provided for @uploadPickFailed.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video tanlash oynasi ochilmadi'**
+  String get uploadPickFailed;
+
+  /// No description provided for @uploadUnsupportedFormat.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video formati qo\'llab-quvvatlanmaydi. MP4, MOV yoki WebM bo\'lishi kerak.'**
+  String get uploadUnsupportedFormat;
+
+  /// No description provided for @uploadTooLarge.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video juda katta (maks. 100 MB)'**
+  String get uploadTooLarge;
+
+  /// No description provided for @uploadTitleLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Sarlavha (ixtiyoriy)'**
+  String get uploadTitleLabel;
+
+  /// No description provided for @uploadDescriptionLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tavsif (ixtiyoriy)'**
+  String get uploadDescriptionLabel;
+
+  /// No description provided for @uploadVisibilityLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Kim ko\'ra oladi'**
+  String get uploadVisibilityLabel;
+
+  /// No description provided for @visibilityPublic.
+  ///
+  /// In uz, this message translates to:
+  /// **'Ommaviy'**
+  String get visibilityPublic;
+
+  /// No description provided for @visibilityFollowers.
+  ///
+  /// In uz, this message translates to:
+  /// **'Obunachilar'**
+  String get visibilityFollowers;
+
+  /// No description provided for @visibilityPrivate.
+  ///
+  /// In uz, this message translates to:
+  /// **'Shaxsiy'**
+  String get visibilityPrivate;
+
+  /// No description provided for @uploadButton.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuklash'**
+  String get uploadButton;
+
+  /// No description provided for @uploadUploading.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuklanmoqda…'**
+  String get uploadUploading;
+
+  /// No description provided for @uploadConfirming.
+  ///
+  /// In uz, this message translates to:
+  /// **'Tasdiqlanmoqda…'**
+  String get uploadConfirming;
+
+  /// No description provided for @uploadProcessingTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video qayta ishlanmoqda…'**
+  String get uploadProcessingTitle;
+
+  /// No description provided for @uploadProcessingHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Odatda bir daqiqa davom etadi. Video tayyor bo\'lgach lentada paydo bo\'ladi.'**
+  String get uploadProcessingHint;
+
+  /// No description provided for @uploadCheckStatus.
+  ///
+  /// In uz, this message translates to:
+  /// **'Holatni tekshirish'**
+  String get uploadCheckStatus;
+
+  /// No description provided for @uploadDoneTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video yuklandi!'**
+  String get uploadDoneTitle;
+
+  /// No description provided for @uploadDoneHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'Video endi lentada ko\'rinadi.'**
+  String get uploadDoneHint;
+
+  /// No description provided for @uploadAnotherVideo.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshqa video yuklash'**
+  String get uploadAnotherVideo;
+
+  /// No description provided for @uploadFailedTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Yuklash amalga oshmadi'**
+  String get uploadFailedTitle;
+
+  /// No description provided for @uploadRetry.
+  ///
+  /// In uz, this message translates to:
+  /// **'Qayta urinish'**
+  String get uploadRetry;
+
+  /// No description provided for @uploadChooseAnother.
+  ///
+  /// In uz, this message translates to:
+  /// **'Boshqa video tanlash'**
+  String get uploadChooseAnother;
+
+  /// No description provided for @obsPanelTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'OBS bilan efir'**
+  String get obsPanelTitle;
+
+  /// No description provided for @obsServerLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'RTMP server'**
+  String get obsServerLabel;
+
+  /// No description provided for @obsStreamKeyLabel.
+  ///
+  /// In uz, this message translates to:
+  /// **'Stream kaliti'**
+  String get obsStreamKeyLabel;
+
+  /// No description provided for @obsCopied.
+  ///
+  /// In uz, this message translates to:
+  /// **'Nusxalandi'**
+  String get obsCopied;
+
+  /// No description provided for @obsWaiting.
+  ///
+  /// In uz, this message translates to:
+  /// **'Efir kutilmoqda…'**
+  String get obsWaiting;
+
+  /// No description provided for @obsLive.
+  ///
+  /// In uz, this message translates to:
+  /// **'Jonlisiz!'**
+  String get obsLive;
+
+  /// No description provided for @obsHint.
+  ///
+  /// In uz, this message translates to:
+  /// **'OBS da: Sozlamalar → Stream → Service: Custom → server va kalitni joylang.'**
+  String get obsHint;
+
+  /// No description provided for @liveHlsWaiting.
+  ///
+  /// In uz, this message translates to:
+  /// **'Efir boshlanmoqda…'**
+  String get liveHlsWaiting;
 }
 
 class _AppLocalizationsDelegate

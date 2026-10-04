@@ -5,6 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
+import 'package:livecommerce_mobile/features/live/presentation/widgets/live_hls_view.dart';
+import 'package:livecommerce_mobile/features/live/presentation/widgets/live_obs_panel.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 Widget buildLiveAvSurface({
@@ -14,6 +16,13 @@ Widget buildLiveAvSurface({
   final supported = !kIsWeb && (Platform.isAndroid || Platform.isIOS);
   if (!supported) {
     return const _NativeOnlyBanner();
+  }
+
+  // RTMP (OBS) sessions: hosts push from OBS, viewers play the HLS relay.
+  if (session.isRtmp && session.hlsUrl != null) {
+    return isHost
+        ? LiveObsHostPanel(session: session)
+        : LiveHlsView(hlsUrl: session.hlsUrl!);
   }
 
   final appId = session.appId;

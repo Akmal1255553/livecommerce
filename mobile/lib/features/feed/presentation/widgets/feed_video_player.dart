@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:livecommerce_mobile/core/video/browser_media_surface.dart';
 import 'package:livecommerce_mobile/shared/widgets/app_cached_image.dart';
 import 'package:video_player/video_player.dart';
 
@@ -73,6 +75,7 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer>
   }
 
   void _adoptOrInit() {
+    if (kIsWeb) return;
     final prefetched = widget.prefetchedController;
     if (prefetched != null && prefetched.value.isInitialized) {
       _controller = prefetched;
@@ -168,6 +171,21 @@ class _FeedVideoPlayerState extends State<FeedVideoPlayer>
 
   @override
   Widget build(BuildContext context) {
+    if (kIsWeb) {
+      return GestureDetector(
+        onTap: () => setState(() => _muted = !_muted),
+        child: Stack(fit: StackFit.expand, children: [
+          BrowserMediaSurface(
+            configuration: {'mode': 'video', 'url': widget.videoUrl,
+              'poster': widget.thumbnailUrl, 'loop': true},
+            active: widget.isActive, muted: _muted, interactive: false,
+          ),
+          Positioned(right: 16, bottom: 220, child: Icon(
+            _muted ? Icons.volume_off : Icons.volume_up,
+            color: Colors.white70, size: 22)),
+        ]),
+      );
+    }
     final controller = _controller;
     final ready = controller != null && controller.value.isInitialized;
 

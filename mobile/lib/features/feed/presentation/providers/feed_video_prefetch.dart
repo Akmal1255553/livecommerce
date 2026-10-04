@@ -13,6 +13,7 @@ class FeedVideoPrefetch {
 
   /// Prefetch [url] if not already warming / warmed.
   Future<void> warm(String? url) async {
+    if (kIsWeb) return; // Browser HLS player manages its own media buffer.
     if (url == null || url.isEmpty) {
       return;
     }

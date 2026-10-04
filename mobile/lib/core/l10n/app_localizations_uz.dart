@@ -850,4 +850,112 @@ class AppLocalizationsUz extends AppLocalizations {
   String walletBitcoinExpires(String time) {
     return '$time gacha amal qiladi';
   }
+
+  @override
+  String get createSheetTitle => 'Yaratish';
+
+  @override
+  String get createUploadVideo => 'Video yuklash';
+
+  @override
+  String get createGoLive => 'Jonli efir';
+
+  @override
+  String get uploadTitle => 'Video yuklash';
+
+  @override
+  String get uploadChooseVideo => 'Video tanlang';
+
+  @override
+  String get uploadPickFromGallery => 'Galereyadan';
+
+  @override
+  String get uploadPickFailed => 'Video tanlash oynasi ochilmadi';
+
+  @override
+  String get uploadUnsupportedFormat =>
+      'Video formati qo\'llab-quvvatlanmaydi. MP4, MOV yoki WebM bo\'lishi kerak.';
+
+  @override
+  String get uploadTooLarge => 'Video juda katta (maks. 100 MB)';
+
+  @override
+  String get uploadTitleLabel => 'Sarlavha (ixtiyoriy)';
+
+  @override
+  String get uploadDescriptionLabel => 'Tavsif (ixtiyoriy)';
+
+  @override
+  String get uploadVisibilityLabel => 'Kim ko\'ra oladi';
+
+  @override
+  String get visibilityPublic => 'Ommaviy';
+
+  @override
+  String get visibilityFollowers => 'Obunachilar';
+
+  @override
+  String get visibilityPrivate => 'Shaxsiy';
+
+  @override
+  String get uploadButton => 'Yuklash';
+
+  @override
+  String get uploadUploading => 'Yuklanmoqda…';
+
+  @override
+  String get uploadConfirming => 'Tasdiqlanmoqda…';
+
+  @override
+  String get uploadProcessingTitle => 'Video qayta ishlanmoqda…';
+
+  @override
+  String get uploadProcessingHint =>
+      'Odatda bir daqiqa davom etadi. Video tayyor bo\'lgach lentada paydo bo\'ladi.';
+
+  @override
+  String get uploadCheckStatus => 'Holatni tekshirish';
+
+  @override
+  String get uploadDoneTitle => 'Video yuklandi!';
+
+  @override
+  String get uploadDoneHint => 'Video endi lentada ko\'rinadi.';
+
+  @override
+  String get uploadAnotherVideo => 'Boshqa video yuklash';
+
+  @override
+  String get uploadFailedTitle => 'Yuklash amalga oshmadi';
+
+  @override
+  String get uploadRetry => 'Qayta urinish';
+
+  @override
+  String get uploadChooseAnother => 'Boshqa video tanlash';
+
+  @override
+  String get obsPanelTitle => 'OBS bilan efir';
+
+  @override
+  String get obsServerLabel => 'RTMP server';
+
+  @override
+  String get obsStreamKeyLabel => 'Stream kaliti';
+
+  @override
+  String get obsCopied => 'Nusxalandi';
+
+  @override
+  String get obsWaiting => 'Efir kutilmoqda…';
+
+  @override
+  String get obsLive => 'Jonlisiz!';
+
+  @override
+  String get obsHint =>
+      'OBS da: Sozlamalar → Stream → Service: Custom → server va kalitni joylang.';
+
+  @override
+  String get liveHlsWaiting => 'Efir boshlanmoqda…';
 }

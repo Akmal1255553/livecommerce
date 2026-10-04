@@ -27,7 +27,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   void initState() {
     super.initState();
-    Future.microtask(() => ref.read(walletNotifierProvider.notifier).load());
+    Future.microtask(() {
+      if (mounted && ref.read(authNotifierProvider).isAuthenticated) {
+        ref.read(walletNotifierProvider.notifier).load();
+      }
+    });
   }
 
   @override

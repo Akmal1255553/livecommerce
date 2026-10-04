@@ -402,5 +402,43 @@
   "walletBitcoinExpires": "{time} gacha amal qiladi",
   "@walletBitcoinExpires": {
     "placeholders": { "time": { "type": "String" } }
-  }
+  },
+
+  "createSheetTitle": "Yaratish",
+  "createUploadVideo": "Video yuklash",
+  "createGoLive": "Jonli efir",
+
+  "uploadTitle": "Video yuklash",
+  "uploadChooseVideo": "Video tanlang",
+  "uploadPickFromGallery": "Galereyadan",
+  "uploadPickFailed": "Video tanlash oynasi ochilmadi",
+  "uploadUnsupportedFormat": "Video formati qo'llab-quvvatlanmaydi. MP4, MOV yoki WebM bo'lishi kerak.",
+  "uploadTooLarge": "Video juda katta (maks. 100 MB)",
+  "uploadTitleLabel": "Sarlavha (ixtiyoriy)",
+  "uploadDescriptionLabel": "Tavsif (ixtiyoriy)",
+  "uploadVisibilityLabel": "Kim ko'ra oladi",
+  "visibilityPublic": "Ommaviy",
+  "visibilityFollowers": "Obunachilar",
+  "visibilityPrivate": "Shaxsiy",
+  "uploadButton": "Yuklash",
+  "uploadUploading": "Yuklanmoqda…",
+  "uploadConfirming": "Tasdiqlanmoqda…",
+  "uploadProcessingTitle": "Video qayta ishlanmoqda…",
+  "uploadProcessingHint": "Odatda bir daqiqa davom etadi. Video tayyor bo'lgach lentada paydo bo'ladi.",
+  "uploadCheckStatus": "Holatni tekshirish",
+  "uploadDoneTitle": "Video yuklandi!",
+  "uploadDoneHint": "Video endi lentada ko'rinadi.",
+  "uploadAnotherVideo": "Boshqa video yuklash",
+  "uploadFailedTitle": "Yuklash amalga oshmadi",
+  "uploadRetry": "Qayta urinish",
+  "uploadChooseAnother": "Boshqa video tanlash",
+
+  "obsPanelTitle": "OBS bilan efir",
+  "obsServerLabel": "RTMP server",
+  "obsStreamKeyLabel": "Stream kaliti",
+  "obsCopied": "Nusxalandi",
+  "obsWaiting": "Efir kutilmoqda…",
+  "obsLive": "Jonlisiz!",
+  "obsHint": "OBS da: Sozlamalar → Stream → Service: Custom → server va kalitni joylang.",
+  "liveHlsWaiting": "Efir boshlanmoqda…"
 }

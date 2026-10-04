@@ -2,10 +2,11 @@ import 'package:flutter/widgets.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
 
 import 'live_av_surface_stub.dart'
-    if (dart.library.io) 'live_av_surface_io.dart' as impl;
+    if (dart.library.io) 'live_av_surface_io.dart'
+    if (dart.library.js_interop) 'live_av_surface_web.dart' as impl;
 
 /// Host/viewer live A/V surface. Native (Android/iOS) uses Agora RTC;
-/// web/desktop show a degraded placeholder.
+/// browsers use the Agora Web SDK. RTMP sessions play through HLS.
 class LiveAvSurface extends StatelessWidget {
   const LiveAvSurface({
     super.key,

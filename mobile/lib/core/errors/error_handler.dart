@@ -49,7 +49,7 @@ Failure mapExceptionToFailure(Object error) {
     }
 
     if (statusCode == 429) {
-      return RateLimitFailure(
+      return const RateLimitFailure(
         'Слишком много запросов. Подождите ~1 минуту и попробуйте снова.',
       );
     }
@@ -57,7 +57,7 @@ Failure mapExceptionToFailure(Object error) {
     if (error.type == DioExceptionType.connectionTimeout ||
         error.type == DioExceptionType.receiveTimeout ||
         error.type == DioExceptionType.connectionError) {
-      return NetworkFailure('Connection failed.');
+      return const NetworkFailure('Connection failed.');
     }
 
     return ServerFailure(_messageFromBody(data) ?? 'Request failed.');

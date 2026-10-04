@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +8,7 @@ import 'package:livecommerce_mobile/app/router.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/core/theme/app_theme.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:livecommerce_mobile/features/push/presentation/providers/push_providers.dart';
 import 'package:livecommerce_mobile/shared/widgets/offline_banner.dart';
 
 class LiveCommerceApp extends ConsumerWidget {
@@ -15,6 +18,13 @@ class LiveCommerceApp extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final router = ref.watch(routerProvider);
     final settings = ref.watch(appSettingsProvider);
+
+    // Register the FCM token on every new sign-in (idempotent upsert server-side).
+    ref.listen<AuthState>(authNotifierProvider, (previous, next) {
+      if (!(previous?.isAuthenticated ?? false) && next.isAuthenticated) {
+        unawaited(ref.read(pushServiceProvider).setup());
+      }
+    });
 
     return MaterialApp.router(
       title: 'LiveCommerce',

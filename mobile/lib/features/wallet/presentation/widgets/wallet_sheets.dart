@@ -45,7 +45,7 @@ Future<TopUpOutcome?> showBitcoinPaymentDialog(
 
 /// Card top-ups allow smaller amounts; BTC network floors need larger presets.
 const _topUpPresets = <int>[50000, 100000, 250000, 500000, 1000000];
-const _bitcoinTopUpPresets = <int>[250000, 500000, 1000000, 2000000, 5000000];
+const _bitcoinTopUpPresets = <int>[300000, 500000, 1000000, 2000000, 5000000];
 
 class _SheetShell extends StatelessWidget {
   const _SheetShell({required this.title, required this.children});
@@ -513,6 +513,24 @@ class _TopUpSheetState extends ConsumerState<_TopUpSheet> {
           ],
         ],
         const SizedBox(height: AppSpacing.xl),
+        if (state.error != null) ...[
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(AppSpacing.md),
+            decoration: BoxDecoration(
+              color: palette.danger.withValues(alpha: 0.12),
+              borderRadius: AppRadius.smAll,
+            ),
+            child: Text(
+              state.error!,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: palette.danger,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
+          ),
+          const SizedBox(height: AppSpacing.md),
+        ],
         GradientButton(
           label: l10n.walletTopUp,
           icon: Icons.add_rounded,
@@ -585,79 +603,108 @@ class _BitcoinPaymentDialogState extends ConsumerState<_BitcoinPaymentDialog> {
     final qr = widget.start.qrPayload ??
         'bitcoin:${widget.start.cryptoAddress}?amount=${widget.start.cryptoAmount}';
 
-    return AlertDialog(
-      title: Text(l10n.walletBitcoinPayTitle),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            QrImageView(
-              data: qr,
-              size: 200,
-              backgroundColor: Colors.white,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              '${widget.start.cryptoAmount ?? ''} ${widget.start.cryptoCurrency ?? 'BTC'}',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-            ),
-            const SizedBox(height: AppSpacing.sm),
-            SelectableText(
-              widget.start.cryptoAddress ?? '',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: palette.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (widget.start.expiresAt != null) ...[
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                l10n.walletBitcoinExpires(widget.start.expiresAt!),
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: palette.textTertiary,
-                    ),
-              ),
-            ],
-            const SizedBox(height: AppSpacing.md),
-            Text(
-              l10n.walletTopUpWaiting,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: palette.textSecondary,
-                  ),
-              textAlign: TextAlign.center,
-            ),
-            if (_pollOutcome == TopUpOutcome.awaitingProvider)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.sm),
-                child: Text(
-                  l10n.walletTopUpPending,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: palette.danger,
+    // AlertDialog uses IntrinsicWidth; QrImageView uses LayoutBuilder — incompatible.
+    return Dialog(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 360),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.lg,
+            AppSpacing.md,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.walletBitcoinPayTitle,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
                       ),
                   textAlign: TextAlign.center,
                 ),
-              ),
-          ],
+                const SizedBox(height: AppSpacing.lg),
+                SizedBox(
+                  width: 200,
+                  height: 200,
+                  child: QrImageView(
+                    data: qr,
+                    size: 200,
+                    backgroundColor: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  '${widget.start.cryptoAmount ?? ''} ${widget.start.cryptoCurrency ?? 'BTC'}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                SelectableText(
+                  widget.start.cryptoAddress ?? '',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: palette.textSecondary,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                if (widget.start.expiresAt != null) ...[
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    l10n.walletBitcoinExpires(widget.start.expiresAt!),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: palette.textTertiary,
+                        ),
+                  ),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  l10n.walletTopUpWaiting,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: palette.textSecondary,
+                      ),
+                  textAlign: TextAlign.center,
+                ),
+                if (_pollOutcome == TopUpOutcome.awaitingProvider)
+                  Padding(
+                    padding: const EdgeInsets.only(top: AppSpacing.sm),
+                    child: Text(
+                      l10n.walletTopUpPending,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: palette.danger,
+                          ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                const SizedBox(height: AppSpacing.lg),
+                Wrap(
+                  alignment: WrapAlignment.end,
+                  spacing: AppSpacing.sm,
+                  children: [
+                    TextButton(
+                      onPressed: _copyAddress,
+                      child: Text(l10n.walletCopyAddress),
+                    ),
+                    if (widget.start.sandboxConfirm)
+                      FilledButton(
+                        onPressed: _confirming ? null : _confirmSandbox,
+                        child: Text(l10n.walletBitcoinConfirmPaid),
+                      )
+                    else
+                      TextButton(
+                        onPressed: () => Navigator.of(context)
+                            .pop(TopUpOutcome.awaitingProvider),
+                        child: Text(l10n.walletBitcoinClose),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ),
       ),
-      actions: [
-        TextButton(
-          onPressed: _copyAddress,
-          child: Text(l10n.walletCopyAddress),
-        ),
-        if (widget.start.sandboxConfirm)
-          FilledButton(
-            onPressed: _confirming ? null : _confirmSandbox,
-            child: Text(l10n.walletBitcoinConfirmPaid),
-          )
-        else
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(TopUpOutcome.awaitingProvider),
-            child: Text(l10n.walletBitcoinClose),
-          ),
-      ],
     );
   }
 }

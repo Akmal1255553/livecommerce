@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/core/theme/app_colors.dart';
 import 'package:livecommerce_mobile/core/theme/app_dimens.dart';
 
@@ -35,12 +36,64 @@ class AppBottomNav extends StatelessWidget {
       case AppTab.discover:
         context.push('/live');
       case AppTab.create:
-        context.push('/live/go');
+        _openCreateSheet(context);
       case AppTab.inbox:
         context.push('/conversations');
       case AppTab.profile:
         context.push('/profile');
     }
+  }
+
+  void _openCreateSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final l10n = AppLocalizations.of(sheetContext)!;
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.lg,
+              0,
+              AppSpacing.lg,
+              AppSpacing.xxl,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.createSheetTitle,
+                  style: Theme.of(sheetContext).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+                _CreateOption(
+                  icon: Icons.video_call_rounded,
+                  label: l10n.createUploadVideo,
+                  subtitle: 'MP4 · MOV · WebM',
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    context.push('/upload');
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                _CreateOption(
+                  icon: Icons.live_tv_rounded,
+                  label: l10n.createGoLive,
+                  subtitle: l10n.liveNowTooltip,
+                  gradient: AppGradients.live,
+                  onTap: () {
+                    Navigator.of(sheetContext).pop();
+                    context.push('/live/go');
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -151,6 +204,76 @@ class _NavIcon extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CreateOption extends StatelessWidget {
+  const _CreateOption({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.subtitle,
+    this.gradient = AppGradients.brand,
+  });
+
+  final IconData icon;
+  final String label;
+  final String? subtitle;
+  final Gradient gradient;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final palette = AppPalette.of(context);
+
+    return Material(
+      color: palette.surfaceElevated,
+      borderRadius: AppRadius.mdAll,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: AppRadius.mdAll,
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  gradient: gradient,
+                  borderRadius: AppRadius.smAll,
+                ),
+                child: Icon(icon, color: Colors.white, size: 26),
+              ),
+              const SizedBox(width: AppSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: AppSpacing.xxs),
+                      Text(
+                        subtitle!,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: palette.textSecondary,
+                            ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right_rounded, color: AppColors.brandPink),
+            ],
+          ),
         ),
       ),
     );

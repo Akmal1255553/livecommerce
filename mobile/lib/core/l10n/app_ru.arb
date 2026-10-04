@@ -402,5 +402,43 @@
   "walletBitcoinExpires": "Действует до {time}",
   "@walletBitcoinExpires": {
     "placeholders": { "time": { "type": "String" } }
-  }
+  },
+
+  "createSheetTitle": "Создать",
+  "createUploadVideo": "Загрузить видео",
+  "createGoLive": "В эфир",
+
+  "uploadTitle": "Загрузка видео",
+  "uploadChooseVideo": "Выберите видео",
+  "uploadPickFromGallery": "Из галереи",
+  "uploadPickFailed": "Не удалось открыть выбор видео",
+  "uploadUnsupportedFormat": "Формат видео не поддерживается. Нужен MP4, MOV или WebM.",
+  "uploadTooLarge": "Видео слишком большое (макс. 100 МБ)",
+  "uploadTitleLabel": "Название (необязательно)",
+  "uploadDescriptionLabel": "Описание (необязательно)",
+  "uploadVisibilityLabel": "Кто может видеть",
+  "visibilityPublic": "Публичное",
+  "visibilityFollowers": "Подписчики",
+  "visibilityPrivate": "Приватное",
+  "uploadButton": "Загрузить",
+  "uploadUploading": "Загрузка…",
+  "uploadConfirming": "Подтверждение…",
+  "uploadProcessingTitle": "Видео обрабатывается…",
+  "uploadProcessingHint": "Обычно занимает минуту. Видео появится в ленте автоматически.",
+  "uploadCheckStatus": "Проверить статус",
+  "uploadDoneTitle": "Видео загружено!",
+  "uploadDoneHint": "Видео уже в вашей ленте.",
+  "uploadAnotherVideo": "Загрузить ещё одно видео",
+  "uploadFailedTitle": "Не удалось загрузить",
+  "uploadRetry": "Повторить",
+  "uploadChooseAnother": "Выбрать другое видео",
+
+  "obsPanelTitle": "Эфир через OBS",
+  "obsServerLabel": "RTMP сервер",
+  "obsStreamKeyLabel": "Ключ трансляции",
+  "obsCopied": "Скопировано",
+  "obsWaiting": "Ждём трансляцию…",
+  "obsLive": "Вы в эфире!",
+  "obsHint": "В OBS: Настройки → Трансляция → Сервис: Custom → вставьте сервер и ключ.",
+  "liveHlsWaiting": "Трансляция запускается…"
 }

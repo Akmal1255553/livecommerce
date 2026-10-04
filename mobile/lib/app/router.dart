@@ -33,6 +33,7 @@ import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_orders_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_product_form_screen.dart';
 import 'package:livecommerce_mobile/features/seller/presentation/screens/seller_products_screen.dart';
+import 'package:livecommerce_mobile/features/upload/presentation/screens/video_upload_screen.dart';
 import 'package:livecommerce_mobile/features/wallet/presentation/screens/wallet_screen.dart';
 import 'package:livecommerce_mobile/shared/navigation/page_transitions.dart';
 
@@ -325,6 +326,13 @@ class AppRouter {
           pageBuilder: (context, state) => AppPageTransitions.slideUp(
             key: state.pageKey,
             child: const GoLiveScreen(),
+          ),
+        ),
+        GoRoute(
+          path: '/upload',
+          pageBuilder: (context, state) => AppPageTransitions.slideUp(
+            key: state.pageKey,
+            child: const VideoUploadScreen(),
           ),
         ),
         GoRoute(

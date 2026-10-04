@@ -114,6 +114,11 @@ class LiveSession {
     required this.title,
     required this.status,
     this.channelId,
+    this.provider,
+    this.rtmpUrl,
+    this.hlsUrl,
+    this.streamKey,
+    this.isStreaming,
     this.viewerCount = 0,
     this.peakViewers,
     this.uniqueViewers,
@@ -133,6 +138,13 @@ class LiveSession {
   final String title;
   final String status;
   final String? channelId;
+
+  /// `fake` | `agora` | `mediamtx` — which relay backs this session.
+  final String? provider;
+  final String? rtmpUrl;
+  final String? hlsUrl;
+  final String? streamKey;
+  final bool? isStreaming;
   final int viewerCount;
   final int? peakViewers;
   final int? uniqueViewers;
@@ -151,6 +163,9 @@ class LiveSession {
   bool get hasReplay => replayUrl != null && replayUrl!.isNotEmpty;
   bool get isHostToken => publisherToken != null && publisherToken!.isNotEmpty;
 
+  /// RTMP (MediaMTX) sessions: viewers play HLS, hosts push from OBS.
+  bool get isRtmp => provider == 'mediamtx' || hlsUrl != null && hlsUrl!.isNotEmpty;
+
   factory LiveSession.fromJson(Map<String, dynamic> json) {
     final pinnedJson = json['pinned_products'] as List<dynamic>? ?? [];
     final timelineJson = json['product_timeline'] as List<dynamic>? ?? [];
@@ -161,6 +176,11 @@ class LiveSession {
       title: json['title'] as String? ?? 'Live',
       status: json['status'] as String? ?? 'ended',
       channelId: json['channel_id'] as String?,
+      provider: json['provider'] as String?,
+      rtmpUrl: json['rtmp_url'] as String?,
+      hlsUrl: json['hls_url'] as String?,
+      streamKey: json['stream_key'] as String?,
+      isStreaming: json['is_streaming'] as bool?,
       viewerCount: json['viewer_count'] as int? ?? 0,
       peakViewers: json['peak_viewers'] as int?,
       uniqueViewers: json['unique_viewers'] as int?,

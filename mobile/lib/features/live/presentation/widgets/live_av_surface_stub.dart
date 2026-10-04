@@ -1,11 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:livecommerce_mobile/core/l10n/app_localizations.dart';
 import 'package:livecommerce_mobile/features/live/domain/entities/live_session.dart';
+import 'package:livecommerce_mobile/features/live/presentation/widgets/live_hls_view.dart';
+import 'package:livecommerce_mobile/features/live/presentation/widgets/live_obs_panel.dart';
 
 Widget buildLiveAvSurface({
   required LiveSession session,
   required bool isHost,
 }) {
+  // RTMP (OBS) sessions work everywhere: viewers play HLS, hosts see the
+  // OBS ingest panel (no in-app camera needed).
+  if (session.isRtmp && session.hlsUrl != null) {
+    return isHost
+        ? LiveObsHostPanel(session: session)
+        : LiveHlsView(hlsUrl: session.hlsUrl!);
+  }
+
   return const _LiveAvPlaceholder();
 }
 
