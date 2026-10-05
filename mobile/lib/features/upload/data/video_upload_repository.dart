@@ -11,7 +11,7 @@ class VideoUploadRemoteDataSource {
   final Dio _dio;
   final PresignedPutUploader _putUploader;
 
-  static const int maxVideoBytes = 104857600; // 100 MB — matches backend default.
+  static const int maxVideoBytes = 52428800; // 50 MB — Supabase Free limit.
 
   Future<VideoUploadSession> initiateUpload({
     required String mimeType,

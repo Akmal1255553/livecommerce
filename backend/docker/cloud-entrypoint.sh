@@ -47,4 +47,22 @@ if [ "$SEED_ON_BOOT" = "true" ] && [ "$APP_ENV" != "production" ]; then
   php artisan db:seed --class=DemoCommerceSeeder --force --no-interaction
 fi
 
-exec php artisan serve --host=0.0.0.0 --port="$PORT"
+# Optional demo worker shares the free web instance. Persistent jobs and media
+# remain in Supabase when Render sleeps or restarts the instance.
+if [ "${RUN_QUEUE_WORKER:-false}" = "true" ]; then
+  (
+    while true; do
+      php -d memory_limit=256M artisan queue:work database --queue=video-processing,default --sleep=3 --tries=3 --timeout=600 --memory=192 --max-time=3600 || true
+      sleep 3
+    done
+  ) &
+  WORKER_PID=$!
+  trap 'kill "$WORKER_PID" 2>/dev/null || true' EXIT
+  trap 'exit 0' TERM INT
+  php artisan serve --host=0.0.0.0 --port="$PORT" &
+  WEB_PID=$!
+  trap 'kill "$WEB_PID" "$WORKER_PID" 2>/dev/null || true; exit 0' TERM INT
+  wait "$WEB_PID"
+else
+  exec php artisan serve --host=0.0.0.0 --port="$PORT"
+fi

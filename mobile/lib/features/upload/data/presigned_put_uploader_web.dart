@@ -14,8 +14,8 @@ class PresignedPutUploader {
     void Function(int sent, int total)? onProgress,
   }) async {
     final bytes = await XFile(filePath).readAsBytes();
-    if (bytes.length != fileSize || fileSize > 104857600) {
-      throw StateError('Selected video size changed or exceeds 100 MB');
+    if (bytes.length != fileSize || fileSize > 52428800) {
+      throw StateError('Selected video size changed or exceeds 50 MB');
     }
     final client = Dio(BaseOptions(
       connectTimeout: const Duration(seconds: 30),

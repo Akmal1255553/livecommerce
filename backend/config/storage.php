@@ -6,6 +6,12 @@ return [
 
     'driver' => env('STORAGE_DRIVER', 'local'),
 
+    'supabase' => [
+        'bridge_url' => env('SUPABASE_STORAGE_BRIDGE_URL'),
+        'token' => env('SUPABASE_STORAGE_TOKEN'),
+        'public_url' => env('SUPABASE_STORAGE_PUBLIC_URL'),
+    ],
+
     'presigned_ttl_minutes' => (int) env('STORAGE_PRESIGNED_TTL', 15),
 
     'video_max_bytes' => (int) env('STORAGE_VIDEO_MAX_BYTES', 104_857_600),

@@ -135,7 +135,7 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
     if (state.fileSize > VideoUploadRemoteDataSource.maxVideoBytes) {
       state = state.copyWith(
         stage: VideoUploadStage.failed,
-        error: 'Video is too large (max 100 MB)',
+        error: 'Video is too large (max 50 MB)',
       );
       return;
     }

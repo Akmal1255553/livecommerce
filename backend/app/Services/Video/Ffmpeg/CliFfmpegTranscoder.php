@@ -83,6 +83,8 @@ class CliFfmpegTranscoder implements FfmpegTranscoderInterface
             '-i', $inputPath,
             '-vf', 'scale=-2:'.$profile->height,
             '-c:v', 'libx264',
+            '-threads', '1',
+            '-preset', 'veryfast',
             '-b:v', $profile->videoBitrateKbps.'k',
             '-c:a', 'aac',
             '-b:a', $profile->audioBitrateKbps.'k',
@@ -107,7 +109,9 @@ class CliFfmpegTranscoder implements FfmpegTranscoderInterface
 
         foreach ($variants as $bandwidth => $playlistPath) {
             $lines[] = '#EXT-X-STREAM-INF:BANDWIDTH='.$bandwidth;
-            $lines[] = basename($playlistPath);
+            // Renditions are siblings of master.m3u8 in named subdirectories.
+            // basename alone points both variants at a nonexistent playlist.
+            $lines[] = basename(dirname($playlistPath)).'/'.basename($playlistPath);
         }
 
         $dir = dirname($masterPath);

@@ -65,7 +65,7 @@ class _SellerApplyScreenState extends ConsumerState<SellerApplyScreen> {
           padding: const EdgeInsets.all(16),
           children: [
             Text(
-              'Open your store on LiveCommerce. MVP applications are auto-approved.',
+              'Создайте магазин. После проверки заявки станет доступна панель продавца.',
               style: Theme.of(context).textTheme.bodyMedium,
             ),
             const SizedBox(height: 24),

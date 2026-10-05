@@ -2,10 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Contracts\Repositories\FollowRepositoryInterface;
 use App\Contracts\Services\MediaServiceInterface;
 use App\Contracts\Services\StorageServiceInterface;
+use App\Contracts\Services\VideoUploadServiceInterface;
 use App\Enums\VideoProcessingStepName;
 use App\Enums\VideoStatus;
+use App\Enums\VideoVisibility;
+use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Jobs\ProcessVideoPipelineJob;
 use App\Models\EngagementEvent;
 use App\Models\User;
@@ -135,7 +139,7 @@ test('confirm upload fails if not owner', function () {
         ->assertForbidden();
 });
 
-test('confirm upload fails if status not uploading', function () {
+test('confirm upload is idempotent after a lost response', function () {
     Queue::fake();
 
     $user = registerUser('statconflict', 'statconflict@example.com');
@@ -155,7 +159,36 @@ test('confirm upload fails if status not uploading', function () {
 
     test()->withToken($user['access_token'])
         ->postJson("/api/v1/videos/{$videoId}/confirm-upload")
-        ->assertStatus(409);
+        ->assertAccepted()
+        ->assertJsonPath('data.video.status', VideoStatus::Queued->value);
+
+    Queue::assertPushed(ProcessVideoPipelineJob::class, 1);
+});
+
+test('published private video is visible only to its owner', function () {
+    $owner = User::factory()->create();
+    $video = Video::factory()->for($owner)->published()->create([
+        'visibility' => VideoVisibility::Private,
+    ]);
+    $service = app(VideoUploadServiceInterface::class);
+    expect($service->getViewableVideo($video->id, $owner)->id)->toBe($video->id);
+    expect(fn () => $service->getViewableVideo($video->id, User::factory()->create()))
+        ->toThrow(ResourceNotFoundException::class);
+    expect(fn () => $service->getViewableVideo($video->id, null))
+        ->toThrow(ResourceNotFoundException::class);
+});
+
+test('published follower video requires a follow relationship', function () {
+    $owner = User::factory()->create();
+    $viewer = User::factory()->create();
+    $video = Video::factory()->for($owner)->published()->create([
+        'visibility' => VideoVisibility::Followers,
+    ]);
+    $service = app(VideoUploadServiceInterface::class);
+    expect(fn () => $service->getViewableVideo($video->id, $viewer))
+        ->toThrow(ResourceNotFoundException::class);
+    app(FollowRepositoryInterface::class)->createFollow($viewer->id, $owner->id);
+    expect($service->getViewableVideo($video->id, $viewer)->id)->toBe($video->id);
 });
 
 test('confirm upload fails if object missing in storage', function () {

@@ -10,12 +10,14 @@ use App\DTOs\Storage\PresignedUploadData;
 use App\Services\BaseService;
 use App\Storage\Drivers\LocalStorageDriver;
 use App\Storage\Drivers\S3StorageDriver;
+use App\Storage\Drivers\SupabaseStorageDriver;
 
 class StorageService extends BaseService implements StorageServiceInterface
 {
     public function __construct(
         private readonly LocalStorageDriver $local,
         private readonly S3StorageDriver $s3,
+        private readonly SupabaseStorageDriver $supabase,
     ) {}
 
     public function exists(string $path): bool
@@ -70,8 +72,10 @@ class StorageService extends BaseService implements StorageServiceInterface
 
     private function driver(): StorageDriverInterface
     {
-        return config('storage.driver', 'local') === 's3'
-            ? $this->s3
-            : $this->local;
+        return match (config('storage.driver', 'local')) {
+            's3' => $this->s3,
+            'supabase' => $this->supabase,
+            default => $this->local,
+        };
     }
 }

@@ -245,7 +245,7 @@ class _PickView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              'MP4 · MOV · WebM · 100 MB · 60 s',
+              'MP4 · MOV · WebM · 50 MB · 60 s',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: palette.textSecondary,
                   ),

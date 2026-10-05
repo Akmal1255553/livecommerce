@@ -28,7 +28,7 @@ class EnsureSeller
         $store = $this->stores->findActiveByUser($user);
 
         if ($store === null) {
-            throw new ForbiddenException('Active store required.');
+            throw new ForbiddenException('Магазин ещё не активирован. Дождитесь одобрения заявки администратором.');
         }
 
         $request->attributes->set('store', $store);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Video;
 
+use App\Contracts\Repositories\FollowRepositoryInterface;
 use App\Contracts\Repositories\MediaUploadRepositoryInterface;
 use App\Contracts\Repositories\VideoRepositoryInterface;
 use App\Contracts\Services\MediaServiceInterface;
@@ -22,6 +23,7 @@ use App\Exceptions\Domain\ResourceNotFoundException;
 use App\Models\User;
 use App\Models\Video;
 use App\Services\BaseService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
@@ -34,6 +36,7 @@ class VideoUploadService extends BaseService implements VideoUploadServiceInterf
         private readonly MediaServiceInterface $media,
         private readonly StorageServiceInterface $storage,
         private readonly VideoStateMachineInterface $stateMachine,
+        private readonly FollowRepositoryInterface $follows,
     ) {}
 
     /**
@@ -79,40 +82,48 @@ class VideoUploadService extends BaseService implements VideoUploadServiceInterf
 
     public function confirmUpload(User $user, string $videoId, ?string $checksum = null): Video
     {
-        $video = $this->videos->findById($videoId);
+        return DB::transaction(function () use ($user, $videoId, $checksum): Video {
+            $video = Video::query()->lockForUpdate()->find($videoId);
 
-        if (! $video instanceof Video) {
-            throw new ResourceNotFoundException('Video not found.');
-        }
+            if (! $video instanceof Video) {
+                throw new ResourceNotFoundException('Video not found.');
+            }
 
-        if ($video->user_id !== $user->id) {
-            throw new ForbiddenException('You cannot confirm this upload.');
-        }
+            if ($video->user_id !== $user->id) {
+                throw new ForbiddenException('You cannot confirm this upload.');
+            }
 
-        if ($video->status !== VideoStatus::Uploading) {
-            throw new ConflictException('Video is not awaiting upload confirmation.');
-        }
+            if ($video->status !== VideoStatus::Uploading) {
+                // A lost HTTP response must not enqueue the same video twice.
+                if (in_array($this->uploads->findForVideo($videoId)?->status, [
+                    MediaUploadStatus::Uploaded, MediaUploadStatus::Processing, MediaUploadStatus::Completed,
+                ], true)) {
+                    return $video->loadMissing('user');
+                }
+                throw new ConflictException('Video is not awaiting upload confirmation.');
+            }
 
-        $upload = $this->uploads->findForVideo($videoId);
+            $upload = $this->uploads->findForVideo($videoId);
 
-        if ($upload === null) {
-            throw new ResourceNotFoundException('Upload session not found.');
-        }
+            if ($upload === null) {
+                throw new ResourceNotFoundException('Upload session not found.');
+            }
 
-        if (! $this->storage->exists($upload->storage_path)) {
-            throw ValidationException::withMessages([
-                'upload' => ['Uploaded object was not found in storage.'],
-            ]);
-        }
+            if (! $this->storage->exists($upload->storage_path)) {
+                throw ValidationException::withMessages([
+                    'upload' => ['Uploaded object was not found in storage.'],
+                ]);
+            }
 
-        $this->uploads->updateStatus($upload, MediaUploadStatus::Uploaded->value, $checksum);
+            $this->uploads->updateStatus($upload, MediaUploadStatus::Uploaded->value, $checksum);
 
-        $video = $this->stateMachine->markUploaded($video);
-        $video = $this->stateMachine->markQueued($video);
+            $video = $this->stateMachine->markUploaded($video);
+            $video = $this->stateMachine->markQueued($video);
 
-        event(new VideoUploadConfirmed($video->id, $user->id, $upload->id));
+            event(new VideoUploadConfirmed($video->id, $user->id, $upload->id));
 
-        return $video->fresh(['user']);
+            return $video->fresh(['user']);
+        });
     }
 
     public function getViewableVideo(string $videoId, ?User $viewer): Video
@@ -123,7 +134,11 @@ class VideoUploadService extends BaseService implements VideoUploadServiceInterf
             throw new ResourceNotFoundException('Video not found.');
         }
 
-        if ($video->status === VideoStatus::Published) {
+        if ($video->status === VideoStatus::Published && (
+            $video->visibility === VideoVisibility::Public ||
+            ($video->visibility === VideoVisibility::Followers && $viewer !== null &&
+                $this->follows->isFollowing($viewer->id, $video->user_id))
+        )) {
             $video->loadMissing('user');
 
             return $video;
