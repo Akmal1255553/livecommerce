@@ -24,6 +24,26 @@ class ProcessVideoPipelineJob implements ShouldQueue
 
     public function handle(VideoProcessingPipelineOrchestrator $pipeline): void
     {
-        $pipeline->run($this->videoId);
+        try {
+            $pipeline->run($this->videoId);
+        } catch (\App\Exceptions\Domain\VideoProcessingException $exception) {
+            if (in_array($exception->failureCode, ['duration_exceeded', 'validation_failed', 'unsupported_codec'], true)) {
+                $this->fail($exception);
+
+                return;
+            }
+
+            throw $exception;
+        }
+    }
+
+    public function failed(?\Throwable $exception): void
+    {
+        $video = \App\Models\Video::find($this->videoId);
+        if ($video?->status === \App\Enums\VideoStatus::Processing) {
+            app(\App\Services\Video\VideoStateMachine::class)->markFailed(
+                $video, $video->failure_code ?? 'transcode_error', $exception?->getMessage(),
+            );
+        }
     }
 }

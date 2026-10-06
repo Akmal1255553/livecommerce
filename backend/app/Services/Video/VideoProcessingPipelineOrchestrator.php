@@ -56,6 +56,21 @@ class VideoProcessingPipelineOrchestrator
     {
         $video = Video::query()->findOrFail($videoId);
 
+        // Permanent validation failures must never re-enter processing on a
+        // queue retry (including jobs enqueued before this fix was deployed).
+        if (in_array($video->failure_code, ['duration_exceeded', 'validation_failed', 'unsupported_codec'], true)
+            && in_array($video->status, [VideoStatus::Failed, VideoStatus::Processing], true)) {
+            $this->stateMachine->markFailed($video, $video->failure_code, $video->failure_message);
+
+            return;
+        }
+
+        if ($video->status === VideoStatus::Failed) {
+            VideoProcessingStep::query()->where('video_id', $videoId)
+                ->where('status', VideoProcessingStepStatus::Failed)
+                ->update(['status' => VideoProcessingStepStatus::Retrying->value]);
+        }
+
         if ($video->status === VideoStatus::Published) {
             return;
         }

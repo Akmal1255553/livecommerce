@@ -124,6 +124,11 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> {
   }
 
   void _startUpload() {
+    final duration = _previewController?.value.duration;
+    if (duration != null && duration > const Duration(seconds: 60)) {
+      _showMessage('Видео длиннее 60 секунд. Обрежьте ролик или выберите другой файл.');
+      return;
+    }
     ref.read(videoUploadNotifierProvider.notifier).upload(
           title: _titleController.text,
           description: _descriptionController.text,

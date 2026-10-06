@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
@@ -8,6 +10,7 @@ import 'package:livecommerce_mobile/features/upload/domain/entities/video_upload
 import 'package:livecommerce_mobile/features/upload/domain/entities/video_upload_session.dart';
 
 final videoUploadRepositoryProvider = Provider<VideoUploadRepository>((ref) {
+  ref.watch(authRepositoryProvider);
   final dio = ref.watch(authDioProvider);
   return VideoUploadRepository(
     remote: VideoUploadRemoteDataSource(dio),
@@ -214,7 +217,12 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
       stage: published ? VideoUploadStage.published
           : failed ? VideoUploadStage.failed : VideoUploadStage.processing,
       clearError: !failed,
-      error: failed ? 'Не удалось обработать видео: ${status.failureCode ?? "processing_failed"}' : null,
+      error: failed ? switch (status.failureCode) {
+        'duration_exceeded' => 'Видео длиннее 60 секунд. Выберите или обрежьте ролик до 60 секунд.',
+        'unsupported_codec' => 'Формат видео не поддерживается. Сохраните ролик как MP4 (H.264).',
+        'validation_failed' => 'Не удалось прочитать видео. Выберите другой файл.',
+        _ => 'Не удалось обработать видео. Попробуйте другой файл.',
+      } : null,
     );
   }
 
@@ -237,7 +245,22 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
       if (mounted && generation == _generation) _applyStatus(status);
     } catch (error) {
       if (mounted && generation == _generation) {
-        state = state.copyWith(error: describeFailure(error));
+        final code = error is DioException ? error.response?.statusCode : null;
+        if (code == 401 || code == 403 || code == 404) {
+          _stopPolling();
+          state = state.copyWith(
+            stage: VideoUploadStage.failed,
+            error: code == 404
+                ? 'Видео не найдено. Выберите файл и загрузите его заново.'
+                : 'Не удалось проверить видео. Войдите в аккаунт заново.',
+          );
+          if (code == 404) {
+            _session = null;
+            _fileUploaded = false;
+          }
+        } else {
+          state = state.copyWith(error: describeFailure(error));
+        }
       }
     } finally {
       _pollInFlight = false;

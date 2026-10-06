@@ -104,6 +104,7 @@ Route::prefix('v1')->group(function (): void {
         Route::get('feed/following', [FeedController::class, 'following']);
 
         Route::post('videos', [VideoController::class, 'store']);
+        Route::get('videos/{id}/upload-status', [VideoController::class, 'uploadStatus']);
         Route::post('videos/{id}/confirm-upload', [VideoController::class, 'confirmUpload']);
         Route::put('videos/{id}', [VideoController::class, 'update']);
         Route::delete('videos/{id}', [VideoController::class, 'destroy']);

@@ -58,7 +58,7 @@ class VideoUploadRemoteDataSource {
   }
 
   Future<VideoUploadStatus> fetchStatus(String videoId) async {
-    final response = await _dio.get<Map<String, dynamic>>('/videos/$videoId');
+    final response = await _dio.get<Map<String, dynamic>>('/videos/$videoId/upload-status');
     final data = response.data?['data'] as Map<String, dynamic>? ?? const {};
     return VideoUploadStatus.fromJson(data);
   }

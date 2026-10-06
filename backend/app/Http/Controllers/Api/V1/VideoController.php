@@ -64,6 +64,16 @@ class VideoController extends Controller
         return ApiResponse::success(new VideoResource($enriched));
     }
 
+    public function uploadStatus(Request $request, string $id): JsonResponse
+    {
+        $video = $this->uploadService->getViewableVideo($id, $request->user());
+        if ($video->user_id !== $request->user()->id) {
+            throw new \App\Exceptions\Domain\ResourceNotFoundException('Video not found.');
+        }
+
+        return ApiResponse::success(new VideoResource($video));
+    }
+
     public function update(UpdateVideoMetadataRequest $request, string $id): JsonResponse
     {
         $video = $this->managementService->updateMetadata(
