@@ -1,5 +1,9 @@
 # LiveCommerce
 
+> **For recruiters and engineering reviewers:** See the [concise technical portfolio overview](./PORTFOLIO.md) for architecture highlights, project maturity, and a suggested code-review path. The historical sprint status notes below describe earlier milestones and may not reflect the latest deployed demo.
+
+**Live demo:** https://livecommerce-web.onrender.com/#/home (availability may vary)
+
 AI-powered live commerce platform — mobile-first video shopping for Central Asia.
 
 **Repository:** https://github.com/Akmal1255553/livecommerce
