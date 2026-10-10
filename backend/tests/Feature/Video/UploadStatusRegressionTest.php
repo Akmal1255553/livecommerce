@@ -42,3 +42,18 @@ test('owner sees actual processing steps and final publication without cached st
     $this->withToken($owner['access_token'])->getJson($url)->assertOk()
         ->assertJsonPath('data.status', 'published');
 });
+
+test('pipeline resumes existing progress without creating duplicate steps', function () {
+    $video = Video::factory()->for(User::factory())->create([
+        'status' => VideoStatus::Queued, 'duration' => 109, 'width' => 1280, 'height' => 720, 'codec' => 'h264',
+    ]);
+    VideoProcessingStep::create(['video_id' => $video->id, 'step' => 'virus_scan', 'status' => 'completed', 'attempt' => 1, 'created_at' => now()]);
+    try {
+        app(VideoProcessingPipelineOrchestrator::class)->run($video->id);
+    } catch (\App\Exceptions\Domain\VideoProcessingException $error) {
+        expect($error->failureCode)->toBe('duration_exceeded');
+    }
+    expect(VideoProcessingStep::where('video_id', $video->id)->count())->toBe(8);
+    expect(VideoProcessingStep::where('video_id', $video->id)->where('step', 'virus_scan')->count())->toBe(1);
+    expect($video->fresh()->status)->toBe(VideoStatus::Failed);
+});
