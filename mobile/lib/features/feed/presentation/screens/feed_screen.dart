@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -451,6 +452,14 @@ class _FeedVideoPage extends ConsumerWidget {
           right: AppSpacing.sm,
           bottom: bottomInset,
           child: FeedActionRail(
+            showFollowBadge: ref.watch(authNotifierProvider).user?.id != latest.user.id,
+            isFollowing: latest.isFollowing,
+            onFollow: () async {
+              final error = await ref.read(feedNotifierProvider.notifier).toggleFollow(latest.user.id);
+              if (error != null && context.mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(error)));
+              }
+            },
             avatarUrl: latest.user.avatarUrl,
             likeCount: latest.likeCount,
             commentCount: latest.commentCount,

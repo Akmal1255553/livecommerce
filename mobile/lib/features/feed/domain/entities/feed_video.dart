@@ -37,6 +37,7 @@ class FeedVideo {
     this.commentCount = 0,
     this.isLiked = false,
     this.isBookmarked = false,
+    this.isFollowing = false,
     this.status,
     this.createdAt,
     this.products = const [],
@@ -54,6 +55,7 @@ class FeedVideo {
   final int commentCount;
   final bool isLiked;
   final bool isBookmarked;
+  final bool isFollowing;
   final String? status;
   final String? createdAt;
   final List<VideoProductTag> products;
@@ -64,6 +66,7 @@ class FeedVideo {
     int? commentCount,
     bool? isLiked,
     bool? isBookmarked,
+    bool? isFollowing,
   }) {
     return FeedVideo(
       id: id,
@@ -78,6 +81,7 @@ class FeedVideo {
       commentCount: commentCount ?? this.commentCount,
       isLiked: isLiked ?? this.isLiked,
       isBookmarked: isBookmarked ?? this.isBookmarked,
+      isFollowing: isFollowing ?? this.isFollowing,
       status: status,
       createdAt: createdAt,
       products: products,
@@ -100,6 +104,7 @@ class FeedVideo {
       commentCount: json['comment_count'] as int? ?? 0,
       isLiked: json['is_liked'] as bool? ?? false,
       isBookmarked: json['is_bookmarked'] as bool? ?? false,
+      isFollowing: json['is_following'] as bool? ?? false,
       status: json['status'] as String?,
       createdAt: json['created_at'] as String?,
       products: productsJson

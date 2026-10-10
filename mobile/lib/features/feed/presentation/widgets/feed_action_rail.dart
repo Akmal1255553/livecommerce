@@ -20,6 +20,8 @@ class FeedActionRail extends StatelessWidget {
     required this.onShare,
     required this.onMore,
     this.onAvatarTap,
+    this.onFollow,
+    this.isFollowing = false,
     this.showFollowBadge = true,
   });
 
@@ -34,6 +36,8 @@ class FeedActionRail extends StatelessWidget {
   final VoidCallback onShare;
   final VoidCallback onMore;
   final VoidCallback? onAvatarTap;
+  final VoidCallback? onFollow;
+  final bool isFollowing;
   final bool showFollowBadge;
 
   @override
@@ -45,6 +49,8 @@ class FeedActionRail extends StatelessWidget {
           url: avatarUrl,
           onTap: onAvatarTap,
           showFollowBadge: showFollowBadge,
+          onFollow: onFollow,
+          isFollowing: isFollowing,
         ),
         const SizedBox(height: AppSpacing.xxl),
         FeedActionButton(
@@ -189,11 +195,15 @@ class _RailAvatar extends StatelessWidget {
     required this.url,
     required this.onTap,
     required this.showFollowBadge,
+    required this.onFollow,
+    required this.isFollowing,
   });
 
   final String? url;
   final VoidCallback? onTap;
   final bool showFollowBadge;
+  final VoidCallback? onFollow;
+  final bool isFollowing;
 
   @override
   Widget build(BuildContext context) {
@@ -218,14 +228,23 @@ class _RailAvatar extends StatelessWidget {
             if (showFollowBadge)
               Positioned(
                 bottom: 0,
-                child: Container(
-                  width: 22,
-                  height: 22,
-                  decoration: const BoxDecoration(
-                    gradient: AppGradients.brand,
-                    shape: BoxShape.circle,
+                child: Semantics(
+                  button: true,
+                  label: isFollowing ? 'Отписаться' : 'Подписаться',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: onFollow,
+                    child: Container(
+                      width: 32,
+                      height: 32,
+                      decoration: const BoxDecoration(
+                        gradient: AppGradients.brand,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(isFollowing ? Icons.check : Icons.add,
+                          size: 20, color: Colors.white),
+                    ),
                   ),
-                  child: const Icon(Icons.add, size: 15, color: Colors.white),
                 ),
               ),
           ],

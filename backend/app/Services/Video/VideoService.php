@@ -97,10 +97,14 @@ class VideoService extends BaseService
         $videoIds = $videos->pluck('id')->all();
         $likedIds = array_flip($this->likes->likedVideoIdsForUser($viewer->id, $videoIds));
         $bookmarkedIds = array_flip($this->bookmarks->bookmarkedVideoIdsForUser($viewer->id, $videoIds));
+        $followingIds = array_flip(DB::table('follows')->where('follower_id', $viewer->id)
+            ->whereIn('following_id', $videos->pluck('user_id')->unique())
+            ->pluck('following_id')->all());
 
-        return $videos->map(function (Video $video) use ($likedIds, $bookmarkedIds): Video {
+        return $videos->map(function (Video $video) use ($likedIds, $bookmarkedIds, $followingIds): Video {
             $video->setAttribute('is_liked', isset($likedIds[$video->id]));
             $video->setAttribute('is_bookmarked', isset($bookmarkedIds[$video->id]));
+            $video->setAttribute('is_following', isset($followingIds[$video->user_id]));
 
             return $video;
         });

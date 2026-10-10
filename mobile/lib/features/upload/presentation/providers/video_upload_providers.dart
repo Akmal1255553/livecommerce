@@ -234,7 +234,7 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
 
   /// Manual refresh while stuck in `processing`.
   Future<void> checkStatus() async {
-    final videoId = state.status?.videoId ?? '';
+    final videoId = _session?.videoId ?? state.status?.videoId ?? '';
     if (!state.isBusy || videoId.isEmpty || _pollInFlight) {
       return;
     }

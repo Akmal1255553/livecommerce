@@ -71,7 +71,14 @@ class VideoController extends Controller
             throw new \App\Exceptions\Domain\ResourceNotFoundException('Video not found.');
         }
 
-        return ApiResponse::success(new VideoResource($video));
+        $steps = \App\Models\VideoProcessingStep::query()->where('video_id', $id)->orderBy('id')->get();
+        $data = (new VideoResource($video))->resolve($request);
+        $data['processing_steps'] = $steps->map(fn ($step) => [
+            'step' => $step->step->value,
+            'status' => $step->status->value,
+        ])->all();
+
+        return ApiResponse::success($data)->header('Cache-Control', 'no-store');
     }
 
     public function update(UpdateVideoMetadataRequest $request, string $id): JsonResponse

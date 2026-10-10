@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:dio/dio.dart';
+import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:livecommerce_mobile/core/errors/error_handler.dart';
@@ -52,6 +54,19 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       }
       context.pushReplacement('/live/${session.id}?host=1');
     } catch (error) {
+      if (error is DioException && error.response?.statusCode == 409) {
+        try {
+          final userId = ref.read(authNotifierProvider).user?.id;
+          final sessions = await ref.read(liveRepositoryProvider).listLive(limit: 50);
+          final existing = sessions.where((s) => s.seller?.id == userId).firstOrNull;
+          if (existing != null && mounted) {
+            context.pushReplacement('/live/${existing.id}?host=1');
+            return;
+          }
+        } catch (_) {
+          // Preserve the original error if recovery fails.
+        }
+      }
       if (!mounted) {
         return;
       }

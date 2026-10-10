@@ -180,6 +180,18 @@
   }
 
   async function initialize(current) {
+    // Status polling refreshes RTC tokens. Keep the established camera/connection.
+    if (config?.mode === 'agora' && current.mode === 'agora' &&
+        config.appId === current.appId && config.channel === current.channel &&
+        config.isHost === current.isHost) {
+      const previousToken = config.token;
+      Object.assign(config, current);
+      if (client && !connecting && previousToken !== current.token) {
+        try { await client.renewToken(current.token); }
+        catch (_) { notice.textContent = 'Не удалось продлить подключение. Переподключитесь к эфиру.'; }
+      }
+      return;
+    }
     config = current;
     await cleanup();
     if (config !== current) return;

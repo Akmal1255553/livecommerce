@@ -8,6 +8,14 @@ class FeedRemoteDataSource {
   final Dio _dio;
   final AnalyticsSession _analyticsSession;
 
+  Future<void> setFollowing(String userId, bool following) async {
+    if (following) {
+      await _dio.post<dynamic>('/users/$userId/follow');
+    } else {
+      await _dio.delete<dynamic>('/users/$userId/follow');
+    }
+  }
+
   Future<FeedPage> fetchForYou({String? cursor, int limit = 20}) async {
     return _fetchFeed('/feed/for-you', cursor: cursor, limit: limit);
   }
@@ -128,6 +136,9 @@ class FeedRepository {
   FeedRepository({required FeedRemoteDataSource remote}) : _remote = remote;
 
   final FeedRemoteDataSource _remote;
+
+  Future<void> setFollowing(String userId, bool following) =>
+      _remote.setFollowing(userId, following);
 
   Future<FeedPage> forYou({String? cursor, int limit = 20}) =>
       _remote.fetchForYou(cursor: cursor, limit: limit);

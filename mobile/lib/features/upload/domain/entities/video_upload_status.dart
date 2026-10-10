@@ -30,6 +30,9 @@ class VideoUploadStatus {
     this.videoUrl,
     this.failureCode,
     this.title,
+    this.completedSteps = 0,
+    this.totalSteps = 0,
+    this.currentStep,
   });
 
   final String videoId;
@@ -38,6 +41,9 @@ class VideoUploadStatus {
   final String? videoUrl;
   final String? failureCode;
   final String? title;
+  final int completedSteps;
+  final int totalSteps;
+  final String? currentStep;
 
   /// Accepts a `VideoResource` JSON map; also tolerates a wrapped
   /// `{ "video": { ... } }` payload (confirm-upload response shape).
@@ -46,6 +52,9 @@ class VideoUploadStatus {
         ? json['video'] as Map<String, dynamic>
         : json;
 
+    final steps = (video['processing_steps'] as List<dynamic>? ?? [])
+        .whereType<Map<String, dynamic>>().toList();
+    final active = steps.where((s) => s['status'] == 'running' || s['status'] == 'processing').firstOrNull;
     return VideoUploadStatus(
       videoId: (video['id'] ?? json['video_id']).toString(),
       phase: VideoUploadPhase.fromValue(video['status'] as String?),
@@ -53,6 +62,9 @@ class VideoUploadStatus {
       videoUrl: video['video_url'] as String?,
       failureCode: video['failure_code'] as String?,
       title: video['title'] as String?,
+      completedSteps: steps.where((s) => s['status'] == 'completed').length,
+      totalSteps: steps.length,
+      currentStep: active?['step'] as String?,
     );
   }
 }

@@ -19,7 +19,7 @@ class VideoUploadScreen extends ConsumerStatefulWidget {
   ConsumerState<VideoUploadScreen> createState() => _VideoUploadScreenState();
 }
 
-class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> {
+class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> with WidgetsBindingObserver {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   VideoPlayerController? _previewController;
@@ -27,7 +27,24 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> {
   bool _picking = false;
 
   @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    Future.microtask(() {
+      if (mounted) ref.read(videoUploadNotifierProvider.notifier).checkStatus();
+    });
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      ref.read(videoUploadNotifierProvider.notifier).checkStatus();
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _titleController.dispose();
     _descriptionController.dispose();
     _previewController?.dispose();
@@ -178,6 +195,7 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> {
               confirming: state.stage == VideoUploadStage.confirming,
             ),
           VideoUploadStage.processing => _ProcessingView(
+              status: state.status,
               error: state.error,
               onCheck: () =>
                   ref.read(videoUploadNotifierProvider.notifier).checkStatus(),
@@ -463,10 +481,11 @@ class _ProgressView extends StatelessWidget {
 }
 
 class _ProcessingView extends StatelessWidget {
-  const _ProcessingView({required this.onCheck, this.error});
+  const _ProcessingView({required this.onCheck, this.error, this.status});
 
   final VoidCallback onCheck;
   final String? error;
+  final VideoUploadStatus? status;
 
   @override
   Widget build(BuildContext context) {
@@ -490,12 +509,18 @@ class _ProcessingView extends StatelessWidget {
             ),
             const SizedBox(height: AppSpacing.sm),
             Text(
-              error ?? l10n.uploadProcessingHint,
+              error ?? 'Файл загружен. Подготовка видео к просмотру может занять несколько минут.',
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: palette.textSecondary,
                   ),
             ),
+            if ((status?.totalSteps ?? 0) > 0) ...[
+              const SizedBox(height: AppSpacing.md),
+              LinearProgressIndicator(value: status!.completedSteps / status!.totalSteps),
+              const SizedBox(height: AppSpacing.sm),
+              Text('Готово этапов: ${status!.completedSteps} из ${status!.totalSteps}'),
+            ],
             const SizedBox(height: AppSpacing.xl),
             TextButton.icon(
               onPressed: onCheck,

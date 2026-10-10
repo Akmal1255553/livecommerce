@@ -13,6 +13,7 @@ final analyticsSessionProvider = Provider<AnalyticsSession>((ref) {
 });
 
 final feedRepositoryProvider = Provider<FeedRepository>((ref) {
+  ref.watch(authRepositoryProvider);
   final dio = ref.watch(authDioProvider);
   final session = ref.watch(analyticsSessionProvider);
   return FeedRepository(
@@ -69,6 +70,25 @@ class FeedNotifier extends StateNotifier<FeedState> {
 
   final FeedRepository _repository;
   final Set<String> _viewedIds = {};
+  final Set<String> _followingInFlight = {};
+
+  Future<String?> toggleFollow(String userId) async {
+    final video = state.videos.where((v) => v.user.id == userId).firstOrNull;
+    if (video == null || !_followingInFlight.add(userId)) return null;
+    final following = !video.isFollowing;
+    try {
+      await _repository.setFollowing(userId, following);
+      if (mounted) {
+        state = state.copyWith(videos: state.videos.map((v) =>
+          v.user.id == userId ? v.copyWith(isFollowing: following) : v).toList());
+      }
+      return null;
+    } catch (error) {
+      return describeFailure(error);
+    } finally {
+      _followingInFlight.remove(userId);
+    }
+  }
 
   Future<void> load({FeedTab? tab}) async {
     final selectedTab = tab ?? state.tab;

@@ -30,3 +30,15 @@ test('retrying a duration rejection cannot leave the video processing again', fu
     expect($video->fresh()->status)->toBe(VideoStatus::Failed);
     expect(VideoProcessingStep::where('video_id', $video->id)->count())->toBe(0);
 });
+
+test('owner sees actual processing steps and final publication without cached status', function () {
+    $owner = registerUser('progressowner', 'progressowner@example.com');
+    $video = Video::factory()->create(['user_id' => $owner['user_id'], 'status' => VideoStatus::Processing]);
+    VideoProcessingStep::create(['video_id' => $video->id, 'step' => 'metadata', 'status' => 'completed', 'attempt' => 1, 'created_at' => now()]);
+    $url = '/api/v1/videos/'.$video->id.'/upload-status';
+    $this->withToken($owner['access_token'])->getJson($url)->assertOk()
+        ->assertJsonPath('data.processing_steps.0.status', 'completed');
+    $video->update(['status' => VideoStatus::Published]);
+    $this->withToken($owner['access_token'])->getJson($url)->assertOk()
+        ->assertJsonPath('data.status', 'published');
+});
