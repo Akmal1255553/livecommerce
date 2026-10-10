@@ -65,9 +65,12 @@ class VideoProcessingPipelineOrchestrator
             return;
         }
 
-        if ($video->status === VideoStatus::Failed) {
+        // A reserved job can be resumed after its worker is terminated during
+        // a deploy. Completed steps remain intact; interrupted work must be
+        // eligible for the new attempt, just like a transient failed step.
+        if (in_array($video->status, [VideoStatus::Processing, VideoStatus::Failed], true)) {
             VideoProcessingStep::query()->where('video_id', $videoId)
-                ->where('status', VideoProcessingStepStatus::Failed)
+                ->whereIn('status', [VideoProcessingStepStatus::Failed, VideoProcessingStepStatus::Running])
                 ->update(['status' => VideoProcessingStepStatus::Retrying->value]);
         }
 

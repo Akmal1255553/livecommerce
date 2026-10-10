@@ -57,3 +57,21 @@ test('pipeline resumes existing progress without creating duplicate steps', func
     expect(VideoProcessingStep::where('video_id', $video->id)->where('step', 'virus_scan')->count())->toBe(1);
     expect($video->fresh()->status)->toBe(VideoStatus::Failed);
 });
+
+test('pipeline resumes a step interrupted by a worker restart', function () {
+    $video = Video::factory()->for(User::factory())->create([
+        'status' => VideoStatus::Processing, 'duration' => 109, 'width' => 1280, 'height' => 720, 'codec' => 'h264',
+    ]);
+    VideoProcessingStep::create(['video_id' => $video->id, 'step' => 'virus_scan', 'status' => 'completed', 'attempt' => 1, 'created_at' => now()]);
+    VideoProcessingStep::create(['video_id' => $video->id, 'step' => 'metadata', 'status' => 'running', 'attempt' => 1, 'created_at' => now(), 'started_at' => now()->subMinutes(11)]);
+    try {
+        app(VideoProcessingPipelineOrchestrator::class)->run($video->id);
+        $this->fail('Expected duration validation to reject the resumed video');
+    } catch (\App\Exceptions\Domain\VideoProcessingException $error) {
+        expect($error->failureCode)->toBe('duration_exceeded');
+    }
+    expect(VideoProcessingStep::where('video_id', $video->id)->where('step', 'metadata')->first()->status)
+        ->toBe(\App\Enums\VideoProcessingStepStatus::Completed);
+    expect(VideoProcessingStep::where('video_id', $video->id)->count())->toBe(8);
+    expect($video->fresh()->status)->toBe(VideoStatus::Failed);
+});
