@@ -24,6 +24,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         bcmath \
         gd \
         pcntl \
+    && docker-php-ext-enable opcache \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apt-get clean \
@@ -37,6 +38,8 @@ COPY composer.json composer.lock ./
 RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist
 
 COPY . .
+# Production OPcache tuning (see docker/php/opcache.ini)
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/99-opcache.ini
 # Skip Composer scripts at build time — artisan needs APP_KEY / env (only available at runtime on Render).
 RUN composer dump-autoload --optimize --no-scripts \
     && chmod +x docker/cloud-entrypoint.sh \

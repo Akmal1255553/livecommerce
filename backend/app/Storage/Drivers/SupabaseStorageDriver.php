@@ -7,6 +7,8 @@ namespace App\Storage\Drivers;
 use App\Contracts\Storage\StorageDriverInterface;
 use App\DTOs\Storage\PresignedUploadData;
 use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -69,6 +71,38 @@ class SupabaseStorageDriver implements StorageDriverInterface
         }
 
         return rtrim((string) config('storage.supabase.public_url'), '/').'/'.$path;
+    }
+
+    /** @param array<string, string> $files Storage paths mapped to local files. */
+    public function putFiles(array $files): void
+    {
+        // Keep memory bounded while uploading independent HLS segments concurrently.
+        foreach (array_chunk($files, 3, true) as $batch) {
+            $streams = [];
+            try {
+                foreach ($batch as $path => $localPath) {
+                    $stream = fopen($localPath, 'rb');
+                    if ($stream === false) throw new RuntimeException('Unable to read media file.');
+                    $streams[$path] = $stream;
+                }
+                $responses = Http::pool(function (Pool $pool) use ($streams): array {
+                    $requests = [];
+                    foreach ($streams as $path => $stream) {
+                        $requests[] = $pool->as($path)
+                            ->withHeaders(['x-media-token' => (string) config('storage.supabase.token')])
+                            ->timeout(120)->connectTimeout(15)->withBody($stream, $this->mime($path))
+                            ->put($this->endpoint('write', $path));
+                    }
+                    return $requests;
+                });
+                foreach ($responses as $response) {
+                    if (! $response instanceof Response) throw $response;
+                    $response->throw();
+                }
+            } finally {
+                foreach ($streams as $stream) fclose($stream);
+            }
+        }
     }
 
     public function createPresignedPutUrl(string $path, string $mimeType, int $ttlMinutes): PresignedUploadData

@@ -5,6 +5,7 @@ cd /app
 
 # Render / Railway inject PORT (Render default 10000)
 PORT="${PORT:-8080}"
+export PHP_CLI_SERVER_WORKERS="${PHP_CLI_SERVER_WORKERS:-2}"
 # web (default) | worker - set via Dockerfile CMD / Render dockerCommand
 MODE="${1:-web}"
 
@@ -59,10 +60,10 @@ if [ "${RUN_QUEUE_WORKER:-false}" = "true" ]; then
   WORKER_PID=$!
   trap 'kill "$WORKER_PID" 2>/dev/null || true' EXIT
   trap 'exit 0' TERM INT
-  php artisan serve --host=0.0.0.0 --port="$PORT" &
+  php artisan serve --no-reload --host=0.0.0.0 --port="$PORT" &
   WEB_PID=$!
   trap 'kill "$WEB_PID" "$WORKER_PID" 2>/dev/null || true; exit 0' TERM INT
   wait "$WEB_PID"
 else
-  exec php artisan serve --host=0.0.0.0 --port="$PORT"
+  exec php artisan serve --no-reload --host=0.0.0.0 --port="$PORT"
 fi

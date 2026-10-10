@@ -57,6 +57,14 @@ class VideoUploadRemoteDataSource {
     return VideoUploadStatus.fromJson(data);
   }
 
+  Future<void> attachProducts(String videoId, List<String> productIds) async {
+    await _dio.put<dynamic>('/videos/$videoId/products', data: {
+      'products': [for (var i = 0; i < productIds.length; i++) {
+        'product_id': productIds[i], 'sort_order': i, 'is_featured': i == 0,
+      }],
+    });
+  }
+
   Future<VideoUploadStatus> fetchStatus(String videoId) async {
     final response = await _dio.get<Map<String, dynamic>>('/videos/$videoId/upload-status');
     final data = response.data?['data'] as Map<String, dynamic>? ?? const {};
@@ -100,6 +108,9 @@ class VideoUploadRepository {
 
   Future<VideoUploadStatus> confirmUpload(String videoId) =>
       _remote.confirmUpload(videoId);
+
+  Future<void> attachProducts(String videoId, List<String> productIds) =>
+      _remote.attachProducts(videoId, productIds);
 
   Future<VideoUploadStatus> fetchStatus(String videoId) =>
       _remote.fetchStatus(videoId);

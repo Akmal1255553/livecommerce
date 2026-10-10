@@ -58,11 +58,17 @@ abstract class AbstractTranscodeHlsStep extends AbstractProcessingStep
 
             $prefix = $this->media->videoHlsRenditionDir($video->id, $this->rendition());
 
+            $files = [];
             foreach ($this->filesInDirectory($outputDir) as $file) {
                 $normalizedRoot = str_replace('\\', '/', $outputDir).'/';
                 $normalizedPath = str_replace('\\', '/', $file->getPathname());
                 $relative = substr($normalizedPath, strlen($normalizedRoot));
-                $this->storage->putFile($prefix.'/'.$relative, $file->getPathname());
+                $files[$prefix.'/'.$relative] = $file->getPathname();
+            }
+            if ($this->storage instanceof \App\Services\Storage\StorageService) {
+                $this->storage->putFiles($files);
+            } else {
+                foreach ($files as $path => $localPath) $this->storage->putFile($path, $localPath);
             }
 
             $playlistPath = $this->media->videoHlsRenditionPlaylistPath($video->id, $this->rendition());

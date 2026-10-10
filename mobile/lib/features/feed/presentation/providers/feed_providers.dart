@@ -91,12 +91,13 @@ class FeedNotifier extends StateNotifier<FeedState> {
   }
 
   Future<void> load({FeedTab? tab}) async {
+    if (state.isLoading) return;
     final selectedTab = tab ?? state.tab;
     state = state.copyWith(
       tab: selectedTab,
       isLoading: true,
       clearError: true,
-      clearVideos: true,
+      clearVideos: selectedTab != state.tab,
       nextCursor: null,
       hasMore: false,
     );

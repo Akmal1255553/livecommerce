@@ -57,6 +57,16 @@ class StorageService extends BaseService implements StorageServiceInterface
         return $this->driver()->publicUrl($path);
     }
 
+    /** @param array<string, string> $files */
+    public function putFiles(array $files): void
+    {
+        if (config('storage.driver') === 'supabase') {
+            $this->supabase->putFiles($files);
+            return;
+        }
+        foreach ($files as $path => $localPath) $this->putFile($path, $localPath);
+    }
+
     public function downloadToTemp(string $path): string
     {
         $tempPath = tempnam(sys_get_temp_dir(), 'lc_vid_');

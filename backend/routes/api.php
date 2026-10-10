@@ -206,13 +206,21 @@ Route::prefix('v1')->group(function (): void {
     });
 
     Route::middleware('auth.api.optional')->group(function (): void {
-        Route::get('discover', [DiscoverController::class, 'index']);
-        Route::get('feed/trending', [FeedController::class, 'trending']);
-        Route::get('feed/popular', [FeedController::class, 'popular']);
-        Route::get('feed/new', [FeedController::class, 'newFeed']);
-        Route::get('feed/for-you', [FeedController::class, 'forYou']);
-        Route::get('live', [LiveSessionController::class, 'index']);
-        Route::get('live/replays', [LiveSessionController::class, 'replays']);
+        // Anonymous read endpoints are response-cached (short TTL) to cut DB load.
+        Route::get('discover', [DiscoverController::class, 'index'])
+            ->middleware('cache.get:discover,10');
+        Route::get('feed/trending', [FeedController::class, 'trending'])
+            ->middleware('cache.get:feed,10');
+        Route::get('feed/popular', [FeedController::class, 'popular'])
+            ->middleware('cache.get:feed,10');
+        Route::get('feed/new', [FeedController::class, 'newFeed'])
+            ->middleware('cache.get:feed,10');
+        Route::get('feed/for-you', [FeedController::class, 'forYou'])
+            ->middleware('cache.get:feed,10');
+        Route::get('live', [LiveSessionController::class, 'index'])
+            ->middleware('cache.get:live,10');
+        Route::get('live/replays', [LiveSessionController::class, 'replays'])
+            ->middleware('cache.get:live,10');
         Route::get('live/{id}', [LiveSessionController::class, 'show']);
         Route::get('live/{id}/chat', [LiveSessionController::class, 'chatIndex'])
             ->middleware('throttle:live-poll');
@@ -225,13 +233,18 @@ Route::prefix('v1')->group(function (): void {
         Route::get('users/{id}/followers', [UserController::class, 'followers']);
         Route::get('users/{id}/following', [UserController::class, 'following']);
 
-        Route::get('products', [ProductController::class, 'index']);
+        Route::get('products', [ProductController::class, 'index'])
+            ->middleware('cache.get:catalog,15');
         Route::get('products/search', [ProductController::class, 'search'])
             ->middleware('throttle:search');
-        Route::get('products/{id}', [ProductController::class, 'show']);
-        Route::get('categories', [CategoryController::class, 'index']);
-        Route::get('categories/{id}/products', [CategoryController::class, 'products']);
-        Route::get('brands', [BrandController::class, 'index']);
+        Route::get('products/{id}', [ProductController::class, 'show'])
+            ->middleware('cache.get:catalog,15');
+        Route::get('categories', [CategoryController::class, 'index'])
+            ->middleware('cache.get:catalog,15');
+        Route::get('categories/{id}/products', [CategoryController::class, 'products'])
+            ->middleware('cache.get:catalog,15');
+        Route::get('brands', [BrandController::class, 'index'])
+            ->middleware('cache.get:catalog,15');
 
         Route::get('stores/{slug}', [StoreController::class, 'show']);
         Route::get('stores/{slug}/products', [StoreController::class, 'products']);

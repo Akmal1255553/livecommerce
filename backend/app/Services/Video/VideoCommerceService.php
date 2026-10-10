@@ -29,6 +29,8 @@ class VideoCommerceService extends BaseService implements VideoCommerceServiceIn
      * @var list<VideoStatus>
      */
     private const SYNCABLE_STATUSES = [
+        VideoStatus::Uploading,
+        VideoStatus::Queued,
         VideoStatus::Processing,
         VideoStatus::Published,
     ];
@@ -77,7 +79,7 @@ class VideoCommerceService extends BaseService implements VideoCommerceServiceIn
 
         if (! in_array($video->status, self::SYNCABLE_STATUSES, true)) {
             throw ValidationException::withMessages([
-                'products' => ['Products can only be attached while the video is processing or published.'],
+                'products' => ['Products can only be attached to an uploaded, processing or published video.'],
             ]);
         }
 

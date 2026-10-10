@@ -28,7 +28,8 @@ abstract class AbstractProcessingStep implements VideoProcessingStepInterface
         $record = $this->acquireStep($video);
 
         try {
-            $this->execute($video->fresh() ?? $video);
+            // The orchestrator loads a fresh video before every step.
+            $this->execute($video);
             $this->completeStep($record, $this->resultStatus());
         } catch (VideoProcessingException $exception) {
             $this->failStep($record, $exception->getMessage());
@@ -88,7 +89,7 @@ abstract class AbstractProcessingStep implements VideoProcessingStepInterface
             'error_message' => null,
         ]);
 
-        return $record->fresh() ?? $record;
+        return $record;
     }
 
     private function completeStep(VideoProcessingStep $record, VideoProcessingStepStatus $status): void

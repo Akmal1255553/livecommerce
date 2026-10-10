@@ -16,6 +16,12 @@ class UploadRepositoryFake implements VideoUploadRepository {
   VideoUploadPhase phase = VideoUploadPhase.published;
   Object? statusError;
   String? failureCode;
+  List<String> attachedProducts = [];
+
+  @override
+  Future<void> attachProducts(String videoId, List<String> productIds) async {
+    attachedProducts = productIds;
+  }
 
   @override
   Future<VideoUploadSession> initiateUpload({required String mimeType,
@@ -64,6 +70,12 @@ void main() {
     await notifier.upload();
     expect(notifier.state.stage, VideoUploadStage.published);
     expect(notifier.state.progress, 1);
+  });
+
+  test('selected products attach to the upload before confirmation', () async {
+    await notifier.upload(productIds: ['p1', 'p2']);
+    expect(repository.attachedProducts, ['p1', 'p2']);
+    expect(notifier.state.stage, VideoUploadStage.published);
   });
 
   test('lost confirmation retries without a duplicate session or PUT', () async {

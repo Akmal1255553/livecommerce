@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:livecommerce_mobile/features/upload/presentation/widgets/video_product_picker.dart';
+import 'package:livecommerce_mobile/features/upload/presentation/providers/video_upload_providers.dart';
+import 'package:livecommerce_mobile/core/errors/error_handler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -414,6 +417,17 @@ class _FeedVideoPage extends ConsumerWidget {
     );
   }
 
+  Future<void> _editProducts(BuildContext context, WidgetRef ref, FeedVideo current) async {
+    final selected = await pickVideoProducts(context, ref, current.products.map((tag) => tag.product.id).toSet());
+    if (selected == null || !context.mounted) return;
+    try {
+      await ref.read(videoUploadRepositoryProvider).attachProducts(current.id, selected.toList());
+      await ref.read(feedNotifierProvider.notifier).load();
+    } catch (error) {
+      if (context.mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(describeFailure(error))));
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
@@ -489,6 +503,16 @@ class _FeedVideoPage extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (ref.watch(authNotifierProvider).user?.id == latest.user.id &&
+                  (ref.watch(authNotifierProvider).user?.isSeller ?? false)) ...[
+                OutlinedButton.icon(
+                  onPressed: () => _editProducts(context, ref, latest),
+                  icon: const Icon(Icons.add_shopping_cart, color: Colors.white),
+                  label: Text(latest.products.isEmpty ? 'Добавить товар' : 'Изменить товары',
+                    style: const TextStyle(color: Colors.white)),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+              ],
               if (overlayProduct != null) ...[
                 ProductOverlayChip(
                   product: overlayProduct,

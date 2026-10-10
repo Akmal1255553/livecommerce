@@ -6,6 +6,7 @@ use App\Exceptions\BusinessException;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\AuthenticateApi;
 use App\Http\Middleware\AuthenticateApiOptional;
+use App\Http\Middleware\CacheGet;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\EnsureSeller;
 use App\Http\Middleware\LogApiRequest;
@@ -30,6 +31,9 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
+    // Listeners are explicitly registered in RepositoryServiceProvider.
+    // Auto-discovery would enqueue processing and notifications twice.
+    ->withEvents(discover: false)
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         api: __DIR__.'/../routes/api.php',
@@ -41,6 +45,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'auth.api' => AuthenticateApi::class,
             'auth.api.optional' => AuthenticateApiOptional::class,
+            'cache.get' => CacheGet::class,
             'seller' => EnsureSeller::class,
             'role' => EnsureRole::class,
             'locale' => SetLocale::class,

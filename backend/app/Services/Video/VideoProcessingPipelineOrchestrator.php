@@ -106,22 +106,15 @@ class VideoProcessingPipelineOrchestrator
 
     private function seedPendingSteps(string $videoId): void
     {
+        $rows = [];
         foreach (self::ALL_STEPS as $stepClass) {
             /** @var VideoProcessingStepInterface $step */
             $step = app($stepClass);
 
-            VideoProcessingStep::query()->firstOrCreate(
-                [
-                    'video_id' => $videoId,
-                    'step' => $step->name()->value,
-                ],
-                [
-                    'status' => VideoProcessingStepStatus::Pending,
-                    'attempt' => 1,
-                    'created_at' => now(),
-                ],
-            );
+            $rows[] = ['video_id' => $videoId, 'step' => $step->name()->value,
+                'status' => VideoProcessingStepStatus::Pending->value, 'attempt' => 1, 'created_at' => now()];
         }
+        VideoProcessingStep::query()->insertOrIgnore($rows);
     }
 
     /**

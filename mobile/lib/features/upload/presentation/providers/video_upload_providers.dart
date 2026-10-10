@@ -126,6 +126,7 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
     String? title,
     String? description,
     String visibility = 'public',
+    List<String> productIds = const [],
   }) async {
     if (state.isBusy) return;
     final generation = ++_generation;
@@ -159,6 +160,11 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
       );
       if (!mounted || generation != _generation) return;
       _session = session;
+
+      if (productIds.isNotEmpty) {
+        await _repository.attachProducts(session.videoId, productIds);
+        if (!mounted || generation != _generation) return;
+      }
 
       if (!_fileUploaded) {
         await _repository.putVideoFile(

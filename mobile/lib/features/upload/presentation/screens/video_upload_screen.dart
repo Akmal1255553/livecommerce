@@ -11,6 +11,8 @@ import 'package:livecommerce_mobile/features/upload/presentation/providers/video
 import 'package:livecommerce_mobile/features/upload/presentation/widgets/video_preview_controller.dart';
 import 'package:livecommerce_mobile/shared/widgets/gradient_button.dart';
 import 'package:video_player/video_player.dart';
+import 'package:livecommerce_mobile/features/auth/presentation/providers/auth_providers.dart';
+import 'package:livecommerce_mobile/features/upload/presentation/widgets/video_product_picker.dart';
 
 class VideoUploadScreen extends ConsumerStatefulWidget {
   const VideoUploadScreen({super.key});
@@ -25,6 +27,12 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> with Widg
   VideoPlayerController? _previewController;
   String _visibility = 'public';
   bool _picking = false;
+  final Set<String> _productIds = {};
+
+  Future<void> _chooseProducts() async {
+    final result = await pickVideoProducts(context, ref, _productIds);
+    if (result != null && mounted) setState(() { _productIds.clear(); _productIds.addAll(result); });
+  }
 
   @override
   void initState() {
@@ -150,6 +158,7 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> with Widg
           title: _titleController.text,
           description: _descriptionController.text,
           visibility: _visibility,
+          productIds: _productIds.toList(),
         );
   }
 
@@ -180,6 +189,11 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> with Widg
               onPick: _pickVideo,
             ),
           VideoUploadStage.picked => _FormView(
+              productPicker: (ref.watch(authNotifierProvider).user?.isSeller ?? false)
+                  ? OutlinedButton.icon(onPressed: _chooseProducts,
+                      icon: const Icon(Icons.shopping_bag_outlined),
+                      label: Text(_productIds.isEmpty ? 'Добавить товар на видео' : 'Товаров на видео: ${_productIds.length}'))
+                  : null,
               titleController: _titleController,
               descriptionController: _descriptionController,
               visibility: _visibility,
@@ -210,6 +224,7 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> with Widg
                 ref.read(videoUploadNotifierProvider.notifier).reset();
                 _titleController.clear();
                 _descriptionController.clear();
+                _productIds.clear();
               },
             ),
           VideoUploadStage.failed => _FailedView(
@@ -219,6 +234,7 @@ class _VideoUploadScreenState extends ConsumerState<VideoUploadScreen> with Widg
                 ref.read(videoUploadNotifierProvider.notifier).reset();
                 _titleController.clear();
                 _descriptionController.clear();
+                _productIds.clear();
               },
             ),
         },
@@ -296,6 +312,7 @@ class _FormView extends StatelessWidget {
     required this.previewController,
     required this.error,
     required this.onUpload,
+    this.productPicker,
   });
 
   final TextEditingController titleController;
@@ -305,6 +322,7 @@ class _FormView extends StatelessWidget {
   final VideoPlayerController? previewController;
   final String? error;
   final VoidCallback onUpload;
+  final Widget? productPicker;
 
   @override
   Widget build(BuildContext context) {
@@ -373,6 +391,9 @@ class _FormView extends StatelessWidget {
           ],
         ),
         const SizedBox(height: AppSpacing.xl),
+        if (productPicker != null) ...[
+          productPicker!, const SizedBox(height: AppSpacing.md),
+        ],
         if (error != null) ...[
           Container(
             width: double.infinity,

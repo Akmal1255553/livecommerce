@@ -17,6 +17,18 @@ test('get video products returns empty list for untagged video', function () {
         ->assertJsonPath('data', []);
 });
 
+test('seller attaches products before file upload and they appear after publication', function () {
+    $seller = createSellerWithStore();
+    $video = Video::factory()->for($seller['user'])->create(['status' => \App\Enums\VideoStatus::Uploading]);
+    $product = Product::factory()->for($seller['store'])->create(['title' => 'Selected before upload']);
+    test()->withToken($seller['token'])->putJson('/api/v1/videos/'.$video->id.'/products', [
+        'products' => [['product_id' => $product->id, 'is_featured' => true]],
+    ])->assertOk();
+    $video->update(['status' => \App\Enums\VideoStatus::Published]);
+    test()->getJson('/api/v1/videos/'.$video->id)->assertOk()
+        ->assertJsonPath('data.products.0.product.id', $product->id);
+});
+
 test('seller can attach reorder and clear products on video', function () {
     Event::fake([ProductAttachedToVideo::class]);
 

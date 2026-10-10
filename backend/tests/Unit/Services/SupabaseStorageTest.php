@@ -37,3 +37,29 @@ test('HLS playlists retain the browser playback content type', function () {
     app(SupabaseStorageDriver::class)->put('videos/id/hls/master.m3u8', '#EXTM3U');
     Http::assertSent(fn ($request) => $request->hasHeader('Content-Type', 'application/vnd.apple.mpegurl') && $request->body() === '#EXTM3U');
 });
+
+test('batch media upload sends every file with correct credentials and mime', function () {
+    Http::fake(['*' => Http::response([], 200)]);
+    $file = tempnam(sys_get_temp_dir(), 'batch_test_');
+    file_put_contents($file, 'segment bytes');
+    try {
+        app(SupabaseStorageDriver::class)->putFiles([
+            'videos/id/hls/480p/segment_0000.ts' => $file,
+            'videos/id/hls/480p/playlist.m3u8' => $file,
+            'videos/id/hls/480p/segment_0001.ts' => $file,
+            'videos/id/hls/480p/segment_0002.ts' => $file,
+        ]);
+        Http::assertSentCount(4);
+        Http::assertSent(fn ($request) => $request->hasHeader('x-media-token', 'server-only-secret')
+            && $request->hasHeader('Content-Type', 'video/mp2t'));
+    } finally { unlink($file); }
+});
+
+test('failed batch media upload cannot report success', function () {
+    Http::fake(['*' => Http::response([], 503)]);
+    $file = tempnam(sys_get_temp_dir(), 'batch_test_');
+    file_put_contents($file, 'segment bytes');
+    try {
+        app(SupabaseStorageDriver::class)->putFiles(['videos/id/hls/480p/segment.ts' => $file]);
+    } finally { unlink($file); }
+})->throws(Illuminate\Http\Client\RequestException::class);
