@@ -48,9 +48,11 @@ jobs:
           DEMO_KEYSTORE_PATH: ${{ runner.temp }}/livecommerce-demo.jks
           DEMO_KEYSTORE_PASSWORD: ${{ secrets.DEMO_ANDROID_KEYSTORE_PASSWORD }}
         run: |
+          # The GitHub runner can give packaging more RAM without affecting PCs.
+          sed -i 's/-Xmx1536m/-Xmx3072m/; s/MaxMetaspaceSize=512m/MaxMetaspaceSize=1024m/' android/gradle.properties
           flutter pub get
           flutter gen-l10n
-          flutter build apk --release --target-platform android-arm,android-arm64 \
+          flutter --verbose build apk --release --target-platform android-arm,android-arm64 \
             --build-name 0.1.1 --build-number "$((20261011 + GITHUB_RUN_NUMBER))" \
             --dart-define=API_BASE_URL=https://livecommerce-api.onrender.com/api/v1
       - name: Verify signature and prepare files
