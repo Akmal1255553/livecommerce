@@ -28,6 +28,13 @@ subprojects {
 // Ensure Android library/app modules see required AndroidX APIs (LifecycleOwner, etc.).
 subprojects {
     pluginManager.withPlugin("com.android.library") {
+        // Some plugins set their own SDK after applying the Android plugin.
+        // Align it once their build script has finished configuring the module.
+        afterEvaluate {
+            extensions.configure<com.android.build.gradle.LibraryExtension> {
+                compileSdk = maxOf(compileSdk ?: 36, 36)
+            }
+        }
         dependencies {
             add("implementation", "androidx.annotation:annotation:1.8.2")
             add("implementation", "androidx.fragment:fragment:1.7.1")
