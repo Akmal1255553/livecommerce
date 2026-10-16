@@ -133,10 +133,12 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
   }
 
   Future<void> _renewToken() async {
+    final engine = _engine;
+    if (engine == null) return;
     try {
-      await _engine?.renewToken(widget.token);
+      await engine.renewToken(widget.token);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Не удалось продлить подключение. Подключитесь повторно.');
+      if (mounted && identical(_engine, engine)) setState(() => _error = 'Не удалось продлить подключение. Подключитесь повторно.');
     }
   }
 
@@ -180,22 +182,22 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
 
       engine.registerEventHandler(RtcEngineEventHandler(
         onJoinChannelSuccess: (connection, elapsed) {
-          if (mounted) {
+          if (mounted && identical(_engine, engine)) {
             setState(() => _joined = true);
           }
         },
         onUserJoined: (connection, remoteUid, elapsed) {
-          if (mounted) {
+          if (mounted && identical(_engine, engine)) {
             setState(() => _remoteUid = remoteUid);
           }
         },
         onUserOffline: (connection, remoteUid, reason) {
-          if (mounted && _remoteUid == remoteUid) {
+          if (mounted && identical(_engine, engine) && _remoteUid == remoteUid) {
             setState(() => _remoteUid = null);
           }
         },
         onError: (err, msg) {
-          if (mounted) {
+          if (mounted && identical(_engine, engine)) {
             setState(() => _error = '$err');
           }
         },
@@ -272,7 +274,7 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
               const SizedBox(height: 12),
               FilledButton(onPressed: _retry, child: const Text('Повторить подключение')),
               if (_permissionDenied)
-                TextButton(onPressed: openAppSettings, child: const Text('Открыть настройки')),
+                const TextButton(onPressed: openAppSettings, child: Text('Открыть настройки')),
             ]),
           ),
         ),

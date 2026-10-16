@@ -7,6 +7,11 @@ on:
     paths:
       - '.github/workflows/demo-apk.yml'
       - 'mobile/android/**'
+      - 'mobile/lib/features/live/**'
+      - 'mobile/test/features/live/**'
+      - 'mobile/web/media_player.*'
+      - 'scripts/test-media-player.cjs'
+      - 'scripts/smoke-live-media.cjs'
 
 permissions:
   contents: read
