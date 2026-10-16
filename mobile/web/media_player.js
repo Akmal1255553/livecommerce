@@ -152,6 +152,10 @@
         subscriptions.delete(`${user.uid}:${kind}`);
         if (kind === 'video') notice.textContent = 'Продавец приостановил видео.';
       });
+      joiningClient.on('user-left', user => {
+        subscriptions.delete(`${user.uid}:audio`);
+        subscriptions.delete(`${user.uid}:video`);
+      });
       joiningClient.on('token-privilege-did-expire', () => {
         notice.textContent = 'Сессия истекла. Откройте эфир заново.';
       });
@@ -188,7 +192,7 @@
       }
       button('Отключить видео', async () => {
         await cleanup();
-        if (config === current) setupAgora(current);
+        if (config === current) setupAgora(current, false);
       });
     } catch (error) {
       localTracks.forEach(track => { track.stop(); track.close(); });
@@ -203,7 +207,7 @@
     } finally { if (currentGeneration === generation) connecting = false; }
   }
 
-  function setupAgora(current) {
+  function setupAgora(current, autoJoin = true) {
     if (!current.appId || !current.channel || !current.token) {
       notice.textContent = 'Эфир не настроен на сервере. Свяжитесь с администратором.';
       return;
@@ -212,7 +216,7 @@
     const connectButton = button(current.isHost ? 'Включить камеру и начать' : 'Повторить подключение', node => joinAgora(current, node));
     // Viewing needs no microphone/camera permission or initial button press.
     // Only audible playback may require a separate browser user gesture.
-    if (!current.isHost) void joinAgora(current, connectButton);
+    if (!current.isHost && autoJoin) void joinAgora(current, connectButton);
   }
 
   async function initialize(current) {
