@@ -147,10 +147,12 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
     state = state.copyWith(isLoading: true, clearError: true, isHost: asHost);
     try {
       final session = await _repository.get(_sessionId);
-      final isHost = asHost ||
-          (_currentUserId != null &&
-              session.seller?.id == _currentUserId &&
-              session.publisherToken != null);
+      // Shared links are viewer entries, even on the broadcaster's account.
+      // Publishing must be explicitly requested by the Go Live/resume route.
+      final isHost = asHost &&
+          _currentUserId != null &&
+          session.seller?.id == _currentUserId &&
+          (session.publisherToken?.isNotEmpty ?? false);
 
       if (!isHost && !_joined) {
         await _repository.join(_sessionId);

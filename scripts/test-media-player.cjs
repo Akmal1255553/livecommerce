@@ -14,7 +14,8 @@ function harness() {
     const node = { tag, children: [], textContent: '', paused: true,
       append(child) { this.children.push(child); },
       replaceChildren() { this.children = []; },
-      remove() {}, removeAttribute() {}, load() {},
+      remove() { for (const parent of created) parent.children = parent.children.filter(child => child !== this); },
+      removeAttribute() {}, load() {},
       play() { this.paused = false; return Promise.resolve(); },
       pause() { this.paused = true; }, canPlayType() { return ''; },
       get childElementCount() { return this.children.length; },
@@ -111,7 +112,7 @@ test('leaving while the live role is pending prevents a late channel join', asyn
       };
     },
   };
-  h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token' });
+  h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token', isHost: true });
   await tick();
   const connecting = h.nodes.actions.children[0].onclick();
   await tick();
@@ -140,7 +141,6 @@ test('live status polling renews token without disconnecting or restarting camer
   const config = { type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'old', isHost: false };
   h.send(config);
   await tick();
-  await h.nodes.actions.children[0].onclick();
   h.send({ ...config, token: 'new' });
   await tick();
   assert.equal(joins, 1);
@@ -149,4 +149,52 @@ test('live status polling renews token without disconnecting or restarting camer
   h.send({ ...config, channel: 'another' });
   await tick();
   assert.equal(leaves, 1);
+});
+
+test('a viewer automatically receives an existing host video and audio without capture permission', async () => {
+  const h = harness();
+  const handlers = {}, subscribed = [];
+  let joined = 0, audioPlayed = 0, videoPlayed = 0;
+  const remote = { uid: 42, hasVideo: true, hasAudio: true,
+    audioTrack: { play() { audioPlayed++; } },
+    videoTrack: { play(container) { assert.equal(container, h.nodes.media); videoPlayed++; } },
+  };
+  h.window.isSecureContext = true;
+  h.window.AgoraRTC = {
+    setLogLevel() {},
+    createMicrophoneAndCameraTracks() { assert.fail('Viewers must not capture camera/microphone'); },
+    createClient: () => ({
+      remoteUsers: [remote],
+      async setClientRole(role) { assert.equal(role, 'audience'); },
+      on(name, fn) { handlers[name] = fn; }, removeAllListeners() {}, async leave() {},
+      async join() {
+        joined++;
+        // Agora may emit both events during join and include them in remoteUsers.
+        void handlers['user-published'](remote, 'video');
+        void handlers['user-published'](remote, 'audio');
+      },
+      async subscribe(user, kind) { assert.equal(user, remote); subscribed.push(kind); },
+    }),
+  };
+  h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token', isHost: false });
+  await tick();
+  assert.equal(joined, 1);
+  assert.deepEqual(subscribed.sort(), ['audio', 'video']);
+  assert.equal(audioPlayed, 1);
+  assert.equal(videoPlayed, 1);
+  assert.equal(h.nodes.notice.textContent, '');
+  h.window.AgoraRTC.onAutoplayFailed();
+  h.window.AgoraRTC.onAutoplayFailed();
+  const sound = h.nodes.actions.children.filter(node => node.textContent === 'Включить звук');
+  assert.equal(sound.length, 1);
+  await sound[0].onclick();
+  assert.equal(audioPlayed, 2);
+  assert.equal(videoPlayed, 2);
+  await handlers['user-unpublished'](remote, 'video');
+  await handlers['user-published'](remote, 'video');
+  assert.equal(videoPlayed, 3);
+  h.send({ type: 'dispose' });
+  await tick();
+  h.window.AgoraRTC.onAutoplayFailed();
+  assert.equal(h.nodes.actions.children.length, 0);
 });

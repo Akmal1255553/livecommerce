@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io' show Platform;
 
 import 'package:agora_rtc_engine/agora_rtc_engine.dart';
@@ -39,6 +40,7 @@ Widget buildLiveAvSurface({
   }
 
   return _AgoraLiveView(
+    key: ValueKey('$appId:$channelId:$isHost'),
     appId: appId,
     channelId: channelId,
     token: token,
@@ -93,6 +95,7 @@ class _NativeOnlyBanner extends StatelessWidget {
 
 class _AgoraLiveView extends StatefulWidget {
   const _AgoraLiveView({
+    super.key,
     required this.appId,
     required this.channelId,
     required this.token,
@@ -112,6 +115,7 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
   RtcEngine? _engine;
   int? _remoteUid;
   bool _joined = false;
+  bool _permissionDenied = false;
   String? _error;
 
   @override
@@ -120,19 +124,59 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
     _bootstrap();
   }
 
+  @override
+  void didUpdateWidget(covariant _AgoraLiveView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_joined && oldWidget.token != widget.token) {
+      unawaited(_renewToken());
+    }
+  }
+
+  Future<void> _renewToken() async {
+    try {
+      await _engine?.renewToken(widget.token);
+    } catch (_) {
+      if (mounted) setState(() => _error = 'Не удалось продлить подключение. Подключитесь повторно.');
+    }
+  }
+
+  Future<void> _release(RtcEngine engine) async {
+    try { await engine.leaveChannel(); } catch (_) {}
+    try { await engine.release(); } catch (_) {}
+  }
+
+  Future<void> _retry() async {
+    final previous = _engine;
+    _engine = null;
+    setState(() { _error = null; _joined = false; _remoteUid = null; _permissionDenied = false; });
+    if (previous != null) await _release(previous);
+    if (mounted) await _bootstrap();
+  }
+
   Future<void> _bootstrap() async {
+    RtcEngine? initializingEngine;
     try {
       if (widget.isHost) {
-        await [Permission.microphone, Permission.camera].request();
-      } else {
-        await Permission.microphone.request();
+        final permissions = await [Permission.microphone, Permission.camera].request();
+        if (!mounted) return;
+        if (permissions[Permission.microphone] != PermissionStatus.granted ||
+            permissions[Permission.camera] != PermissionStatus.granted) {
+          setState(() {
+            _permissionDenied = true;
+            _error = 'Разрешите камеру и микрофон в настройках приложения, затем повторите подключение.';
+          });
+          return;
+        }
       }
 
       final engine = createAgoraRtcEngine();
+      initializingEngine = engine;
       await engine.initialize(RtcEngineContext(
         appId: widget.appId,
         channelProfile: ChannelProfileType.channelProfileLiveBroadcasting,
       ));
+      if (!mounted) { await _release(engine); return; }
+      _engine = engine;
 
       engine.registerEventHandler(RtcEngineEventHandler(
         onJoinChannelSuccess: (connection, elapsed) {
@@ -158,6 +202,10 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
       ));
 
       await engine.enableVideo();
+      await engine.enableAudio();
+      await engine.enableLocalVideo(widget.isHost);
+      await engine.enableLocalAudio(widget.isHost);
+      await engine.setDefaultAudioRouteToSpeakerphone(true);
       await engine.setClientRole(
         role: widget.isHost
             ? ClientRoleType.clientRoleBroadcaster
@@ -165,6 +213,9 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
       );
 
       if (widget.isHost) {
+        await engine.setVideoEncoderConfiguration(const VideoEncoderConfiguration(
+          dimensions: VideoDimensions(width: 640, height: 480), frameRate: 15,
+        ));
         await engine.startPreview();
       }
 
@@ -175,6 +226,7 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
         options: ChannelMediaOptions(
           autoSubscribeAudio: true,
           autoSubscribeVideo: true,
+          enableAudioRecordingOrPlayout: true,
           publishCameraTrack: widget.isHost,
           publishMicrophoneTrack: widget.isHost,
           clientRoleType: widget.isHost
@@ -184,12 +236,13 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
       );
 
       if (!mounted) {
-        await engine.leaveChannel();
-        await engine.release();
+        await _release(engine);
         return;
       }
       setState(() => _engine = engine);
     } catch (e) {
+      if (identical(_engine, initializingEngine)) _engine = null;
+      if (initializingEngine != null) await _release(initializingEngine);
       if (mounted) {
         setState(() => _error = e.toString());
       }
@@ -201,8 +254,7 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
     final engine = _engine;
     _engine = null;
     if (engine != null) {
-      engine.leaveChannel();
-      engine.release();
+      unawaited(_release(engine));
     }
     super.dispose();
   }
@@ -213,10 +265,15 @@ class _AgoraLiveViewState extends State<_AgoraLiveView> {
       return ColoredBox(
         color: const Color(0xFF1A1A2E),
         child: Center(
-          child: Text(
-            _error!,
-            style: const TextStyle(color: Colors.white70),
-            textAlign: TextAlign.center,
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(_error!, style: const TextStyle(color: Colors.white70), textAlign: TextAlign.center),
+              const SizedBox(height: 12),
+              FilledButton(onPressed: _retry, child: const Text('Повторить подключение')),
+              if (_permissionDenied)
+                TextButton(onPressed: openAppSettings, child: const Text('Открыть настройки')),
+            ]),
           ),
         ),
       );

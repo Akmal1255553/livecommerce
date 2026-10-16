@@ -28,6 +28,14 @@ jobs:
         with:
           distribution: temurin
           java-version: '21'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Test browser live playback protocol
+        run: node --test ../scripts/test-media-player.cjs
+      - name: Verify actual synthetic video and audio delivery
+        timeout-minutes: 8
+        run: node ../scripts/smoke-live-media.cjs
       - uses: gradle/actions/setup-gradle@v4
         with:
           cache-read-only: false
@@ -52,18 +60,20 @@ jobs:
           sed -i 's/-Xmx1536m/-Xmx3072m/; s/MaxMetaspaceSize=512m/MaxMetaspaceSize=1024m/' android/gradle.properties
           flutter pub get
           flutter gen-l10n
+          flutter analyze lib/features/live test/features/live
+          flutter test test/features/live/live_room_role_test.dart
           flutter --verbose build apk --release --target-platform android-arm,android-arm64 \
-            --build-name 0.1.1 --build-number "$((20261011 + GITHUB_RUN_NUMBER))" \
+            --build-name 0.1.2 --build-number "$((20261011 + GITHUB_RUN_NUMBER))" \
             --dart-define=API_BASE_URL=https://livecommerce-api.onrender.com/api/v1
       - name: Verify signature and prepare files
         run: |
           mkdir -p build/demo-apk
-          cp build/app/outputs/flutter-apk/app-release.apk build/demo-apk/LiveCommerce-0.1.1.apk
+          cp build/app/outputs/flutter-apk/app-release.apk build/demo-apk/LiveCommerce-0.1.2.apk
           BUILD_TOOLS="$(find "$ANDROID_HOME/build-tools" -mindepth 1 -maxdepth 1 -type d | sort -V | tail -1)"
-          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs build/demo-apk/LiveCommerce-0.1.1.apk
-          "$BUILD_TOOLS/aapt" dump badging build/demo-apk/LiveCommerce-0.1.1.apk > build/demo-apk/android-manifest.txt
+          "$BUILD_TOOLS/apksigner" verify --verbose --print-certs build/demo-apk/LiveCommerce-0.1.2.apk
+          "$BUILD_TOOLS/aapt" dump badging build/demo-apk/LiveCommerce-0.1.2.apk > build/demo-apk/android-manifest.txt
           cd build/demo-apk
-          sha256sum LiveCommerce-0.1.1.apk > SHA256SUMS.txt
+          sha256sum LiveCommerce-0.1.2.apk > SHA256SUMS.txt
           printf 'Source commit: %s\nAPI: https://livecommerce-api.onrender.com/api/v1\n' "$GITHUB_SHA" > build-info.txt
       - uses: actions/upload-artifact@v4
         with:

@@ -108,7 +108,7 @@
     notice.textContent = 'Подключение к эфиру…';
     try {
       if (!window.isSecureContext) throw new Error('secure');
-      await loadScript('https://cdn.jsdelivr.net/npm/agora-rtc-sdk-ng@4.23.4/AgoraRTC_N-production.js');
+      if (!window.AgoraRTC) await loadScript('https://cdn.jsdelivr.net/npm/agora-rtc-sdk-ng@4.23.4/AgoraRTC_N-production.js');
       if (currentGeneration !== generation) return;
       const sdk = window.AgoraRTC;
       sdk.setLogLevel(4);
@@ -116,15 +116,40 @@
       client = joiningClient;
       await joiningClient.setClientRole(current.isHost ? 'host' : 'audience');
       if (currentGeneration !== generation) return;
-      joiningClient.on('user-published', async (user, kind) => {
+      const subscriptions = new Set();
+      let soundButton;
+      function enableSound() {
+        if (currentGeneration !== generation || soundButton || current.isHost) return;
+        soundButton = button('Включить звук', async node => {
+          // Replay inside the click handler, before awaiting, to retain the
+          // browser's user activation even when RTC joining took several seconds.
+          for (const remote of joiningClient.remoteUsers || []) {
+            remote.audioTrack?.play();
+            remote.videoTrack?.play(media);
+          }
+          await sdk.resumeAudioContext?.();
+          node.remove(); soundButton = null;
+        });
+      }
+      sdk.onAutoplayFailed = enableSound;
+      async function subscribe(user, kind) {
+        if (kind !== 'audio' && kind !== 'video') return;
+        const key = `${user.uid}:${kind}`;
+        if (subscriptions.has(key)) return;
+        subscriptions.add(key);
         try {
           await joiningClient.subscribe(user, kind);
           if (currentGeneration !== generation) return;
           if (kind === 'video') { user.videoTrack.play(media); notice.textContent = ''; }
           if (kind === 'audio') user.audioTrack.play();
-        } catch (_) { if (currentGeneration === generation) notice.textContent = 'Не удалось получить поток. Переподключитесь.'; }
-      });
-      joiningClient.on('user-unpublished', (_, kind) => {
+        } catch (_) {
+          subscriptions.delete(key);
+          if (currentGeneration === generation) notice.textContent = 'Не удалось получить поток. Переподключитесь.';
+        }
+      }
+      joiningClient.on('user-published', subscribe);
+      joiningClient.on('user-unpublished', (user, kind) => {
+        subscriptions.delete(`${user.uid}:${kind}`);
         if (kind === 'video') notice.textContent = 'Продавец приостановил видео.';
       });
       joiningClient.on('token-privilege-did-expire', () => {
@@ -132,6 +157,12 @@
       });
       await joiningClient.join(current.appId, current.channel, current.token, null);
       if (currentGeneration !== generation) { await joiningClient.leave(); return; }
+      // A broadcaster may already be publishing before this viewer joins.
+      // Reconcile the snapshot as well as events, without double subscriptions.
+      for (const remote of joiningClient.remoteUsers || []) {
+        if (remote.hasVideo) void subscribe(remote, 'video');
+        if (remote.hasAudio) void subscribe(remote, 'audio');
+      }
       if (current.isHost) {
         localTracks = await sdk.createMicrophoneAndCameraTracks({}, { encoderConfig: '480p_1' });
         if (currentGeneration !== generation) {
@@ -144,7 +175,9 @@
       }
       if (currentGeneration !== generation) return;
       connectButton.remove();
-      notice.textContent = current.isHost ? '' : 'Ожидаем видео продавца…';
+      notice.textContent = current.isHost || (joiningClient.remoteUsers || []).some(u => u.hasVideo)
+        ? '' : 'Ожидаем видео продавца…';
+      if (!current.isHost) enableSound();
       if (current.isHost) {
         let muted = false;
         button('Выключить микрофон', async node => {
@@ -176,7 +209,10 @@
       return;
     }
     notice.textContent = current.isHost ? 'Разрешите камеру и микрофон для трансляции.' : 'Подключитесь к эфиру со звуком.';
-    button(current.isHost ? 'Включить камеру и начать' : 'Смотреть эфир', node => joinAgora(current, node));
+    const connectButton = button(current.isHost ? 'Включить камеру и начать' : 'Повторить подключение', node => joinAgora(current, node));
+    // Viewing needs no microphone/camera permission or initial button press.
+    // Only audible playback may require a separate browser user gesture.
+    if (!current.isHost) void joinAgora(current, connectButton);
   }
 
   async function initialize(current) {
