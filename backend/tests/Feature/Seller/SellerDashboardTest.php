@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\OrderStatus;
 use App\Enums\ProductStatus;
+use App\Enums\StoreStatus;
 use App\Enums\UserRole;
 use App\Models\Category;
 use App\Models\Order;
@@ -76,6 +77,31 @@ test('seller dashboard and analytics require seller middleware', function () {
         ->assertJsonPath('data.total_orders', 1)
         ->assertJsonPath('data.total_revenue', 100000)
         ->assertJsonStructure(['data' => ['series', 'currency', 'total_products']]);
+});
+
+test('demo auto approval grants a new seller dashboard and product access immediately', function () {
+    config(['seller.auto_approve_stores' => true]);
+    $auth = registerUser('demoseller', 'demoseller@example.com');
+    test()->withToken($auth['access_token'])->postJson('/api/v1/seller/apply', [
+        'store_name' => 'Demo approved store',
+    ])->assertCreated()->assertJsonPath('data.status', 'active');
+    test()->withToken($auth['access_token'])->getJson('/api/v1/seller/dashboard')
+        ->assertOk()->assertJsonPath('data.store.status', 'active');
+    $category = Category::factory()->create();
+    test()->withToken($auth['access_token'])->postJson('/api/v1/products', [
+        'title' => 'Demo product', 'category_id' => $category->id,
+        'price' => 10000, 'stock_quantity' => 2, 'status' => 'active',
+    ])->assertCreated()->assertJsonPath('data.title', 'Demo product');
+});
+
+test('demo auto approval does not unlock suspended stores or buyer access', function () {
+    config(['seller.auto_approve_stores' => true]);
+    $seller = createSellerWithStore();
+    $seller['store']->update(['status' => StoreStatus::Suspended]);
+    test()->withToken($seller['token'])->getJson('/api/v1/seller/dashboard')->assertForbidden();
+    expect($seller['store']->fresh()->status)->toBe(StoreStatus::Suspended);
+    $buyer = registerUser('demobuyer', 'demobuyer@example.com');
+    test()->withToken($buyer['access_token'])->getJson('/api/v1/seller/dashboard')->assertForbidden();
 });
 
 test('public storefront returns store and products by slug', function () {
