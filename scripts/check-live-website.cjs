@@ -29,11 +29,14 @@ async function api(path, method = 'GET', body, token) {
     live = await api('/live/start', 'POST', { title: 'Temporary synthetic media verification' }, auth.access_token);
     browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome',
       args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--disable-dev-shm-usage'] });
-    const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    const context = await browser.newContext({ viewport: { width: 412, height: 915 },
+      isMobile: true, hasTouch: true,
+      userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36' });
     page = await context.newPage();
     page.on('pageerror', error => diagnostics.errors.push(error.name));
     await page.goto(site, { waitUntil: 'domcontentloaded' });
-    await page.locator('flt-glass-pane').waitFor({ timeout: 90000 });
+    await page.locator('flt-glass-pane').waitFor({ state: 'attached', timeout: 90000 });
+    console.log('Flutter application attached');
     await page.locator('flt-semantics-placeholder').evaluate(node => node.click());
     const inputs = page.locator('input');
     await inputs.first().fill(email, { timeout: 30000 });
@@ -41,11 +44,13 @@ async function api(path, method = 'GET', body, token) {
     await page.getByRole('button', { name: /^(Войти|Kirish)$/ }).click();
     await page.waitForURL(/home/, { timeout: 60000 });
     loggedIn = true;
+    console.log('Temporary host logged in');
     // Hash navigation preserves the authenticated Flutter session.
     await page.evaluate(id => { location.hash = `/live/${id}?host=1`; }, live.id);
     const frame = page.frameLocator('iframe');
     const start = frame.getByRole('button', { name: 'Включить камеру и начать' });
     await start.waitFor({ timeout: 60000 });
+    console.log('Host camera start control visible');
     await start.click();
     await frame.locator('video').waitFor({ timeout: 60000 });
     await frame.locator('video').evaluate(async video => {
@@ -59,7 +64,7 @@ async function api(path, method = 'GET', body, token) {
     diagnostics.passed = true;
     console.log('Actual Flutter host UI: camera preview and microphone publishing passed');
   } finally {
-    if (page && loggedIn) {
+    if (page) {
       for (const frame of page.frames()) {
         diagnostics.frames.push(await frame.evaluate(() => ({
           mediaFrame: !!document.getElementById('media'),
@@ -68,7 +73,7 @@ async function api(path, method = 'GET', body, token) {
           videos: Array.from(document.querySelectorAll('video')).map(v => ({ width: v.videoWidth, playing: !v.paused })),
         })).catch(() => ({ inaccessible: true })));
       }
-      await page.screenshot({ path: 'live-website-diagnostics/host.png' }).catch(() => {});
+      await page.screenshot({ path: 'live-website-diagnostics/host.png', mask: loggedIn ? [] : [page.locator('input')] }).catch(() => {});
     }
     await writeFile('live-website-diagnostics/result.json', JSON.stringify(diagnostics, null, 2));
     await browser?.close();
