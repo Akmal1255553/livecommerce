@@ -55,8 +55,8 @@ async function api(path, method = 'GET', body, token) {
     await start.waitFor({ timeout: 60000 });
     console.log('Host camera start control visible');
     await start.click();
-    await frame.locator('video').waitFor({ timeout: 60000 });
-    await frame.locator('video').evaluate(async video => {
+    await frame.locator('#media video').first().waitFor({ timeout: 60000 });
+    await frame.locator('#media video').first().evaluate(async video => {
       const deadline = Date.now() + 20000;
       while (!(video.videoWidth > 0 && video.currentTime > 0)) {
         if (Date.now() > deadline) throw Error('Host preview has no decoded video');
