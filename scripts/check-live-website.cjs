@@ -36,7 +36,7 @@ async function api(path, method = 'GET', body, token) {
     const password = randomBytes(24).toString('base64url');
     const email = `${name}@example.invalid`;
     auth = await api('/auth/register', 'POST', { username: name, email, password, password_confirmation: password });
-    await api('/seller/apply', 'POST', { store_name: 'Temporary website media verification' }, auth.access_token);
+    await api('/seller/apply', 'POST', { store_name: `Temporary website media verification ${randomBytes(6).toString('hex')}` }, auth.access_token);
     live = await api('/live/start', 'POST', { title: 'Temporary synthetic media verification' }, auth.access_token);
     browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome',
       args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--disable-dev-shm-usage'] });
