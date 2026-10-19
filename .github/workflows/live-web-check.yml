@@ -5,6 +5,7 @@ on:
     paths:
       - '.github/workflows/live-web-check.yml'
       - 'scripts/check-live-website.cjs'
+      - 'scripts/check-live-receivers.cjs'
   workflow_dispatch:
 permissions:
   contents: read
@@ -19,6 +20,10 @@ jobs:
           node-version: '22'
       - name: Install browser driver
         run: npm install --prefix "$RUNNER_TEMP/live-check" playwright@1.58.2
+      - name: Inspect active public stream transport without recording
+        env:
+          NODE_PATH: ${{ runner.temp }}/live-check/node_modules
+        run: node scripts/check-live-receivers.cjs
       - name: Check actual Flutter website and embedded broadcaster
         env:
           NODE_PATH: ${{ runner.temp }}/live-check/node_modules
