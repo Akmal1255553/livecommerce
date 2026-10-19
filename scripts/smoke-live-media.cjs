@@ -91,6 +91,8 @@ async function waitFor(page, expression, description) {
     const host = await page(true);
     await delay(300);
     await host.evaluate(`document.querySelector('#actions button').click()`, true);
+    await waitFor(host, `Array.from(document.querySelectorAll('button')).some(b=>b.textContent==='Включить микрофон и начать эфир')`, 'Host microphone action not shown');
+    await host.evaluate(`Array.from(document.querySelectorAll('button')).find(b=>b.textContent==='Включить микрофон и начать эфир').click()`, true);
     await waitFor(host, `window.__rtc?.localTracks.length===2`, 'Host did not publish camera and microphone');
     const viewer = await page(false);
     await waitFor(viewer, `window.__rtc?.remoteUsers.some(u=>u.audioTrack&&u.videoTrack)`, 'Viewer did not subscribe automatically');

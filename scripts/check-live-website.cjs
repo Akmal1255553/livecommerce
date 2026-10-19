@@ -1,8 +1,9 @@
 // Exercise the deployed Flutter UI, not just the media frame in isolation.
 // Uses temporary credentials and Chrome's synthetic camera and microphone.
 const { chromium } = require('playwright');
-const { randomBytes } = require('node:crypto');
-const { mkdir, writeFile } = require('node:fs/promises');
+const { randomBytes, createHash } = require('node:crypto');
+const { mkdir, writeFile, readFile } = require('node:fs/promises');
+const { join } = require('node:path');
 const apiBase = 'https://livecommerce-api.onrender.com/api/v1';
 const site = 'https://livecommerce-web.onrender.com';
 async function api(path, method = 'GET', body, token) {
@@ -21,6 +22,16 @@ async function api(path, method = 'GET', body, token) {
   const diagnostics = { errors: [], frames: [] };
   await mkdir('live-website-diagnostics', { recursive: true });
   try {
+    const hash = value => createHash('sha256').update(value.replace(/\r\n/g, '\n')).digest('hex');
+    const expected = hash(await readFile(join(__dirname, '../mobile/web/media_player.js'), 'utf8'));
+    console.log('Waiting for website player deployment');
+    let deployed = false;
+    for (let attempt = 0; attempt < 42; attempt++) {
+      const response = await fetch(`${site}/media_player.js?check=${expected}`, { signal: AbortSignal.timeout(15000) });
+      if (response.ok && hash(await response.text()) === expected) { deployed = true; break; }
+      await new Promise(resolve => setTimeout(resolve, 5000));
+    }
+    if (!deployed) throw Error('Expected website player has not deployed yet');
     const name = 'livemediacheck_' + randomBytes(5).toString('hex');
     const password = randomBytes(24).toString('base64url');
     const email = `${name}@example.invalid`;
@@ -51,7 +62,7 @@ async function api(path, method = 'GET', body, token) {
     // Hash navigation preserves the authenticated Flutter session.
     await page.evaluate(id => { location.hash = `/live/${id}?host=1`; }, live.id);
     const frame = page.frameLocator('iframe');
-    const start = frame.getByRole('button', { name: 'Включить камеру и начать' });
+    const start = frame.getByRole('button', { name: 'Включить камеру', exact: true });
     await start.waitFor({ timeout: 60000 });
     console.log('Host camera start control visible');
     await start.click();
@@ -63,6 +74,7 @@ async function api(path, method = 'GET', body, token) {
         await new Promise(resolve => setTimeout(resolve, 250));
       }
     });
+    await frame.getByRole('button', { name: 'Включить микрофон и начать эфир', exact: true }).click();
     await frame.getByRole('button', { name: 'Выключить микрофон' }).waitFor({ timeout: 30000 });
     diagnostics.passed = true;
     console.log('Actual Flutter host UI: camera preview and microphone publishing passed');

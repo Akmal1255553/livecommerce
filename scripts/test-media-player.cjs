@@ -210,7 +210,8 @@ test('host previews capture while signaling is pending and leaving releases both
   h.window.isSecureContext = true;
   h.window.AgoraRTC = {
     setLogLevel() {},
-    async createMicrophoneAndCameraTracks() { return localTracks; },
+    async createCameraVideoTrack() { return localTracks[1]; },
+    async createMicrophoneAudioTrack() { return localTracks[0]; },
     createClient: () => ({
       async setClientRole() {}, on() {}, removeAllListeners() {},
       join: () => joining, async leave() {},
@@ -221,9 +222,11 @@ test('host previews capture while signaling is pending and leaving releases both
   await tick();
   const connecting = h.nodes.actions.children[0].onclick();
   await tick();
+  await h.nodes.actions.children.find(node => node.textContent === 'Включить микрофон и начать эфир').onclick();
+  await tick();
   assert.equal(previewed, 1);
   assert.equal(published, 0);
-  assert.match(h.nodes.notice.textContent, /Камера включена/);
+  assert.match(h.nodes.notice.textContent, /Камера и микрофон включены/);
   h.send({ type: 'dispose' });
   await tick();
   assert.equal(closed, 2);
@@ -232,14 +235,14 @@ test('host previews capture while signaling is pending and leaving releases both
   assert.equal(published, 0);
 });
 
-test('denied microphone and occupied camera show actionable errors and allow retry', async () => {
+test('denied or occupied camera shows actionable errors and allows retry', async () => {
   for (const [code, message] of [['PERMISSION_DENIED', /ОБА устройства/], ['NOT_READABLE', /заняты/]]) {
     const h = harness();
     let attempts = 0;
     h.window.isSecureContext = true;
     h.window.AgoraRTC = {
       setLogLevel() {},
-      async createMicrophoneAndCameraTracks() { attempts++; throw { code }; },
+      async createCameraVideoTrack() { attempts++; throw { code }; },
       createClient: () => ({
         async setClientRole() {}, on() {}, removeAllListeners() {}, async leave() {},
         async join() { assert.fail('Do not join without capture'); },
@@ -247,11 +250,72 @@ test('denied microphone and occupied camera show actionable errors and allow ret
     };
     h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token', isHost: true });
     await tick();
-    const start = h.nodes.actions.children[0];
-    await start.onclick();
+    await h.nodes.actions.children[0].onclick();
     assert.match(h.nodes.notice.textContent, message);
-    assert.equal(start.disabled, false);
-    await start.onclick();
+    assert.equal(h.nodes.actions.children[0].disabled, undefined);
+    await h.nodes.actions.children[0].onclick();
     assert.equal(attempts, 2);
   }
+});
+
+test('microphone gets its own user action; denial preserves camera and can be retried', async () => {
+  const h = harness();
+  let audioAttempts = 0, cameraClosed = 0, joined = 0;
+  const published = [];
+  const camera = { play() {}, stop() {}, close() { cameraClosed++; } };
+  const audio = { setEnabled() {}, stop() {}, close() {} };
+  h.window.isSecureContext = true;
+  h.window.AgoraRTC = {
+    setLogLevel() {},
+    async createCameraVideoTrack() { return camera; },
+    async createMicrophoneAudioTrack() {
+      if (++audioAttempts === 1) throw { code: 'PERMISSION_DENIED' };
+      return audio;
+    },
+    createClient: () => ({
+      async setClientRole() {}, on() {}, removeAllListeners() {}, async leave() {},
+      async join() { joined++; }, async publish(tracks) { published.push(...tracks); },
+    }),
+  };
+  h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token', isHost: true });
+  await tick();
+  const starting = h.nodes.actions.children[0].onclick();
+  await tick();
+  assert.equal(audioAttempts, 0, 'Microphone capture requires a separate click');
+  const micButton = h.nodes.actions.children[0];
+  assert.equal(micButton.textContent, 'Включить микрофон и начать эфир');
+  await micButton.onclick();
+  assert.match(h.nodes.notice.textContent, /Chrome запретил микрофон/);
+  assert.equal(cameraClosed, 0);
+  assert.equal(joined, 0);
+  assert.equal(micButton.disabled, false);
+  await micButton.onclick();
+  await starting;
+  assert.deepEqual(published, [audio, camera]);
+  assert.equal(joined, 1);
+  h.send({ type: 'dispose' });
+  await tick();
+  assert.equal(cameraClosed, 1);
+});
+
+test('leaving while waiting for microphone closes preview without joining', async () => {
+  const h = harness();
+  let closed = 0;
+  h.window.isSecureContext = true;
+  h.window.AgoraRTC = {
+    setLogLevel() {},
+    async createCameraVideoTrack() { return { play() {}, stop() {}, close() { closed++; } }; },
+    createClient: () => ({
+      async setClientRole() {}, on() {}, removeAllListeners() {}, async leave() {},
+      async join() { assert.fail('Must not join after leaving'); },
+    }),
+  };
+  h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token', isHost: true });
+  await tick();
+  const starting = h.nodes.actions.children[0].onclick();
+  await tick();
+  h.send({ type: 'dispose' });
+  await starting;
+  assert.equal(closed, 1);
+  assert.equal(h.nodes.actions.children.length, 0);
 });

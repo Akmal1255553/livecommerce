@@ -8,6 +8,7 @@
   let config, player, hls, client, tracks = [], generation = 0;
   let playback = { active: true, muted: true };
   let connecting = false;
+  let cancelCapture;
 
   function loadScript(url) {
     if (!scripts.has(url)) {
@@ -37,6 +38,7 @@
 
   async function cleanup() {
     generation++;
+    cancelCapture?.(); cancelCapture = null;
     connecting = false;
     hls?.destroy(); hls = null;
     if (player) { player.pause(); player.removeAttribute('src'); player.load(); player = null; }
@@ -162,15 +164,45 @@
       // Open capture before waiting for RTC signaling. A slow connection must
       // not leave the host staring at a blank camera preview.
       if (current.isHost) {
-        notice.textContent = 'Разрешите камеру и микрофон в запросе браузера…';
-        localTracks = await sdk.createMicrophoneAndCameraTracks({}, { encoderConfig: '480p_1' });
+        notice.textContent = 'Разрешите камеру в запросе браузера…';
+        const camera = await sdk.createCameraVideoTrack({ encoderConfig: '480p_1' });
+        localTracks = [camera];
         if (currentGeneration !== generation) {
           localTracks.forEach(track => { track.stop(); track.close(); });
           await joiningClient.leave(); return;
         }
         tracks = localTracks;
-        localTracks[1].play(media);
-        notice.textContent = 'Камера включена. Подключение к эфиру…';
+        camera.play(media);
+        connectButton.remove();
+        notice.textContent = 'Камера включена. Нажмите «Включить микрофон и начать эфир» и разрешите микрофон.';
+        // Android permission dialogs need separate, explicit capture actions.
+        // Keep the working camera preview if microphone access is denied.
+        const microphone = await new Promise(resolve => {
+          cancelCapture = () => resolve(null);
+          button('Включить микрофон и начать эфир', async node => {
+            notice.textContent = 'Разрешите микрофон в запросе браузера…';
+            try {
+              const audio = await sdk.createMicrophoneAudioTrack();
+              if (currentGeneration !== generation) {
+                audio.stop(); audio.close(); resolve(null); return;
+              }
+              cancelCapture = null;
+              node.remove(); resolve(audio);
+            } catch (error) {
+              if (currentGeneration !== generation) return;
+              const code = String(error?.code || error?.name || '');
+              notice.textContent = /PERMISSION|NotAllowed|DENIED/i.test(code)
+                ? 'Chrome запретил микрофон. Разрешите его в настройках сайта. Если запроса нет: настройки Android → Приложения → Chrome → Разрешения → Микрофон. Затем нажмите кнопку ещё раз.'
+                : /NOT_READABLE|NotReadable|TrackStart/i.test(code)
+                  ? 'Микрофон занят другим приложением. Закройте его и повторите включение микрофона.'
+                  : 'Не удалось включить микрофон. Проверьте его доступность и нажмите кнопку ещё раз.';
+            }
+          });
+        });
+        if (!microphone || currentGeneration !== generation) return;
+        localTracks = [microphone, camera];
+        tracks = localTracks;
+        notice.textContent = 'Камера и микрофон включены. Подключение к эфиру…';
       }
       await joiningClient.join(current.appId, current.channel, current.token, null);
       if (currentGeneration !== generation) { await joiningClient.leave(); return; }
@@ -205,6 +237,8 @@
       if (joiningClient) { joiningClient.removeAllListeners(); try { await joiningClient.leave(); } catch (_) {} }
       if (currentGeneration === generation) {
         tracks = []; client = null;
+        actions.replaceChildren();
+        button(current.isHost ? 'Включить камеру' : 'Повторить подключение', node => joinAgora(current, node));
         // Never show raw SDK errors: they may contain connection credentials.
         const code = String(error?.code || error?.name || '');
         if (/PERMISSION|NotAllowed|DENIED/i.test(code)) {
@@ -228,7 +262,7 @@
       return;
     }
     notice.textContent = current.isHost ? 'Разрешите камеру и микрофон для трансляции.' : 'Подключитесь к эфиру со звуком.';
-    const connectButton = button(current.isHost ? 'Включить камеру и начать' : 'Повторить подключение', node => joinAgora(current, node));
+    const connectButton = button(current.isHost ? 'Включить камеру' : 'Повторить подключение', node => joinAgora(current, node));
     // Viewing needs no microphone/camera permission or initial button press.
     // Only audible playback may require a separate browser user gesture.
     if (!current.isHost && autoJoin) void joinAgora(current, connectButton);
