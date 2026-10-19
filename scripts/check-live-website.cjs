@@ -39,13 +39,17 @@ async function api(path, method = 'GET', body, token) {
     await api('/seller/apply', 'POST', { store_name: `Temporary website media verification ${randomBytes(6).toString('hex')}` }, auth.access_token);
     live = await api('/live/start', 'POST', { title: 'Temporary synthetic media verification' }, auth.access_token);
     browser = await chromium.launch({ executablePath: '/usr/bin/google-chrome',
-      args: ['--use-fake-device-for-media-stream', '--use-fake-ui-for-media-stream', '--disable-dev-shm-usage'] });
+      args: ['--use-fake-device-for-media-stream', '--disable-dev-shm-usage'] });
     const context = await browser.newContext({ viewport: { width: 412, height: 915 },
       isMobile: true, hasTouch: true,
       userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36' });
     // Reproduce the reported state: camera allowed, microphone denied.
     await context.grantPermissions(['camera'], { origin: site });
     page = await context.newPage();
+    const permissions = await context.newCDPSession(page);
+    const { targetInfo } = await permissions.send('Target.getTargetInfo');
+    await permissions.send('Browser.setPermission', { permission: { name: 'microphone' },
+      setting: 'denied', origin: site, browserContextId: targetInfo.browserContextId });
     page.on('pageerror', error => diagnostics.errors.push(error.name));
     await page.goto(site, { waitUntil: 'domcontentloaded' });
     await page.locator('flt-glass-pane').waitFor({ state: 'attached', timeout: 90000 });
