@@ -349,7 +349,9 @@ class AppRouter {
           path: '/live/:id',
           pageBuilder: (context, state) {
             final id = state.pathParameters['id']!;
-            final host = state.uri.queryParameters['host'] == '1';
+            // Publishing is an in-app action. A copied URL must always open
+            // as a viewer, including on another device with the same account.
+            final host = state.extra == true;
             return AppPageTransitions.fadeSlide(
               key: state.pageKey,
               child: LiveRoomScreen(sessionId: id, asHost: host),

@@ -17,7 +17,7 @@ async function api(path, method = 'GET', body, token) {
   return (await response.json()).data;
 }
 (async () => {
-  let auth, live, browser, page;
+  let auth, live, browser, page, viewer;
   let loggedIn = false;
   const diagnostics = { errors: [], frames: [] };
   await mkdir('live-website-diagnostics', { recursive: true });
@@ -28,7 +28,10 @@ async function api(path, method = 'GET', body, token) {
     let deployed = false;
     for (let attempt = 0; attempt < 42; attempt++) {
       const response = await fetch(`${site}/media_player.js?check=${expected}`, { signal: AbortSignal.timeout(15000) });
-      if (response.ok && hash(await response.text()) === expected) { deployed = true; break; }
+      if (response.ok && hash(await response.text()) === expected) {
+        const app = await fetch(`${site}/main.dart.js?live-entry-check=2`, { signal: AbortSignal.timeout(30000) });
+        if (app.ok && !(await app.text()).includes('?host=1')) { deployed = true; break; }
+      }
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
     if (!deployed) throw Error('Expected website player has not deployed yet');
@@ -65,8 +68,12 @@ async function api(path, method = 'GET', body, token) {
     await page.waitForURL(/home/, { timeout: 60000 });
     loggedIn = true;
     console.log('Temporary host logged in');
-    // Hash navigation preserves the authenticated Flutter session.
-    await page.evaluate(id => { location.hash = `/live/${id}?host=1`; }, live.id);
+    // Resume via the real Go Live UI. Publishing intent must not be in a URL.
+    await page.locator('flt-semantics-placeholder').evaluateAll(nodes => nodes.forEach(node => node.click()));
+    await page.evaluate(() => { location.hash = '/live/go'; });
+    const resume = page.getByRole('button', { name: /^(Efirni boshlash|Начать эфир)$/ });
+    await resume.waitFor({ state: 'attached', timeout: 30000 });
+    await resume.evaluate(node => node.click());
     const frame = page.frameLocator('iframe');
     const start = frame.getByRole('button', { name: 'Включить камеру', exact: true });
     await start.waitFor({ timeout: 60000 });
@@ -90,6 +97,35 @@ async function api(path, method = 'GET', body, token) {
     await context.grantPermissions(['camera', 'microphone'], { origin: site });
     await microphoneButton.click();
     await frame.getByRole('button', { name: 'Выключить микрофон' }).waitFor({ timeout: 30000 });
+    const sharedUrl = page.url();
+    if (sharedUrl.includes('host=1')) throw Error('Broadcasting intent leaked into shared URL');
+    // A separate desktop browser session, logged into the same account, must
+    // watch a copied link without asking to publish or capture any devices.
+    const viewerContext = await browser.newContext({ viewport: { width: 412, height: 915 }, hasTouch: true });
+    viewer = await viewerContext.newPage();
+    await viewer.goto(site, { waitUntil: 'domcontentloaded' });
+    await viewer.locator('flt-glass-pane').waitFor({ state: 'attached', timeout: 90000 });
+    await viewer.waitForTimeout(2000);
+    await viewer.touchscreen.tap(120, 108);
+    await viewer.locator('textarea,input').first().fill(email, { timeout: 30000 });
+    await viewer.touchscreen.tap(120, 180);
+    await viewer.locator('input[type="password"]').fill(password);
+    await viewer.touchscreen.tap(206, 258);
+    await viewer.waitForURL(/home/, { timeout: 60000 });
+    await viewer.setViewportSize({ width: 1280, height: 900 });
+    // Include an old host query parameter to cover already copied legacy links.
+    await viewer.evaluate(url => { location.hash = url + '?host=1'; }, `/live/${live.id}`);
+    const viewerFrame = viewer.frameLocator('iframe');
+    await viewerFrame.getByRole('button', { name: 'Включить звук', exact: true }).click({ timeout: 60000 });
+    await viewerFrame.locator('#media video').first().waitFor({ timeout: 60000 });
+    await viewerFrame.locator('#media video').first().evaluate(async video => {
+      const deadline = Date.now() + 20000;
+      while (!(video.videoWidth > 0 && video.currentTime > 0)) {
+        if (Date.now() > deadline) throw Error('Desktop viewer received no decoded video');
+        await new Promise(resolve => setTimeout(resolve, 250));
+      }
+    });
+    console.log('Desktop shared-link viewer decoded live video without capture permission');
     diagnostics.passed = true;
     console.log('Actual Flutter host UI: camera preview and microphone publishing passed');
   } finally {
@@ -104,6 +140,7 @@ async function api(path, method = 'GET', body, token) {
       }
       await page.screenshot({ path: 'live-website-diagnostics/host.png', mask: loggedIn ? [] : [page.locator('input,textarea')] }).catch(() => {});
     }
+    if (viewer) await viewer.screenshot({ path: 'live-website-diagnostics/viewer.png', mask: [viewer.locator('input,textarea')] }).catch(() => {});
     await writeFile('live-website-diagnostics/result.json', JSON.stringify(diagnostics, null, 2));
     await browser?.close();
     if (live && auth) await api(`/live/${live.id}/end`, 'POST', {}, auth.access_token);

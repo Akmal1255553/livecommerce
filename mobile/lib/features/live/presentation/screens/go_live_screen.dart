@@ -52,7 +52,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
       if (!mounted) {
         return;
       }
-      context.pushReplacement('/live/${session.id}?host=1');
+      context.pushReplacement('/live/${session.id}', extra: true);
     } catch (error) {
       if (error is DioException && error.response?.statusCode == 409) {
         try {
@@ -60,7 +60,7 @@ class _GoLiveScreenState extends ConsumerState<GoLiveScreen> {
           final sessions = await ref.read(liveRepositoryProvider).listLive(limit: 50);
           final existing = sessions.where((s) => s.seller?.id == userId).firstOrNull;
           if (existing != null && mounted) {
-            context.pushReplacement('/live/${existing.id}?host=1');
+            context.pushReplacement('/live/${existing.id}', extra: true);
             return;
           }
         } catch (_) {
