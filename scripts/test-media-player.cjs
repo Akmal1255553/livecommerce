@@ -198,3 +198,60 @@ test('a viewer automatically receives an existing host video and audio without c
   h.window.AgoraRTC.onAutoplayFailed();
   assert.equal(h.nodes.actions.children.length, 0);
 });
+
+test('host previews capture while signaling is pending and leaving releases both devices', async () => {
+  const h = harness();
+  let finishJoin, published = 0, previewed = 0, closed = 0;
+  const joining = new Promise(resolve => { finishJoin = resolve; });
+  const localTracks = [
+    { stop() {}, close() { closed++; } },
+    { play() { previewed++; }, stop() {}, close() { closed++; } },
+  ];
+  h.window.isSecureContext = true;
+  h.window.AgoraRTC = {
+    setLogLevel() {},
+    async createMicrophoneAndCameraTracks() { return localTracks; },
+    createClient: () => ({
+      async setClientRole() {}, on() {}, removeAllListeners() {},
+      join: () => joining, async leave() {},
+      async publish() { published++; },
+    }),
+  };
+  h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token', isHost: true });
+  await tick();
+  const connecting = h.nodes.actions.children[0].onclick();
+  await tick();
+  assert.equal(previewed, 1);
+  assert.equal(published, 0);
+  assert.match(h.nodes.notice.textContent, /Камера включена/);
+  h.send({ type: 'dispose' });
+  await tick();
+  assert.equal(closed, 2);
+  finishJoin();
+  await connecting;
+  assert.equal(published, 0);
+});
+
+test('denied microphone and occupied camera show actionable errors and allow retry', async () => {
+  for (const [code, message] of [['PERMISSION_DENIED', /ОБА устройства/], ['NOT_READABLE', /заняты/]]) {
+    const h = harness();
+    let attempts = 0;
+    h.window.isSecureContext = true;
+    h.window.AgoraRTC = {
+      setLogLevel() {},
+      async createMicrophoneAndCameraTracks() { attempts++; throw { code }; },
+      createClient: () => ({
+        async setClientRole() {}, on() {}, removeAllListeners() {}, async leave() {},
+        async join() { assert.fail('Do not join without capture'); },
+      }),
+    };
+    h.send({ type: 'init', mode: 'agora', appId: 'app', channel: 'room', token: 'token', isHost: true });
+    await tick();
+    const start = h.nodes.actions.children[0];
+    await start.onclick();
+    assert.match(h.nodes.notice.textContent, message);
+    assert.equal(start.disabled, false);
+    await start.onclick();
+    assert.equal(attempts, 2);
+  }
+});

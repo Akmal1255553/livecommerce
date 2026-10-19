@@ -37,11 +37,13 @@ async function api(path, method = 'GET', body, token) {
     await page.goto(site, { waitUntil: 'domcontentloaded' });
     await page.locator('flt-glass-pane').waitFor({ state: 'attached', timeout: 90000 });
     console.log('Flutter application attached');
-    await page.locator('flt-semantics-placeholder').evaluate(node => node.click());
-    const inputs = page.locator('input');
-    await inputs.first().fill(email, { timeout: 30000 });
-    await inputs.nth(1).fill(password);
-    await page.getByRole('button', { name: /^(Войти|Kirish)$/ }).click();
+    // Flutter creates editable DOM inputs only after the canvas field receives
+    // a real tap. Use the fixed mobile viewport's login fields for this fixture.
+    await page.touchscreen.tap(120, 108);
+    await page.locator('input').first().fill(email, { timeout: 30000 });
+    await page.touchscreen.tap(120, 180);
+    await page.locator('input[type="password"]').fill(password);
+    await page.touchscreen.tap(206, 258);
     await page.waitForURL(/home/, { timeout: 60000 });
     loggedIn = true;
     console.log('Temporary host logged in');

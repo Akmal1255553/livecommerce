@@ -159,6 +159,19 @@
       joiningClient.on('token-privilege-did-expire', () => {
         notice.textContent = 'Сессия истекла. Откройте эфир заново.';
       });
+      // Open capture before waiting for RTC signaling. A slow connection must
+      // not leave the host staring at a blank camera preview.
+      if (current.isHost) {
+        notice.textContent = 'Разрешите камеру и микрофон в запросе браузера…';
+        localTracks = await sdk.createMicrophoneAndCameraTracks({}, { encoderConfig: '480p_1' });
+        if (currentGeneration !== generation) {
+          localTracks.forEach(track => { track.stop(); track.close(); });
+          await joiningClient.leave(); return;
+        }
+        tracks = localTracks;
+        localTracks[1].play(media);
+        notice.textContent = 'Камера включена. Подключение к эфиру…';
+      }
       await joiningClient.join(current.appId, current.channel, current.token, null);
       if (currentGeneration !== generation) { await joiningClient.leave(); return; }
       // A broadcaster may already be publishing before this viewer joins.
@@ -168,13 +181,6 @@
         if (remote.hasAudio) void subscribe(remote, 'audio');
       }
       if (current.isHost) {
-        localTracks = await sdk.createMicrophoneAndCameraTracks({}, { encoderConfig: '480p_1' });
-        if (currentGeneration !== generation) {
-          localTracks.forEach(track => { track.stop(); track.close(); });
-          await joiningClient.leave(); return;
-        }
-        tracks = localTracks;
-        localTracks[1].play(media);
         await joiningClient.publish(localTracks);
       }
       if (currentGeneration !== generation) return;
@@ -199,10 +205,19 @@
       if (joiningClient) { joiningClient.removeAllListeners(); try { await joiningClient.leave(); } catch (_) {} }
       if (currentGeneration === generation) {
         tracks = []; client = null;
-        const denied = /PERMISSION|NotAllowed|DENIED/i.test(String(error?.code || error?.name));
-        notice.textContent = denied
-          ? 'Разрешите доступ к камере и микрофону в браузере и повторите подключение.'
-          : 'Не удалось подключиться. Проверьте интернет, камеру и настройки эфира.';
+        // Never show raw SDK errors: they may contain connection credentials.
+        const code = String(error?.code || error?.name || '');
+        if (/PERMISSION|NotAllowed|DENIED/i.test(code)) {
+          notice.textContent = 'Нет доступа к камере или микрофону. В настройках сайта Chrome разрешите ОБА устройства и повторите подключение.';
+        } else if (/NOT_READABLE|NotReadable|TrackStart/i.test(code)) {
+          notice.textContent = 'Камера или микрофон заняты. Закройте другие приложения с камерой, затем повторите подключение.';
+        } else if (/DEVICE_NOT_FOUND|NotFound|DevicesNotFound/i.test(code)) {
+          notice.textContent = 'Камера или микрофон не найдены. Проверьте, доступны ли оба устройства браузеру.';
+        } else if (/NOT_SUPPORTED|NotSupported|CONSTRAINT|Overconstrained/i.test(code)) {
+          notice.textContent = 'Браузер не смог включить камеру и микрофон. Обновите Chrome и повторите подключение.';
+        } else {
+          notice.textContent = 'Не удалось подключиться к эфиру. Проверьте интернет и повторите подключение.';
+        }
       }
     } finally { if (currentGeneration === generation) connecting = false; }
   }
