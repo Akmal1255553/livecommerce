@@ -1,0 +1,31 @@
+name: Live website media check
+on:
+  push:
+    branches: [feature/ux-polish-rc1]
+    paths:
+      - '.github/workflows/live-web-check.yml'
+      - 'scripts/check-live-website.cjs'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  website:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install browser driver
+        run: npm install --prefix "$RUNNER_TEMP/live-check" playwright@1.58.2
+      - name: Check actual Flutter website and embedded broadcaster
+        env:
+          NODE_PATH: ${{ runner.temp }}/live-check/node_modules
+        run: node scripts/check-live-website.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: live-website-diagnostics
+          path: live-website-diagnostics/
+          retention-days: 3
