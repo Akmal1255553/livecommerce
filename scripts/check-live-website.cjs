@@ -43,6 +43,8 @@ async function api(path, method = 'GET', body, token) {
     const context = await browser.newContext({ viewport: { width: 412, height: 915 },
       isMobile: true, hasTouch: true,
       userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Mobile Safari/537.36' });
+    // Reproduce the reported state: camera allowed, microphone denied.
+    await context.grantPermissions(['camera'], { origin: site });
     page = await context.newPage();
     page.on('pageerror', error => diagnostics.errors.push(error.name));
     await page.goto(site, { waitUntil: 'domcontentloaded' });
@@ -74,7 +76,15 @@ async function api(path, method = 'GET', body, token) {
         await new Promise(resolve => setTimeout(resolve, 250));
       }
     });
-    await frame.getByRole('button', { name: 'Включить микрофон и начать эфир', exact: true }).click();
+    const microphoneButton = frame.getByRole('button', { name: 'Включить микрофон и начать эфир', exact: true });
+    await microphoneButton.click();
+    await frame.getByText('Chrome запретил микрофон.', { exact: false }).waitFor({ timeout: 20000 });
+    if (!await frame.locator('#media video').first().evaluate(video => video.videoWidth > 0 && !video.paused)) {
+      throw Error('Denied microphone stopped the working camera preview');
+    }
+    console.log('Denied microphone preserves live camera preview');
+    await context.grantPermissions(['camera', 'microphone'], { origin: site });
+    await microphoneButton.click();
     await frame.getByRole('button', { name: 'Выключить микрофон' }).waitFor({ timeout: 30000 });
     diagnostics.passed = true;
     console.log('Actual Flutter host UI: camera preview and microphone publishing passed');
