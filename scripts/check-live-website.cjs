@@ -37,10 +37,11 @@ async function api(path, method = 'GET', body, token) {
     await page.goto(site, { waitUntil: 'domcontentloaded' });
     await page.locator('flt-glass-pane').waitFor({ state: 'attached', timeout: 90000 });
     console.log('Flutter application attached');
+    await page.waitForTimeout(2000);
     // Flutter creates editable DOM inputs only after the canvas field receives
     // a real tap. Use the fixed mobile viewport's login fields for this fixture.
     await page.touchscreen.tap(120, 108);
-    await page.locator('input').first().fill(email, { timeout: 30000 });
+    await page.locator('textarea,input').first().fill(email, { timeout: 30000 });
     await page.touchscreen.tap(120, 180);
     await page.locator('input[type="password"]').fill(password);
     await page.touchscreen.tap(206, 258);
@@ -75,7 +76,7 @@ async function api(path, method = 'GET', body, token) {
           videos: Array.from(document.querySelectorAll('video')).map(v => ({ width: v.videoWidth, playing: !v.paused })),
         })).catch(() => ({ inaccessible: true })));
       }
-      await page.screenshot({ path: 'live-website-diagnostics/host.png', mask: loggedIn ? [] : [page.locator('input')] }).catch(() => {});
+      await page.screenshot({ path: 'live-website-diagnostics/host.png', mask: loggedIn ? [] : [page.locator('input,textarea')] }).catch(() => {});
     }
     await writeFile('live-website-diagnostics/result.json', JSON.stringify(diagnostics, null, 2));
     await browser?.close();
