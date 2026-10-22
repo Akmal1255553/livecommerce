@@ -127,7 +127,7 @@
           // browser's user activation even when RTC joining took several seconds.
           for (const remote of joiningClient.remoteUsers || []) {
             remote.audioTrack?.play();
-            remote.videoTrack?.play(media);
+            remote.videoTrack?.play(media, { fit: 'contain' });
           }
           await sdk.resumeAudioContext?.();
           node.remove(); soundButton = null;
@@ -142,7 +142,7 @@
         try {
           await joiningClient.subscribe(user, kind);
           if (currentGeneration !== generation) return;
-          if (kind === 'video') { user.videoTrack.play(media); notice.textContent = ''; }
+          if (kind === 'video') { user.videoTrack.play(media, { fit: 'contain' }); notice.textContent = ''; }
           if (kind === 'audio') user.audioTrack.play();
         } catch (_) {
           subscriptions.delete(key);
@@ -172,7 +172,7 @@
           await joiningClient.leave(); return;
         }
         tracks = localTracks;
-        camera.play(media);
+        camera.play(media, { fit: 'contain' });
         connectButton.remove();
         notice.textContent = 'Камера включена. Нажмите «Включить микрофон и начать эфир» и разрешите микрофон.';
         // Android permission dialogs need separate, explicit capture actions.
@@ -282,6 +282,7 @@
       return;
     }
     config = current;
+    media.dataset.live = String(current.mode === 'agora' || current.live === true);
     await cleanup();
     if (config !== current) return;
     if (current.mode === 'agora') setupAgora(current);

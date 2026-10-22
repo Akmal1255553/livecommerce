@@ -11,7 +11,7 @@ function harness() {
   const listeners = {};
   const created = [];
   function element(tag) {
-    const node = { tag, children: [], textContent: '', paused: true,
+    const node = { tag, children: [], textContent: '', paused: true, dataset: {},
       append(child) { this.children.push(child); },
       replaceChildren() { this.children = []; },
       remove() { for (const parent of created) parent.children = parent.children.filter(child => child !== this); },
