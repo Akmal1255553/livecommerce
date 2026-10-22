@@ -35,6 +35,18 @@ const api = 'https://livecommerce-api.onrender.com/api/v1';
           senders: window.receiver?.remoteUsers.map(user => ({ video: user.hasVideo, audio: user.hasAudio })),
           video: Object.values(window.receiver?.getRemoteVideoStats() || {}).map(s => ({ receiving: s.receiveBitrate > 0, decoding: s.decodeFrameRate > 0 })),
           audio: Object.values(window.receiver?.getRemoteAudioStats() || {}).map(s => ({ receiving: s.receiveBitrate > 0 })),
+          // Retain only brightness totals, never pixels or screenshots.
+          frameBrightness: window.receiver?.remoteUsers.filter(user => user.videoTrack).map(user => {
+            const frame = user.videoTrack.getCurrentFrameData();
+            if (!frame) return { available: false };
+            let total = 0, maximum = 0, samples = 0;
+            const step = Math.max(4, Math.floor(frame.data.length / 256 / 4) * 4);
+            for (let i = 0; i < frame.data.length; i += step) {
+              const value = (frame.data[i] + frame.data[i + 1] + frame.data[i + 2]) / 3;
+              total += value; maximum = Math.max(maximum, value); samples++;
+            }
+            return { available: true, average: Math.round(total / samples), maximum: Math.round(maximum) };
+          }),
           notice: document.getElementById('notice').textContent,
         }));
         console.log(JSON.stringify({ session: session.id, ...result }));

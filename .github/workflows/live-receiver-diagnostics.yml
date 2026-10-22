@@ -2,7 +2,7 @@ name: Live receiver diagnostics
 on:
   push:
     branches: [feature/ux-polish-rc1]
-    paths: ['.github/workflows/live-receiver-diagnostics.yml']
+    paths: ['.github/workflows/live-receiver-diagnostics.yml', 'scripts/check-live-receivers.cjs']
   workflow_dispatch:
 permissions:
   contents: read
