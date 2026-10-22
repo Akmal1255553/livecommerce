@@ -69,11 +69,14 @@ async function api(path, method = 'GET', body, token) {
     loggedIn = true;
     console.log('Temporary host logged in');
     // Resume via the real Go Live UI. Publishing intent must not be in a URL.
-    await page.locator('flt-semantics-placeholder').evaluateAll(nodes => nodes.forEach(node => node.click()));
+    const productsLoaded = page.waitForResponse(response =>
+      response.url().includes('/seller/products') && response.request().method() === 'GET');
     await page.evaluate(() => { location.hash = '/live/go'; });
-    const resume = page.getByRole('button', { name: /^(Efirni boshlash|Начать эфир)$/ });
-    await resume.waitFor({ state: 'attached', timeout: 30000 });
-    await resume.evaluate(node => node.click());
+    await productsLoaded;
+    await page.waitForTimeout(1000);
+    // Canvas-rendered Flutter buttons have no DOM role until accessibility is
+    // enabled. Tap the empty-store fixture's actual button in the fixed viewport.
+    await page.touchscreen.tap(206, 310);
     const frame = page.frameLocator('iframe');
     const start = frame.getByRole('button', { name: 'Включить камеру', exact: true });
     await start.waitFor({ timeout: 60000 });
