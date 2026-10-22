@@ -1,0 +1,22 @@
+name: Live receiver diagnostics
+on:
+  push:
+    branches: [feature/ux-polish-rc1]
+    paths: ['.github/workflows/live-receiver-diagnostics.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  receiver:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --prefix "$RUNNER_TEMP/live-check" playwright@1.58.2
+      - name: Inspect receiver packets without saving media
+        env:
+          NODE_PATH: ${{ runner.temp }}/live-check/node_modules
+        run: node scripts/check-live-receivers.cjs
