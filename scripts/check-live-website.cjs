@@ -70,7 +70,8 @@ async function api(path, method = 'GET', body, token) {
     console.log('Temporary host logged in');
     // Resume via the real Go Live UI. Publishing intent must not be in a URL.
     const productsLoaded = page.waitForResponse(response =>
-      response.url().includes('/seller/products') && response.request().method() === 'GET');
+      new URL(response.url()).pathname.endsWith('/products') &&
+      new URL(response.url()).searchParams.get('mine') === '1' && response.request().method() === 'GET');
     await page.evaluate(() => { location.hash = '/live/go'; });
     await productsLoaded;
     await page.waitForTimeout(1000);
