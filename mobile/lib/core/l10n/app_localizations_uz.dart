@@ -531,6 +531,13 @@ class AppLocalizationsUz extends AppLocalizations {
   String get endLive => 'Tugatish';
 
   @override
+  String get liveEndedTitle => 'Efir yakunlandi';
+
+  @override
+  String get liveEndedBody =>
+      'Bu havoladagi efir tugagan. Ro‘yxatdan hozirgi efirni tanlang.';
+
+  @override
   String get assistantTooltip => 'Yordamchi';
 
   @override

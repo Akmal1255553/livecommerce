@@ -272,6 +272,8 @@
   "liveWaitingHost": "Boshlovchi kutilmoqda…",
   "chatHint": "Biror narsa yozing…",
   "endLive": "Tugatish",
+  "liveEndedTitle": "Efir yakunlandi",
+  "liveEndedBody": "Bu havoladagi efir tugagan. Ro‘yxatdan hozirgi efirni tanlang.",
   "assistantTooltip": "Yordamchi",
   "noProductsToPin": "Pin qilish uchun mahsulot yo'q",
   "pinProductTitle": "Mahsulotni pin qilish",

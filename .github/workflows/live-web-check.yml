@@ -10,6 +10,23 @@ on:
 permissions:
   contents: read
 jobs:
+  live-state-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.4'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter gen-l10n
+      - run: flutter analyze lib/features/live test/features/live
+      - run: flutter test test/features/live/live_room_role_test.dart
   website:
     runs-on: ubuntu-latest
     timeout-minutes: 12

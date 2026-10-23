@@ -1040,6 +1040,18 @@ abstract class AppLocalizations {
   /// **'Tugatish'**
   String get endLive;
 
+  /// No description provided for @liveEndedTitle.
+  ///
+  /// In uz, this message translates to:
+  /// **'Efir yakunlandi'**
+  String get liveEndedTitle;
+
+  /// No description provided for @liveEndedBody.
+  ///
+  /// In uz, this message translates to:
+  /// **'Bu havoladagi efir tugagan. Ro‘yxatdan hozirgi efirni tanlang.'**
+  String get liveEndedBody;
+
   /// No description provided for @assistantTooltip.
   ///
   /// In uz, this message translates to:

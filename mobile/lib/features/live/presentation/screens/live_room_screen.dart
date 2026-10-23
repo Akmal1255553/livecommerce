@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
@@ -27,6 +29,14 @@ class LiveRoomScreen extends ConsumerStatefulWidget {
 
 class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
   final _chatController = TextEditingController();
+
+  void _close() {
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/live');
+    }
+  }
 
   @override
   void initState() {
@@ -214,6 +224,37 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final cartCount = ref.watch(cartNotifierProvider).itemCount;
     final session = state.session;
 
+    if (session != null && !session.isLive) {
+      final l10n = AppLocalizations.of(context)!;
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.videocam_off_outlined, color: Colors.white70, size: 48),
+                  const SizedBox(height: 16),
+                  Text(l10n.liveEndedTitle,
+                      style: const TextStyle(color: Colors.white, fontSize: 22)),
+                  const SizedBox(height: 12),
+                  Text(l10n.liveEndedBody, textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white70)),
+                  const SizedBox(height: 20),
+                  FilledButton(
+                    onPressed: () => context.go('/live'),
+                    child: Text(l10n.liveNowTab),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       body: state.isLoading && session == null
@@ -235,10 +276,10 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
                               .read(liveRoomProvider(widget.sessionId).notifier)
                               .endLive();
                           if (ok && context.mounted) {
-                            context.pop();
+                            _close();
                           }
                         },
-                        onClose: () => context.pop(),
+                        onClose: _close,
                         onPin: state.isHost ? _pickPin : null,
                         onAssistant: state.isHost ? _openAssistant : null,
                       ),
@@ -356,6 +397,33 @@ class _LiveHeader extends StatelessWidget {
   final VoidCallback? onPin;
   final VoidCallback? onAssistant;
 
+  Future<void> _share(BuildContext context) async {
+    final current = session;
+    if (current == null) return;
+    final base =
+        kIsWeb
+            ? Uri.base
+            : Uri.parse(
+              const String.fromEnvironment(
+                'WEB_BASE_URL',
+                defaultValue: 'https://livecommerce-web.onrender.com/',
+              ),
+            );
+    final link = Uri(
+      scheme: base.scheme,
+      host: base.host,
+      port: base.hasPort ? base.port : null,
+      path: base.path,
+      fragment: '/live/${current.id}',
+    );
+    await Clipboard.setData(ClipboardData(text: link.toString()));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(AppLocalizations.of(context)!.linkCopied)),
+    );
+  }
+
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -396,6 +464,12 @@ class _LiveHeader extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           const Icon(Icons.remove_red_eye_outlined, color: Colors.white70, size: 18),
+          if (session != null)
+            IconButton(
+              onPressed: () => _share(context),
+              icon: const Icon(Icons.link, color: Colors.white),
+              tooltip: l10n.shareAction,
+            ),
           if (!isHost)
             Stack(
               clipBehavior: Clip.none,

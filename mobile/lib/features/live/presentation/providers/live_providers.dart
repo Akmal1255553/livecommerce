@@ -54,10 +54,11 @@ class LiveListNotifier extends StateNotifier<LiveListState> {
   }
 }
 
-final liveListProvider =
-    StateNotifierProvider<LiveListNotifier, LiveListState>((ref) {
-  return LiveListNotifier(ref.watch(liveRepositoryProvider));
-});
+final liveListProvider = StateNotifierProvider<LiveListNotifier, LiveListState>(
+  (ref) {
+    return LiveListNotifier(ref.watch(liveRepositoryProvider));
+  },
+);
 
 class LiveReplayListNotifier extends StateNotifier<LiveListState> {
   LiveReplayListNotifier(this._repository) : super(const LiveListState());
@@ -77,11 +78,13 @@ class LiveReplayListNotifier extends StateNotifier<LiveListState> {
 
 final liveReplayListProvider =
     StateNotifierProvider<LiveReplayListNotifier, LiveListState>((ref) {
-  return LiveReplayListNotifier(ref.watch(liveRepositoryProvider));
-});
+      return LiveReplayListNotifier(ref.watch(liveRepositoryProvider));
+    });
 
-final liveReplayDetailProvider =
-    FutureProvider.family<LiveSession, String>((ref, id) async {
+final liveReplayDetailProvider = FutureProvider.family<LiveSession, String>((
+  ref,
+  id,
+) async {
   return ref.watch(liveRepositoryProvider).get(id);
 });
 
@@ -147,9 +150,20 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
     state = state.copyWith(isLoading: true, clearError: true, isHost: asHost);
     try {
       final session = await _repository.get(_sessionId);
+      if (!session.isLive) {
+        state = state.copyWith(
+          session: session,
+          isLoading: false,
+          isHost: false,
+          clearError: true,
+        );
+        await leave();
+        return;
+      }
       // Shared links are viewer entries, even on the broadcaster's account.
       // Publishing must be explicitly requested by the Go Live/resume route.
-      final isHost = asHost &&
+      final isHost =
+          asHost &&
           _currentUserId != null &&
           session.seller?.id == _currentUserId &&
           (session.publisherToken?.isNotEmpty ?? false);
@@ -183,14 +197,21 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
       _pollInFlight = true;
       _pollTick += 1;
       try {
-        final afterId =
-            state.messages.isEmpty ? null : state.messages.last.id;
+        LiveSession? refreshedSession;
+        if (_pollTick.isOdd) {
+          refreshedSession = await _repository.get(_sessionId);
+          if (!refreshedSession.isLive) {
+            state = state.copyWith(session: refreshedSession, isHost: false);
+            await leave();
+            return;
+          }
+        }
+        final afterId = state.messages.isEmpty ? null : state.messages.last.id;
         final newer = await _repository.chat(_sessionId, afterId: afterId);
         final merged = [...state.messages, ...newer];
 
         if (_pollTick.isOdd) {
-          final session = await _repository.get(_sessionId);
-          state = state.copyWith(session: session, messages: merged);
+          state = state.copyWith(session: refreshedSession, messages: merged);
         } else {
           state = state.copyWith(messages: merged);
         }
@@ -296,15 +317,15 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
 
 final liveRoomProvider = StateNotifierProvider.autoDispose
     .family<LiveRoomNotifier, LiveRoomState, String>((ref, sessionId) {
-  final userId = ref.watch(authNotifierProvider).user?.id;
-  final notifier = LiveRoomNotifier(
-    ref.watch(liveRepositoryProvider),
-    sessionId,
-    userId,
-    () => ref.read(cartNotifierProvider.notifier).load(),
-  );
-  ref.onDispose(() {
-    unawaited(notifier.leave());
-  });
-  return notifier;
-});
+      final userId = ref.watch(authNotifierProvider).user?.id;
+      final notifier = LiveRoomNotifier(
+        ref.watch(liveRepositoryProvider),
+        sessionId,
+        userId,
+        () => ref.read(cartNotifierProvider.notifier).load(),
+      );
+      ref.onDispose(() {
+        unawaited(notifier.leave());
+      });
+      return notifier;
+    });

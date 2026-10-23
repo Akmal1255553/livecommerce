@@ -4,6 +4,7 @@ const { chromium } = require('playwright');
 const { randomBytes, createHash } = require('node:crypto');
 const { mkdir, writeFile, readFile } = require('node:fs/promises');
 const { join } = require('node:path');
+const { execFileSync } = require('node:child_process');
 const apiBase = 'https://livecommerce-api.onrender.com/api/v1';
 const site = 'https://livecommerce-web.onrender.com';
 async function api(path, method = 'GET', body, token) {
@@ -18,19 +19,21 @@ async function api(path, method = 'GET', body, token) {
 }
 (async () => {
   let auth, live, browser, page, viewer;
-  let loggedIn = false;
+  let loggedIn = false, liveEnded = false;
   const diagnostics = { errors: [], frames: [] };
   await mkdir('live-website-diagnostics', { recursive: true });
   try {
     const hash = value => createHash('sha256').update(value.replace(/\r\n/g, '\n')).digest('hex');
     const expected = hash(await readFile(join(__dirname, '../mobile/web/media_player.js'), 'utf8'));
+    const expectedBuildAt = Number(execFileSync('git', ['show', '-s', '--format=%ct', 'HEAD'], { encoding: 'utf8' }).trim()) * 1000;
     console.log('Waiting for website player deployment');
     let deployed = false;
     for (let attempt = 0; attempt < 42; attempt++) {
       const response = await fetch(`${site}/media_player.js?check=${expected}`, { signal: AbortSignal.timeout(15000) });
       if (response.ok && hash(await response.text()) === expected) {
         const app = await fetch(`${site}/main.dart.js?live-entry-check=2`, { signal: AbortSignal.timeout(30000) });
-        if (app.ok && !(await app.text()).includes('?host=1')) { deployed = true; break; }
+        const builtAt = Date.parse(app.headers.get('last-modified') || '');
+        if (app.ok && builtAt >= expectedBuildAt && !(await app.text()).includes('?host=1')) { deployed = true; break; }
       }
       await new Promise(resolve => setTimeout(resolve, 5000));
     }
@@ -130,6 +133,12 @@ async function api(path, method = 'GET', body, token) {
       }
     });
     console.log('Desktop shared-link viewer decoded live video without capture permission');
+    await viewer.screenshot({ path: 'live-website-diagnostics/viewer-live.png', mask: [viewer.locator('input,textarea')] });
+    await api(`/live/${live.id}/end`, 'POST', {}, auth.access_token);
+    liveEnded = true;
+    await viewer.locator('iframe').waitFor({ state: 'detached', timeout: 20000 });
+    await page.locator('iframe').waitFor({ state: 'detached', timeout: 20000 });
+    console.log('Ended broadcast removed the media surface for host and desktop viewer');
     diagnostics.passed = true;
     console.log('Actual Flutter host UI: camera preview and microphone publishing passed');
   } finally {
@@ -147,7 +156,7 @@ async function api(path, method = 'GET', body, token) {
     if (viewer) await viewer.screenshot({ path: 'live-website-diagnostics/viewer.png', mask: [viewer.locator('input,textarea')] }).catch(() => {});
     await writeFile('live-website-diagnostics/result.json', JSON.stringify(diagnostics, null, 2));
     await browser?.close();
-    if (live && auth) await api(`/live/${live.id}/end`, 'POST', {}, auth.access_token);
+    if (live && auth && !liveEnded) await api(`/live/${live.id}/end`, 'POST', {}, auth.access_token);
     if (auth) await api('/me', 'DELETE', undefined, auth.access_token);
   }
 })().catch(error => { console.error(error.message); process.exitCode = 1; });

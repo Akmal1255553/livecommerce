@@ -270,6 +270,8 @@
   "liveAvNativeOnly": "Прямой эфир с камерой — только на Android/iOS",
   "liveConnecting": "Подключение…",
   "liveWaitingHost": "Ожидание ведущего…",
+  "liveEndedTitle": "Эфир завершён",
+  "liveEndedBody": "Трансляция по этой ссылке закончилась. Выберите текущий эфир в списке.",
   "chatHint": "Напишите что-нибудь…",
   "endLive": "Завершить",
   "assistantTooltip": "Ассистент",

@@ -528,6 +528,13 @@ class AppLocalizationsRu extends AppLocalizations {
   String get endLive => 'Завершить';
 
   @override
+  String get liveEndedTitle => 'Эфир завершён';
+
+  @override
+  String get liveEndedBody =>
+      'Трансляция по этой ссылке закончилась. Выберите текущий эфир в списке.';
+
+  @override
   String get assistantTooltip => 'Ассистент';
 
   @override
