@@ -160,6 +160,7 @@ class LiveSession {
   final String? endedAt;
 
   bool get isLive => status == 'live';
+  bool get isClosed => status == 'ended' || status == 'cancelled';
   bool get hasReplay => replayUrl != null && replayUrl!.isNotEmpty;
   bool get isHostToken => publisherToken != null && publisherToken!.isNotEmpty;
 

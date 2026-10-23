@@ -224,7 +224,7 @@ class _LiveRoomScreenState extends ConsumerState<LiveRoomScreen> {
     final cartCount = ref.watch(cartNotifierProvider).itemCount;
     final session = state.session;
 
-    if (session != null && !session.isLive) {
+    if (session != null && session.isClosed) {
       final l10n = AppLocalizations.of(context)!;
       return Scaffold(
         backgroundColor: Colors.black,

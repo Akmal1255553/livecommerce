@@ -150,7 +150,7 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
     state = state.copyWith(isLoading: true, clearError: true, isHost: asHost);
     try {
       final session = await _repository.get(_sessionId);
-      if (!session.isLive) {
+      if (session.isClosed) {
         state = state.copyWith(
           session: session,
           isLoading: false,
@@ -200,7 +200,7 @@ class LiveRoomNotifier extends StateNotifier<LiveRoomState> {
         LiveSession? refreshedSession;
         if (_pollTick.isOdd) {
           refreshedSession = await _repository.get(_sessionId);
-          if (!refreshedSession.isLive) {
+          if (refreshedSession.isClosed) {
             state = state.copyWith(session: refreshedSession, isHost: false);
             await leave();
             return;
